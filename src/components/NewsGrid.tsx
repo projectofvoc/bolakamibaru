@@ -2,6 +2,7 @@ import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { articles } from '@/data/dummyData';
 import { motion } from 'framer-motion';
+import { CheckCircle, Bookmark } from 'lucide-react';
 
 const NewsGrid: React.FC = () => {
   const { language, t } = useLanguage();
@@ -46,13 +47,44 @@ const NewsGrid: React.FC = () => {
                   </div>
                 )}
               </div>
+              
               <div className="mt-4">
                 <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
                   {article.title[language]}
                 </h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {article.timestamp}
-                </p>
+                
+                {/* Publisher Metadata Footer */}
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    {/* Publisher Icon */}
+                    <span className="w-5 h-5 flex-shrink-0 flex items-center justify-center bg-muted rounded-full text-xs">
+                      {article.publisher.icon}
+                    </span>
+                    
+                    {/* Publisher Name */}
+                    <span className="text-sm text-muted-foreground truncate max-w-[80px]">
+                      {article.publisher.name}
+                    </span>
+                    
+                    {/* Verified Badge */}
+                    {article.publisher.verified && (
+                      <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 text-primary fill-primary/20" />
+                    )}
+                    
+                    {/* Separator */}
+                    <span className="text-muted-foreground/50 flex-shrink-0">·</span>
+                    
+                    {/* Timestamp */}
+                    <span className="text-sm text-muted-foreground truncate">
+                      {article.timestamp}
+                    </span>
+                  </div>
+                  
+                  {/* Bookmark Button */}
+                  <button className="p-1.5 hover:bg-muted rounded-md transition-colors flex-shrink-0">
+                    <Bookmark className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </div>
               </div>
             </motion.article>
           ))}
