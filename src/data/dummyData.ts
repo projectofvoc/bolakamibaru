@@ -1,3 +1,9 @@
+export interface Publisher {
+  name: string;
+  icon: string;
+  verified?: boolean;
+}
+
 export interface Article {
   id: string;
   title: { id: string; en: string };
@@ -7,6 +13,7 @@ export interface Article {
   author: string;
   timestamp: string;
   club?: string;
+  publisher: Publisher;
 }
 
 export interface Match {
@@ -42,7 +49,8 @@ export const featuredArticle: Article = {
   image: '',
   category: 'Liga 1',
   author: 'Ahmad Rizky',
-  timestamp: '2 jam lalu'
+  timestamp: '2 jam lalu',
+  publisher: { name: 'Kompas Bola', icon: '📰', verified: true }
 };
 
 export const articles: Article[] = [
@@ -57,7 +65,8 @@ export const articles: Article[] = [
     category: 'Transfer',
     author: 'Budi Santoso',
     timestamp: '3 jam lalu',
-    club: 'Persija'
+    club: 'Persija',
+    publisher: { name: 'Detik Sport', icon: '⚽', verified: true }
   },
   {
     id: '3',
@@ -70,7 +79,8 @@ export const articles: Article[] = [
     category: 'Transfer',
     author: 'Dewi Lestari',
     timestamp: '5 jam lalu',
-    club: 'Madura United'
+    club: 'Madura United',
+    publisher: { name: 'Bola.com', icon: '🏟️', verified: true }
   },
   {
     id: '4',
@@ -83,7 +93,8 @@ export const articles: Article[] = [
     category: 'Liga 2',
     author: 'Eko Prasetyo',
     timestamp: '6 jam lalu',
-    club: 'PSIM'
+    club: 'PSIM',
+    publisher: { name: 'Goal Indonesia', icon: '🎯', verified: false }
   },
   {
     id: '5',
@@ -96,7 +107,8 @@ export const articles: Article[] = [
     category: 'Premier League',
     author: 'Michael Owen',
     timestamp: '7 jam lalu',
-    club: 'Man City'
+    club: 'Man City',
+    publisher: { name: 'Sky Sports', icon: '📺', verified: true }
   },
   {
     id: '6',
@@ -109,7 +121,8 @@ export const articles: Article[] = [
     category: 'La Liga',
     author: 'Carlos Martinez',
     timestamp: '8 jam lalu',
-    club: 'Real Madrid'
+    club: 'Real Madrid',
+    publisher: { name: 'Marca', icon: '📰', verified: true }
   },
   {
     id: '7',
@@ -122,7 +135,8 @@ export const articles: Article[] = [
     category: 'Bundesliga',
     author: 'Hans Mueller',
     timestamp: '10 jam lalu',
-    club: 'Bayern'
+    club: 'Bayern',
+    publisher: { name: 'Kicker', icon: '⚽', verified: true }
   },
   {
     id: '8',
@@ -135,7 +149,8 @@ export const articles: Article[] = [
     category: 'Serie A',
     author: 'Marco Rossi',
     timestamp: '12 jam lalu',
-    club: 'Inter'
+    club: 'Inter',
+    publisher: { name: 'Gazzetta', icon: '🇮🇹', verified: true }
   }
 ];
 
