@@ -24,6 +24,8 @@ const translations: Record<string, Record<Language, string>> = {
   'section.fromClubs': { id: 'Dari Klub-Klub', en: 'From the Clubs' },
   'section.latestUpdates': { id: 'Update Terbaru', en: 'Latest Updates' },
   'section.seeMore': { id: 'Lihat Lebih Banyak', en: 'See More' },
+  'section.upcomingMatches': { id: 'Jadwal Terdekat', en: 'Upcoming Matches' },
+  'match.quickAnalysis': { id: 'Analisa Cepat', en: 'Quick Analysis' },
   
   // AI Companion
   'ai.headline1': { id: 'Mau menang parlay?', en: 'Want to win parlay?' },

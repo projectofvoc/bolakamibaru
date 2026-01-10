@@ -36,6 +36,64 @@ export interface League {
   icon: string;
 }
 
+export interface UpcomingMatch {
+  id: string;
+  homeTeam: string;
+  awayTeam: string;
+  league: string;
+  leagueColor: 'orange' | 'blue' | 'green' | 'red' | 'yellow';
+  dateLabel: { id: string; en: string };
+  time: string;
+}
+
+export const upcomingMatches: UpcomingMatch[] = [
+  {
+    id: '1',
+    homeTeam: 'Fiorentina',
+    awayTeam: 'AC Milan',
+    league: 'Serie A',
+    leagueColor: 'orange',
+    dateLabel: { id: 'Besok', en: 'Tomorrow' },
+    time: '21.00 WIB'
+  },
+  {
+    id: '2',
+    homeTeam: 'Inter',
+    awayTeam: 'Napoli',
+    league: 'Serie A',
+    leagueColor: 'orange',
+    dateLabel: { id: 'Lusa', en: 'Day after' },
+    time: '02.45 WIB'
+  },
+  {
+    id: '3',
+    homeTeam: 'Persebaya',
+    awayTeam: 'Persija',
+    league: 'Liga 1',
+    leagueColor: 'green',
+    dateLabel: { id: 'Besok', en: 'Tomorrow' },
+    time: '19.30 WIB'
+  },
+  {
+    id: '4',
+    homeTeam: 'Arsenal',
+    awayTeam: 'Man United',
+    league: 'EPL',
+    leagueColor: 'blue',
+    dateLabel: { id: 'Sabtu', en: 'Saturday' },
+    time: '22.00 WIB'
+  },
+  {
+    id: '5',
+    homeTeam: 'Real Madrid',
+    awayTeam: 'Barcelona',
+    league: 'La Liga',
+    leagueColor: 'red',
+    dateLabel: { id: 'Minggu', en: 'Sunday' },
+    time: '03.00 WIB'
+  }
+];
+
 export const featuredArticle: Article = {
   id: '1',
   title: {

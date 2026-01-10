@@ -4,6 +4,7 @@ import Footer from '@/components/Footer';
 import HeroDashboard from '@/components/HeroDashboard';
 import BestMomentsCarousel from '@/components/BestMomentsCarousel';
 import NewsGrid from '@/components/NewsGrid';
+import UpcomingMatches from '@/components/UpcomingMatches';
 import LatestUpdates from '@/components/LatestUpdates';
 import AICompanion from '@/components/AICompanion';
 
@@ -15,6 +16,7 @@ const Index: React.FC = () => {
         <HeroDashboard />
         <BestMomentsCarousel />
         <NewsGrid />
+        <UpcomingMatches />
         <LatestUpdates />
         <AICompanion />
       </main>
