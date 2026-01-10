@@ -103,8 +103,8 @@ const HeroDashboard: React.FC = () => {
                 <span className="text-right">{t('liveScore.status')}</span>
               </div>
               
-              {/* Match Rows - Scrollable */}
-              <div className="flex-1 overflow-y-auto max-h-[320px] divide-y divide-border">
+              {/* Match Rows - Scrollable only when overflow */}
+              <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-border">
                 {displayMatches.map((match) => (
                   <div
                     key={match.id}
