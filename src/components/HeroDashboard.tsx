@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { featuredArticle, matches } from '@/data/dummyData';
 import { Clock, ChevronRight, Play } from 'lucide-react';
@@ -40,7 +41,7 @@ const HeroDashboard: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[450px]">
             
             {/* Card 1: Featured Article (Left - 8 cols) */}
-            <div className="lg:col-span-8 relative overflow-hidden">
+            <Link to={`/news/${featuredArticle.slug}`} className="lg:col-span-8 relative overflow-hidden block">
               <div
                 className="absolute inset-0 bg-cover bg-center"
                 style={{ backgroundImage: `url(${heroImage})` }}
@@ -76,7 +77,7 @@ const HeroDashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
 
             {/* Card 2: Live Score Widget (Right - 4 cols) */}
             <div className="lg:col-span-4 bg-card flex flex-col">
