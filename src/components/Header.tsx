@@ -1,124 +1,170 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, MapPin, ChevronDown, Search, User } from 'lucide-react';
+import { Menu, X, MapPin, ChevronDown, Search, User, Radio, Brain, Trophy, Newspaper } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Header: React.FC = () => {
   const { language, setLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [ligaDropdownOpen, setLigaDropdownOpen] = useState(false);
+  const [beritaDropdownOpen, setBeritaDropdownOpen] = useState(false);
   const location = useLocation();
 
   const navItems = [
-    { key: 'nav.home', path: '/' },
-    { key: 'nav.fixtures', path: '/fixtures' },
-    { key: 'nav.live', path: '/live' },
-    { key: 'nav.news', path: '/news' },
-    { key: 'nav.standings', path: '/standings' },
+    { key: 'nav.live', path: '/live', icon: Radio, priority: 'high' },
+    { key: 'nav.prediksiAI', path: '/prediksi-ai', icon: Brain, priority: 'high' },
+    { key: 'nav.liga', path: '/liga', icon: Trophy, priority: 'medium', hasDropdown: true },
+    { key: 'nav.berita', path: '/berita', icon: Newspaper, priority: 'medium', hasDropdown: true },
   ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const ligaSubmenu = [
+    { key: 'liga.all', path: '/liga' },
+    { key: 'liga.liga1', path: '/liga/liga-1' },
+    { key: 'liga.premierLeague', path: '/liga/premier-league' },
+    { key: 'liga.laLiga', path: '/liga/la-liga' },
+    { key: 'liga.serieA', path: '/liga/serie-a' },
+    { key: 'liga.bundesliga', path: '/liga/bundesliga' },
+    { key: 'liga.championsLeague', path: '/liga/champions-league' },
+  ];
+
+  const beritaSubmenu = [
+    { key: 'berita.trending', path: '/berita/trending' },
+    { key: 'berita.daily', path: '/berita/daily' },
+    { key: 'berita.analisa', path: '/berita/analisa' },
+  ];
+
+  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
   return (
     <header className="sticky top-0 z-50">
       {/* Section 1: Top Banner Bar */}
-      <div className="bg-header hidden md:block">
+      <div className="bg-card hidden md:block">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center h-8 text-xs text-header-foreground/80">
+          <div className="flex items-center justify-center h-8 text-xs text-muted-foreground">
             <span>Official Partner: Liga 1 Indonesia 2025/26</span>
-            <span className="mx-4 text-header-foreground/40">|</span>
+            <span className="mx-4 text-muted-foreground/40">|</span>
             <span>Powered by BOLAKAMI Network</span>
           </div>
         </div>
       </div>
 
       {/* Section 2: Main Header with Logo & Navigation */}
-      <div className="bg-gradient-to-b from-header to-header-secondary">
+      <div className="bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-1 text-2xl md:text-3xl font-black tracking-tight">
-              <span className="text-header-foreground">BOLA</span>
+              <span className="text-foreground">BOLA</span>
               <span className="text-primary">KAMI</span>
             </Link>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1">
               {navItems.map((item) => (
-                <Link
+                <div
                   key={item.key}
-                  to={item.path}
-                  className={`relative px-5 py-2 text-sm font-bold uppercase tracking-wider transition-all ${
-                    isActive(item.path)
-                      ? 'text-header-foreground'
-                      : 'text-header-foreground/70 hover:text-header-foreground'
-                  }`}
+                  className="relative"
+                  onMouseEnter={() => {
+                    if (item.key === 'nav.liga') setLigaDropdownOpen(true);
+                    if (item.key === 'nav.berita') setBeritaDropdownOpen(true);
+                  }}
+                  onMouseLeave={() => {
+                    if (item.key === 'nav.liga') setLigaDropdownOpen(false);
+                    if (item.key === 'nav.berita') setBeritaDropdownOpen(false);
+                  }}
                 >
-                  {t(item.key)}
-                  {isActive(item.path) && (
+                  <Link
+                    to={item.path}
+                    className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full ${
+                      isActive(item.path)
+                        ? 'text-primary-foreground bg-primary'
+                        : 'text-foreground/80 hover:text-foreground hover:bg-secondary'
+                    } ${item.priority === 'high' ? 'text-primary' : ''}`}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    {t(item.key)}
+                    {item.hasDropdown && <ChevronDown className="w-3 h-3 ml-0.5" />}
+                  </Link>
+
+                  {/* Liga Dropdown */}
+                  {item.key === 'nav.liga' && ligaDropdownOpen && (
                     <motion.div
-                      layoutId="activeNav"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-header-foreground"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full left-0 mt-1 w-56 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-50"
+                    >
+                      <div className="py-2">
+                        {ligaSubmenu.map((sub) => (
+                          <Link
+                            key={sub.key}
+                            to={sub.path}
+                            className="flex items-center px-4 py-2.5 text-sm text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors"
+                          >
+                            {t(sub.key)}
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
                   )}
-                </Link>
+
+                  {/* Berita Dropdown */}
+                  {item.key === 'nav.berita' && beritaDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full left-0 mt-1 w-48 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-50"
+                    >
+                      <div className="py-2">
+                        {beritaSubmenu.map((sub) => (
+                          <Link
+                            key={sub.key}
+                            to={sub.path}
+                            className="flex items-center px-4 py-2.5 text-sm text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors"
+                          >
+                            {t(sub.key)}
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
               ))}
             </nav>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-header-foreground"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Section 3: Utility Bar */}
-      <div className="bg-header-secondary/90 backdrop-blur-sm border-b border-header-accent/30 hidden md:block">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-10">
-            {/* Left: Quick Links */}
-            <div className="flex items-center gap-6 text-xs text-header-foreground/70">
-              <span className="hover:text-header-foreground cursor-pointer transition-colors">Transfer News</span>
-              <span className="hover:text-header-foreground cursor-pointer transition-colors">Match Highlights</span>
-              <span className="hover:text-header-foreground cursor-pointer transition-colors">Fantasy League</span>
-            </div>
-
-            {/* Right: Utilities */}
-            <div className="flex items-center gap-4">
+            {/* Right Side Utilities */}
+            <div className="hidden md:flex items-center gap-3">
               {/* Search */}
-              <button className="flex items-center gap-2 text-header-foreground/70 hover:text-header-foreground transition-colors">
+              <button className="flex items-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-secondary">
                 <Search className="w-4 h-4" />
-                <span className="text-xs">Search</span>
               </button>
 
               {/* Language Toggle */}
               <button
                 onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-                className="flex items-center gap-1 px-2.5 py-1 rounded bg-header-accent/30 text-header-foreground text-xs font-semibold hover:bg-header-accent/50 transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-secondary text-foreground text-xs font-semibold hover:bg-secondary/80 transition-colors"
               >
-                <span className={language === 'id' ? 'text-primary' : 'text-header-foreground/70'}>ID</span>
-                <span className="text-header-foreground/40">/</span>
-                <span className={language === 'en' ? 'text-primary' : 'text-header-foreground/70'}>EN</span>
-              </button>
-
-              {/* Location */}
-              <button className="flex items-center gap-1.5 text-xs text-header-foreground/70 hover:text-header-foreground transition-colors">
-                <MapPin className="w-3.5 h-3.5" />
-                <span>JAKARTA</span>
-                <ChevronDown className="w-3 h-3" />
+                <span className={language === 'id' ? 'text-primary' : 'text-muted-foreground'}>ID</span>
+                <span className="text-muted-foreground/40">/</span>
+                <span className={language === 'en' ? 'text-primary' : 'text-muted-foreground'}>EN</span>
               </button>
 
               {/* User */}
-              <button className="flex items-center gap-1.5 text-xs text-header-foreground/70 hover:text-header-foreground transition-colors">
+              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-primary/10 hover:bg-primary/20 rounded-full transition-colors">
                 <User className="w-4 h-4" />
-                <span>Sign In</span>
+                <span>Masuk</span>
               </button>
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-foreground"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
       </div>
@@ -130,51 +176,72 @@ const Header: React.FC = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-header-secondary border-b border-header-accent/30"
+            className="md:hidden bg-card border-b border-border"
           >
             <nav className="container mx-auto px-4 py-4 flex flex-col gap-2">
               {navItems.map((item) => (
-                <Link
-                  key={item.key}
-                  to={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`text-sm font-bold uppercase tracking-wide py-3 px-4 rounded transition-colors ${
-                    isActive(item.path)
-                      ? 'text-header-foreground bg-header-accent/30'
-                      : 'text-header-foreground/70 hover:bg-header-accent/20'
-                  }`}
-                >
-                  {t(item.key)}
-                </Link>
+                <div key={item.key}>
+                  <Link
+                    to={item.path}
+                    onClick={() => !item.hasDropdown && setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 text-sm font-bold uppercase tracking-wide py-3 px-4 rounded-xl transition-colors ${
+                      isActive(item.path)
+                        ? 'text-primary-foreground bg-primary'
+                        : 'text-foreground/80 hover:bg-secondary'
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    {t(item.key)}
+                    {item.hasDropdown && <ChevronDown className="w-4 h-4 ml-auto" />}
+                  </Link>
+
+                  {/* Mobile Liga Submenu */}
+                  {item.key === 'nav.liga' && (
+                    <div className="ml-8 mt-1 flex flex-col gap-1">
+                      {ligaSubmenu.slice(0, 4).map((sub) => (
+                        <Link
+                          key={sub.key}
+                          to={sub.path}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="text-sm text-muted-foreground hover:text-foreground py-2 px-3 rounded-lg hover:bg-secondary transition-colors"
+                        >
+                          {t(sub.key)}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Mobile Berita Submenu */}
+                  {item.key === 'nav.berita' && (
+                    <div className="ml-8 mt-1 flex flex-col gap-1">
+                      {beritaSubmenu.map((sub) => (
+                        <Link
+                          key={sub.key}
+                          to={sub.path}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="text-sm text-muted-foreground hover:text-foreground py-2 px-3 rounded-lg hover:bg-secondary transition-colors"
+                        >
+                          {t(sub.key)}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
               
-              <div className="mt-4 pt-4 border-t border-header-accent/30 flex flex-col gap-3">
-                {/* Mobile Quick Links */}
-                <div className="flex flex-wrap gap-2 text-xs text-header-foreground/70">
-                  <span className="px-3 py-1.5 bg-header-accent/20 rounded-full">Transfer News</span>
-                  <span className="px-3 py-1.5 bg-header-accent/20 rounded-full">Highlights</span>
-                  <span className="px-3 py-1.5 bg-header-accent/20 rounded-full">Fantasy</span>
-                </div>
-
-                {/* Mobile Utilities */}
-                <div className="flex items-center justify-between pt-2">
-                  <button
-                    onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded bg-header-accent/30 text-sm font-medium text-header-foreground"
-                  >
-                    <span className={language === 'id' ? 'text-primary font-bold' : 'text-header-foreground/70'}>ID</span>
-                    <span className="text-header-foreground/40">/</span>
-                    <span className={language === 'en' ? 'text-primary font-bold' : 'text-header-foreground/70'}>EN</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 text-sm text-header-foreground/70">
-                    <MapPin className="w-4 h-4" />
-                    <span>JAKARTA</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 text-sm text-header-foreground/70">
-                    <User className="w-4 h-4" />
-                    <span>Sign In</span>
-                  </button>
-                </div>
+              <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
+                <button
+                  onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-secondary text-sm font-medium text-foreground"
+                >
+                  <span className={language === 'id' ? 'text-primary font-bold' : 'text-muted-foreground'}>ID</span>
+                  <span className="text-muted-foreground/40">/</span>
+                  <span className={language === 'en' ? 'text-primary font-bold' : 'text-muted-foreground'}>EN</span>
+                </button>
+                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-primary/10 hover:bg-primary/20 rounded-full transition-colors">
+                  <User className="w-4 h-4" />
+                  <span>Masuk</span>
+                </button>
               </div>
             </nav>
           </motion.div>

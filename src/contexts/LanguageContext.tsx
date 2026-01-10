@@ -10,10 +10,24 @@ interface LanguageContextType {
 
 const translations: Record<string, Record<Language, string>> = {
   // Navigation
-  'nav.home': { id: 'BERANDA', en: 'HOME' },
-  'nav.fixtures': { id: 'JADWAL', en: 'FIXTURES' },
-  'nav.live': { id: 'LANGSUNG', en: 'LIVE' },
-  'nav.news': { id: 'BERITA', en: 'NEWS' },
+  'nav.live': { id: 'LIVE', en: 'LIVE' },
+  'nav.prediksiAI': { id: 'PREDIKSI AI', en: 'AI PREDICTIONS' },
+  'nav.liga': { id: 'LIGA', en: 'LEAGUES' },
+  'nav.berita': { id: 'BERITA', en: 'NEWS' },
+  
+  // Liga Submenu
+  'liga.all': { id: 'Semua Liga', en: 'All Leagues' },
+  'liga.liga1': { id: 'Liga 1 Indonesia', en: 'Liga 1 Indonesia' },
+  'liga.premierLeague': { id: 'Premier League', en: 'Premier League' },
+  'liga.laLiga': { id: 'La Liga', en: 'La Liga' },
+  'liga.serieA': { id: 'Serie A', en: 'Serie A' },
+  'liga.bundesliga': { id: 'Bundesliga', en: 'Bundesliga' },
+  'liga.championsLeague': { id: 'Liga Champions', en: 'Champions League' },
+  
+  // Berita Submenu
+  'berita.trending': { id: 'Trending', en: 'Trending' },
+  'berita.daily': { id: 'Update Harian', en: 'Daily Updates' },
+  'berita.analisa': { id: 'Analisa Klub', en: 'Club Analysis' },
   'nav.standings': { id: 'KLASEMEN', en: 'STANDINGS' },
   
   // Hero

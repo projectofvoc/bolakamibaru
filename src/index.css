@@ -58,11 +58,11 @@
     --sidebar-border: 220 15% 15%;
     --sidebar-ring: 142 69% 58%;
 
-    /* Header Purple Theme */
-    --header-primary: 316 100% 12%;
-    --header-secondary: 300 100% 19%;
-    --header-accent: 316 100% 27%;
-    --header-foreground: 0 0% 100%;
+    /* Header Theme - Using Brand Colors */
+    --header-primary: 220 15% 8%;
+    --header-secondary: 220 15% 10%;
+    --header-accent: 142 69% 58%;
+    --header-foreground: 0 0% 98%;
 
     /* Gradients */
     --gradient-hero: linear-gradient(to top, hsl(220 20% 5% / 0.95), hsl(220 20% 5% / 0.4), transparent);
