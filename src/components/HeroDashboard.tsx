@@ -48,14 +48,14 @@ const HeroDashboard: React.FC = () => {
   };
 
   return (
-    <section className="w-full bg-header-primary py-6 px-4">
+    <section className="w-full bg-background py-6 px-4">
       <div className="container mx-auto">
         {/* Main Container with 3 Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-header-secondary/50 rounded-2xl overflow-hidden border border-header-accent/20"
+          className="bg-card rounded-2xl overflow-hidden border border-border"
         >
           <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[450px]">
             
@@ -96,14 +96,14 @@ const HeroDashboard: React.FC = () => {
             </div>
 
             {/* Card 2: News List (Middle - 4 cols) */}
-            <div className="lg:col-span-4 bg-header-secondary/80 border-x border-header-accent/10">
-              <div className="p-4 border-b border-header-accent/10">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+            <div className="lg:col-span-4 bg-card border-x border-border">
+              <div className="p-4 border-b border-border">
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
                   {language === 'id' ? 'BERITA TERBARU' : 'LATEST NEWS'}
                 </h3>
               </div>
               
-              <div className="divide-y divide-header-accent/10">
+              <div className="divide-y divide-border">
                 {newsArticles.map((article, index) => (
                   <motion.a
                     key={article.id}
@@ -111,7 +111,7 @@ const HeroDashboard: React.FC = () => {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="flex items-center gap-3 p-4 hover:bg-header-accent/10 transition-colors group"
+                    className="flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors group"
                   >
                     {/* Thumbnail */}
                     <div className="flex-shrink-0 w-16 h-12 rounded overflow-hidden">
@@ -124,27 +124,27 @@ const HeroDashboard: React.FC = () => {
                     
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-white line-clamp-2 group-hover:text-primary transition-colors">
+                      <h4 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors">
                         {article.title[language]}
                       </h4>
-                      <span className="text-xs text-header-muted mt-1 block">
+                      <span className="text-xs text-muted-foreground mt-1 block">
                         {article.category}
                       </span>
                     </div>
                     
-                    <ChevronRight className="w-4 h-4 text-header-muted group-hover:text-primary transition-colors flex-shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
                   </motion.a>
                 ))}
               </div>
             </div>
 
             {/* Card 3: Match Widget (Right - 3 cols) */}
-            <div className="lg:col-span-3 bg-header-secondary">
+            <div className="lg:col-span-3 bg-card">
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-header-accent/10">
+              <div className="flex items-center justify-between p-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🇮🇩</span>
-                  <span className="text-sm font-bold text-white">Liga 1</span>
+                  <span className="text-sm font-bold text-foreground">Liga 1</span>
                 </div>
                 <a
                   href="/fixtures"
@@ -156,35 +156,35 @@ const HeroDashboard: React.FC = () => {
               </div>
               
               {/* Date Header */}
-              <div className="px-4 py-2 bg-header-accent/10">
-                <span className="text-xs font-medium text-header-muted uppercase">
+              <div className="px-4 py-2 bg-muted/50">
+                <span className="text-xs font-medium text-muted-foreground uppercase">
                   {language === 'id' ? 'Hari Ini' : 'Today'}
                 </span>
               </div>
               
               {/* Matches */}
-              <div className="divide-y divide-header-accent/10">
+              <div className="divide-y divide-border">
                 {liga1Matches.map((match) => (
                   <div
                     key={match.id}
-                    className="p-3 hover:bg-header-accent/10 transition-colors cursor-pointer"
+                    className="p-3 hover:bg-muted/50 transition-colors cursor-pointer"
                   >
                     {/* Home Team */}
                     <div className="flex items-center justify-between mb-1">
-                      <span className={`text-sm ${match.homeScore !== undefined && match.homeScore > (match.awayScore || 0) ? 'text-white font-semibold' : 'text-header-muted'}`}>
+                      <span className={`text-sm ${match.homeScore !== undefined && match.homeScore > (match.awayScore || 0) ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
                         {getTeamShortName(match.homeTeam)}
                       </span>
-                      <span className={`text-sm font-bold ${match.homeScore !== undefined && match.homeScore > (match.awayScore || 0) ? 'text-white' : 'text-header-muted'}`}>
+                      <span className={`text-sm font-bold ${match.homeScore !== undefined && match.homeScore > (match.awayScore || 0) ? 'text-foreground' : 'text-muted-foreground'}`}>
                         {match.homeScore ?? '-'}
                       </span>
                     </div>
                     
                     {/* Away Team */}
                     <div className="flex items-center justify-between">
-                      <span className={`text-sm ${match.awayScore !== undefined && match.awayScore > (match.homeScore || 0) ? 'text-white font-semibold' : 'text-header-muted'}`}>
+                      <span className={`text-sm ${match.awayScore !== undefined && match.awayScore > (match.homeScore || 0) ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
                         {getTeamShortName(match.awayTeam)}
                       </span>
-                      <span className={`text-sm font-bold ${match.awayScore !== undefined && match.awayScore > (match.homeScore || 0) ? 'text-white' : 'text-header-muted'}`}>
+                      <span className={`text-sm font-bold ${match.awayScore !== undefined && match.awayScore > (match.homeScore || 0) ? 'text-foreground' : 'text-muted-foreground'}`}>
                         {match.awayScore ?? '-'}
                       </span>
                     </div>
@@ -192,7 +192,7 @@ const HeroDashboard: React.FC = () => {
                     {/* Status */}
                     <div className="flex justify-end mt-1">
                       {match.status === 'scheduled' ? (
-                        <span className="text-xs text-header-muted">{match.time}</span>
+                        <span className="text-xs text-muted-foreground">{match.time}</span>
                       ) : (
                         getStatusBadge(match.status, match.minute)
                       )}
