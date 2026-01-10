@@ -47,22 +47,25 @@ const HeroDashboard: React.FC = () => {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
               
-              <div className="relative h-full flex flex-col justify-end p-6">
-                {/* Category Badge */}
-                <span className="inline-flex items-center gap-1 w-fit px-3 py-1 mb-3 text-xs font-semibold bg-primary text-primary-foreground rounded-full">
+              <div className="relative h-full flex flex-col p-6">
+                {/* Category Badge - Top Left */}
+                <span className="inline-flex items-center gap-1 w-fit px-3 py-1 mb-auto text-xs font-semibold bg-primary text-primary-foreground rounded-full">
                   <Play className="w-3 h-3" />
                   {featuredArticle.category}
                 </span>
                 
-                {/* What We Learned Label */}
-                <span className="text-primary font-bold text-sm uppercase tracking-wider mb-2">
-                  {language === 'id' ? 'APA YANG KITA PELAJARI' : 'WHAT WE LEARNED'}
-                </span>
-                
-                {/* Headline */}
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 leading-tight max-w-2xl">
-                  {featuredArticle.title[language]}
-                </h2>
+                {/* Content at bottom */}
+                <div className="mt-auto">
+                  {/* Popular News Label */}
+                  <span className="text-primary font-bold text-sm uppercase tracking-wider mb-2 block">
+                    {language === 'id' ? 'BERITA POPULER' : 'POPULAR NEWS'}
+                  </span>
+                  
+                  {/* Headline - 50% larger */}
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 leading-tight max-w-2xl">
+                    {featuredArticle.title[language]}
+                  </h2>
+                </div>
                 
                 {/* Meta */}
                 <div className="flex items-center gap-4 text-sm text-white/70">
