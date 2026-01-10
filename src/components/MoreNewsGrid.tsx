@@ -185,10 +185,8 @@ const MoreNewsGrid: React.FC = () => {
   return (
     <section className="pt-12 pb-16">
       <div className="container mx-auto px-4">
-        {/* Section Header */}
-        <h2 className="text-xl md:text-2xl font-bold text-foreground mb-8">
-          {t('section.moreNews')}
-        </h2>
+        {/* Spacer - maintains same height as previous heading */}
+        <div className="mb-8" />
 
         {/* Grid - 5 columns on desktop */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -207,9 +205,9 @@ const MoreNewsGrid: React.FC = () => {
                   alt={article.title[language]}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
-                {/* Category Badge */}
                 <div className="absolute top-3 left-3">
-                  <span className="px-2 py-1 text-xs font-semibold bg-primary/90 text-primary-foreground rounded">
+                  <span className="px-3 py-1 text-xs font-semibold bg-primary/90 text-primary-foreground rounded-full">
+                    {article.category}
                     {article.category}
                   </span>
                 </div>
