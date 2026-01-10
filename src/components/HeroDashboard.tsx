@@ -79,7 +79,13 @@ const HeroDashboard: React.FC = () => {
             <div className="lg:col-span-4 bg-card flex flex-col">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-border">
-                <span className="text-sm font-bold text-foreground">{t('liveScore.title')}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-foreground">{t('liveScore.title')}</span>
+                  <span className="flex items-center gap-1 px-2 py-0.5 bg-live/20 rounded text-[10px] font-bold text-live">
+                    <span className="w-1.5 h-1.5 bg-live rounded-full animate-pulse" />
+                    LIVE
+                  </span>
+                </div>
                 <a
                   href="/fixtures"
                   className="text-xs text-primary hover:underline flex items-center gap-1"
