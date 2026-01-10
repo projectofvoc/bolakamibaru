@@ -26,7 +26,8 @@ const translations: Record<string, Record<Language, string>> = {
   'section.seeMore': { id: 'Lihat Lebih Banyak', en: 'See More' },
   
   // AI Companion
-  'ai.headline': { id: 'Mau menang parlay? Gue bantu lu analisa!', en: 'Want to win parlay? Let me help you analyze!' },
+  'ai.headline1': { id: 'Mau menang parlay?', en: 'Want to win parlay?' },
+  'ai.headline2': { id: 'Gue bantu lu analisa!', en: 'Let me help you analyze!' },
   'ai.subtitle': { id: 'Live score + alert odds drop! Waktunya cuan!', en: 'Live score + odds drop alerts! Time to win!' },
   'ai.placeholder': { id: 'Contoh: Analisa MU vs Arsenal, fokus BTTS + odds...', en: 'Example: Analyze MU vs Arsenal, focus on BTTS + odds...' },
   'ai.prompt1': { id: 'Siapa pencetak gol terbanyak Liga 1?', en: 'Who is the top scorer in Liga 1?' },

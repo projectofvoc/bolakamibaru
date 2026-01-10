@@ -29,13 +29,18 @@ const AICompanion: React.FC = () => {
             {/* Icon - Simple Flag */}
             <Flag className="w-8 h-8 text-primary mx-auto mb-4" />
             
-            {/* Headline */}
-            <h2 className="text-xl md:text-2xl font-bold text-primary mb-2">
-              {t('ai.headline')}
+            {/* Headline Line 1 - Primary/Orange */}
+            <h2 className="text-2xl md:text-4xl font-bold text-primary">
+              {t('ai.headline1')}
             </h2>
             
-            {/* Subtitle */}
-            <p className="text-muted-foreground mb-8">
+            {/* Headline Line 2 - White */}
+            <p className="text-2xl md:text-4xl font-bold text-foreground mb-3">
+              {t('ai.headline2')}
+            </p>
+            
+            {/* Subtitle - Smaller, Gray */}
+            <p className="text-sm md:text-base text-muted-foreground mb-8">
               {t('ai.subtitle')}
             </p>
             
