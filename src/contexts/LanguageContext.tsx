@@ -26,12 +26,12 @@ const translations: Record<string, Record<Language, string>> = {
   'section.seeMore': { id: 'Lihat Lebih Banyak', en: 'See More' },
   
   // AI Companion
-  'ai.title': { id: 'BOLAKAMI Companion, asisten AI personalisasi Anda', en: 'BOLAKAMI Companion, your personalized AI assistant' },
-  'ai.placeholder': { id: 'Ketik pertanyaan Anda di sini', en: 'Type your question here' },
+  'ai.headline': { id: 'Mau menang parlay? Gue bantu lu analisa!', en: 'Want to win parlay? Let me help you analyze!' },
+  'ai.subtitle': { id: 'Live score + alert odds drop! Waktunya cuan!', en: 'Live score + odds drop alerts! Time to win!' },
+  'ai.placeholder': { id: 'Contoh: Analisa MU vs Arsenal, fokus BTTS + odds...', en: 'Example: Analyze MU vs Arsenal, focus on BTTS + odds...' },
   'ai.prompt1': { id: 'Siapa pencetak gol terbanyak Liga 1?', en: 'Who is the top scorer in Liga 1?' },
   'ai.prompt2': { id: 'Jadwal pertandingan Persebaya', en: 'Persebaya match schedule' },
   'ai.prompt3': { id: 'Statistik pemain terbaik', en: 'Best player statistics' },
-  'ai.poweredBy': { id: 'Didukung oleh AI', en: 'Powered by AI' },
   
   // Fixtures
   'fixtures.allUpdates': { id: 'SEMUA UPDATE', en: 'ALL UPDATES' },
