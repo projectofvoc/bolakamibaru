@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { bestMoments } from '@/data/dummyData';
-import { ChevronLeft, ChevronRight, Heart, Send, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Heart, Send, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
@@ -14,7 +14,7 @@ interface MomentType {
 const BestMomentsCarousel: React.FC = () => {
   const { language, t } = useLanguage();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [selectedMoment, setSelectedMoment] = useState<MomentType | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -25,6 +25,18 @@ const BestMomentsCarousel: React.FC = () => {
       });
     }
   };
+
+  const navigateMoment = (direction: 'prev' | 'next') => {
+    if (selectedIndex === null) return;
+    
+    if (direction === 'prev' && selectedIndex > 0) {
+      setSelectedIndex(selectedIndex - 1);
+    } else if (direction === 'next' && selectedIndex < bestMoments.length - 1) {
+      setSelectedIndex(selectedIndex + 1);
+    }
+  };
+
+  const selectedMoment = selectedIndex !== null ? bestMoments[selectedIndex] : null;
 
   return (
     <>
@@ -64,7 +76,7 @@ const BestMomentsCarousel: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
                 className="flex-shrink-0 w-40 md:w-44 group cursor-pointer"
-                onClick={() => setSelectedMoment(moment)}
+                onClick={() => setSelectedIndex(index)}
               >
                 <div className="relative rounded-xl overflow-hidden bg-card aspect-[3/4]">
                   <img
@@ -91,14 +103,16 @@ const BestMomentsCarousel: React.FC = () => {
       </section>
 
       {/* Video Modal */}
-      <Dialog open={!!selectedMoment} onOpenChange={() => setSelectedMoment(null)}>
+      <Dialog open={selectedIndex !== null} onOpenChange={() => setSelectedIndex(null)}>
         <DialogContent className="max-w-md p-0 bg-background border-none overflow-hidden">
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {selectedMoment && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
+                key={selectedMoment.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
                 className="relative"
               >
                 {/* Video/Image Area - Portrait */}
@@ -111,7 +125,7 @@ const BestMomentsCarousel: React.FC = () => {
                   
                   {/* Close Button */}
                   <button 
-                    onClick={() => setSelectedMoment(null)}
+                    onClick={() => setSelectedIndex(null)}
                     className="absolute top-4 right-4 w-8 h-8 rounded-full bg-background/50 flex items-center justify-center hover:bg-background/70 transition-colors"
                   >
                     <X className="w-4 h-4 text-foreground" />
@@ -149,6 +163,26 @@ const BestMomentsCarousel: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Navigation Buttons - Outside modal content, on the right edge */}
+          {selectedIndex !== null && (
+            <div className="absolute -right-14 top-1/2 -translate-y-1/2 flex flex-col gap-2">
+              <button
+                onClick={() => navigateMoment('prev')}
+                disabled={selectedIndex === 0}
+                className="w-10 h-10 rounded-full bg-secondary/80 flex items-center justify-center text-foreground hover:bg-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronUp className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => navigateMoment('next')}
+                disabled={selectedIndex === bestMoments.length - 1}
+                className="w-10 h-10 rounded-full bg-secondary/80 flex items-center justify-center text-foreground hover:bg-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronDown className="w-5 h-5" />
+              </button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>
