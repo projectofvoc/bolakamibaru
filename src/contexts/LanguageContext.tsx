@@ -57,7 +57,7 @@ const translations: Record<string, Record<Language, string>> = {
   'footer.quickLinks': { id: 'Tautan Cepat', en: 'Quick Links' },
   'footer.social': { id: 'Media Sosial', en: 'Social Media' },
   'footer.copyright': { id: '© 2025 BOLAKAMI. Semua hak dilindungi.', en: '© 2025 BOLAKAMI. All rights reserved.' },
-  'footer.aboutText': { id: 'Portal berita sepak bola terlengkap di Indonesia', en: 'The most complete football news portal in Indonesia' },
+  'footer.aboutText': { id: 'Bolakami adalah portal sepak bola terlengkap di Indonesia yang menyajikan update skor, jadwal, dan berita terbaru, plus prediksi parlay berbasis AI yang cerdas dan live streaming pertandingan favoritmu — semua dalam satu tempat', en: 'Bolakami is the most complete football portal in Indonesia, delivering live scores, fixtures, and the latest news, plus smart AI-powered parlay predictions and live streaming of your favorite matches — all in one place' },
   
   // Common
   'common.search': { id: 'Cari...', en: 'Search...' },
