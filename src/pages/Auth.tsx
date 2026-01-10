@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, Phone, Check } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Phone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -63,7 +63,14 @@ const Auth = () => {
         </div>
 
         {/* Card */}
-        <div className="bg-card border border-border rounded-2xl p-8">
+        <div className="bg-card border border-border rounded-2xl p-8 relative">
+          {/* Close Button */}
+          <Link
+            to="/"
+            className="absolute top-4 right-4 p-2 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </Link>
           {/* Toggle Tabs */}
           <div className="flex bg-muted rounded-full p-1 mb-8">
             <button
