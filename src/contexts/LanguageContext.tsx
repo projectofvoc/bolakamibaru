@@ -122,6 +122,14 @@ const translations: Record<string, Record<Language, string>> = {
   'auth.resetEmailSentTo': { id: 'Kami sudah mengirimkan link reset ke', en: 'We have sent a reset link to' },
   'auth.checkInbox': { id: 'Silakan cek inbox email kamu', en: 'Please check your email inbox' },
   'auth.didntReceiveEmail': { id: 'Tidak menerima email? Kirim ulang', en: "Didn't receive email? Resend" },
+  
+  // News Detail
+  'breadcrumb.home': { id: 'Beranda', en: 'Home' },
+  'news.publishedOn': { id: 'Dipublikasikan pada', en: 'Published on' },
+  'news.popularNews': { id: 'Berita Populer', en: 'Popular News' },
+  'news.shares': { id: 'Shares', en: 'Shares' },
+  'news.by': { id: 'Oleh', en: 'By' },
+  'news.relatedNews': { id: 'Berita Terkait', en: 'Related News' },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);

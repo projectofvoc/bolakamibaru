@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Fixtures from "./pages/Fixtures";
 import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/ForgotPassword";
+import NewsDetail from "./pages/NewsDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/fixtures" element={<Fixtures />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/news/:slug" element={<NewsDetail />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

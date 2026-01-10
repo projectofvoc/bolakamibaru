@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { articles } from '@/data/dummyData';
 import { motion } from 'framer-motion';
@@ -18,14 +19,14 @@ const NewsGrid: React.FC = () => {
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {articles.slice(0, 8).map((article, index) => (
-            <motion.article
-              key={article.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.05 }}
-              className="group cursor-pointer"
-            >
+            <Link key={article.id} to={`/news/${article.slug}`}>
+              <motion.article
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.05 }}
+                className="group cursor-pointer"
+              >
               <div className="relative rounded-lg overflow-hidden bg-card aspect-[4/3]">
                 <img
                   src={article.image}
@@ -87,6 +88,7 @@ const NewsGrid: React.FC = () => {
                 </div>
               </div>
             </motion.article>
+            </Link>
           ))}
         </div>
 
