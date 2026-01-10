@@ -152,10 +152,13 @@ const Header: React.FC = () => {
               </button>
 
               {/* User */}
-              <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-primary/10 hover:bg-primary/20 rounded-full transition-colors">
+              <Link
+                to="/auth"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-primary/10 hover:bg-primary/20 rounded-full transition-colors"
+              >
                 <User className="w-4 h-4" />
                 <span>Masuk</span>
-              </button>
+              </Link>
             </div>
 
             {/* Mobile Menu Button */}
@@ -238,10 +241,14 @@ const Header: React.FC = () => {
                   <span className="text-muted-foreground/40">/</span>
                   <span className={language === 'en' ? 'text-primary font-bold' : 'text-muted-foreground'}>EN</span>
                 </button>
-                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-primary/10 hover:bg-primary/20 rounded-full transition-colors">
+                <Link
+                  to="/auth"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-primary/10 hover:bg-primary/20 rounded-full transition-colors"
+                >
                   <User className="w-4 h-4" />
                   <span>Masuk</span>
-                </button>
+                </Link>
               </div>
             </nav>
           </motion.div>
