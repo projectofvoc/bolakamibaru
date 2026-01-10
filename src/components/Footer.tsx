@@ -25,7 +25,7 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-card border-t border-border">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.5fr_auto_auto_auto] gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_auto_auto_auto] gap-8 lg:gap-12">
           {/* About */}
           <div>
             <Link to="/" className="flex items-center gap-1 text-xl font-bold mb-4">
