@@ -62,7 +62,7 @@ const HeroDashboard: React.FC = () => {
                   </span>
                   
                   {/* Headline - 50% larger */}
-                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 leading-tight max-w-2xl">
+                  <h2 className="text-[26px] md:text-[34px] lg:text-[42px] font-bold text-white mb-3 leading-tight max-w-2xl">
                     {featuredArticle.title[language]}
                   </h2>
                 </div>
