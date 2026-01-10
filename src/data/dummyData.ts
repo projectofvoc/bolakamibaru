@@ -117,7 +117,7 @@ export const articles: Article[] = [
       en: 'Real Madrid Extends Vinicius Jr Contract Until 2030'
     },
     excerpt: { id: '', en: '' },
-    image: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=400&h=250&fit=crop',
+    image: 'https://images.unsplash.com/photo-1522778526097-ce0a22ceb253?w=400&h=250&fit=crop',
     category: 'La Liga',
     author: 'Carlos Martinez',
     timestamp: '8 jam lalu',

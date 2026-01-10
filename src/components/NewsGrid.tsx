@@ -95,7 +95,7 @@ const NewsGrid: React.FC = () => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="px-8 py-3 border border-primary text-primary font-semibold rounded-lg hover:bg-primary hover:text-primary-foreground transition-colors"
+            className="px-8 py-3 border border-primary text-primary font-semibold rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
           >
             {t('section.seeMore')}
           </motion.button>
