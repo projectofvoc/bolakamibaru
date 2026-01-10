@@ -272,6 +272,20 @@ export const articles: Article[] = [
     timestamp: '12 jam lalu',
     club: 'Inter',
     publisher: { name: 'Gazzetta', icon: '🇮🇹', verified: true }
+  },
+  {
+    id: '9',
+    title: {
+      id: 'Liverpool Menang Tipis Atas Newcastle di Anfield',
+      en: 'Liverpool Edges Past Newcastle at Anfield'
+    },
+    excerpt: { id: '', en: '' },
+    image: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=400&h=250&fit=crop',
+    category: 'Premier League',
+    author: 'James Wilson',
+    timestamp: '14 jam lalu',
+    club: 'Liverpool',
+    publisher: { name: 'BBC Sport', icon: '📻', verified: true }
   }
 ];
 
