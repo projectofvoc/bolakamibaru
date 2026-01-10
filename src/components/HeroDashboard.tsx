@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { featuredArticle, articles, matches } from '@/data/dummyData';
+import { featuredArticle, matches } from '@/data/dummyData';
 import { Clock, ChevronRight, Play } from 'lucide-react';
 import { motion } from 'framer-motion';
 import heroImage from '@/assets/hero-stadium.jpg';
@@ -11,8 +11,6 @@ const HeroDashboard: React.FC = () => {
   // Get Liga 1 matches for the widget
   const liga1Matches = matches.filter(m => m.league === 'Liga 1 Indonesia').slice(0, 4);
   
-  // Get news articles for the middle section
-  const newsArticles = articles.slice(0, 5);
 
   const getStatusBadge = (status: string, minute?: number) => {
     switch (status) {
@@ -59,8 +57,8 @@ const HeroDashboard: React.FC = () => {
         >
           <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[450px]">
             
-            {/* Card 1: Featured Article (Left - 5 cols) */}
-            <div className="lg:col-span-5 relative overflow-hidden">
+            {/* Card 1: Featured Article (Left - 9 cols, expanded after removing news list) */}
+            <div className="lg:col-span-9 relative overflow-hidden">
               <div
                 className="absolute inset-0 bg-cover bg-center"
                 style={{ backgroundImage: `url(${heroImage})` }}
@@ -80,61 +78,18 @@ const HeroDashboard: React.FC = () => {
                 </span>
                 
                 {/* Headline */}
-                <h2 className="text-xl md:text-2xl font-bold text-white mb-3 leading-tight">
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 leading-tight max-w-2xl">
                   {featuredArticle.title[language]}
                 </h2>
                 
                 {/* Meta */}
-                <div className="flex items-center gap-4 text-xs text-white/70">
+                <div className="flex items-center gap-4 text-sm text-white/70">
                   <span>{featuredArticle.author}</span>
                   <div className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     <span>{featuredArticle.timestamp}</span>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Card 2: News List (Middle - 4 cols) */}
-            <div className="lg:col-span-4 bg-card border-x border-border">
-              <div className="p-4 border-b border-border">
-                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
-                  {language === 'id' ? 'BERITA TERBARU' : 'LATEST NEWS'}
-                </h3>
-              </div>
-              
-              <div className="divide-y divide-border">
-                {newsArticles.map((article, index) => (
-                  <motion.a
-                    key={article.id}
-                    href="#"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors group"
-                  >
-                    {/* Thumbnail */}
-                    <div className="flex-shrink-0 w-16 h-12 rounded overflow-hidden">
-                      <img
-                        src={article.image}
-                        alt={article.title[language]}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      />
-                    </div>
-                    
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors">
-                        {article.title[language]}
-                      </h4>
-                      <span className="text-xs text-muted-foreground mt-1 block">
-                        {article.category}
-                      </span>
-                    </div>
-                    
-                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-                  </motion.a>
-                ))}
               </div>
             </div>
 
