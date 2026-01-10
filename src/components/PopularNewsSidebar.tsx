@@ -8,7 +8,9 @@ const PopularNewsSidebar: React.FC = () => {
   const { language, t } = useLanguage();
   
   // Combine featured and regular articles for popular news
-  const allArticles = [featuredArticle, ...articles].slice(0, 5);
+  const allArticles = [featuredArticle, ...articles];
+  const thumbnailArticles = allArticles.slice(0, 3);
+  const textOnlyArticles = allArticles.slice(3, 11);
 
   return (
     <div className="bg-card rounded-xl border border-border p-5">
@@ -16,8 +18,9 @@ const PopularNewsSidebar: React.FC = () => {
         {t('news.popularNews')}
       </h3>
       
+      {/* Top 3 Articles with Thumbnails */}
       <div className="space-y-4">
-        {allArticles.map((article) => (
+        {thumbnailArticles.map((article) => (
           <Link
             key={article.id}
             to={`/news/${article.slug}`}
@@ -44,14 +47,14 @@ const PopularNewsSidebar: React.FC = () => {
               )}
             </div>
             
-            {/* Title - larger font, primary color on hover */}
-            <h4 className="text-base font-medium text-primary group-hover:text-primary/80 transition-colors line-clamp-2 mb-2">
+            {/* Title - consistent with NewsGrid */}
+            <h4 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-2">
               {article.title[language]}
             </h4>
             
             {/* Publisher metadata row */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+              <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
                 {/* Publisher icon */}
                 <span className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[10px]">
                   {article.publisher.icon}
@@ -80,6 +83,30 @@ const PopularNewsSidebar: React.FC = () => {
                 <Bookmark className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
             </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-border my-5" />
+
+      {/* Bottom 8 Articles - Text Only List */}
+      <div className="space-y-0">
+        {textOnlyArticles.map((article, index) => (
+          <Link
+            key={article.id}
+            to={`/news/${article.slug}`}
+            className="flex items-start gap-3 py-3 border-b border-border last:border-b-0 group"
+          >
+            {/* Number */}
+            <span className="text-base font-bold text-muted-foreground/50 w-6 shrink-0">
+              {String(index + 4).padStart(2, '0')}
+            </span>
+            
+            {/* Title */}
+            <h4 className="text-base text-foreground group-hover:text-primary transition-colors line-clamp-2">
+              {article.title[language]}
+            </h4>
           </Link>
         ))}
       </div>
