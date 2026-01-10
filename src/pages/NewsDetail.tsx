@@ -140,10 +140,10 @@ const NewsDetail: React.FC = () => {
                 />
               </div>
               
-              {/* Article Content */}
-              <div className="prose prose-lg max-w-none">
+              {/* Article Content - Medium-style narrow width */}
+              <div className="max-w-2xl">
                 {article.content[language].split('\n\n').map((paragraph, index) => (
-                  <p key={index} className="text-foreground/90 leading-relaxed mb-4">
+                  <p key={index} className="text-foreground/90 text-lg leading-relaxed mb-6">
                     {paragraph}
                   </p>
                 ))}
