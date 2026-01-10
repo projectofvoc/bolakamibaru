@@ -6,6 +6,7 @@ import BestMomentsCarousel from '@/components/BestMomentsCarousel';
 import NewsGrid from '@/components/NewsGrid';
 import UpcomingMatches from '@/components/UpcomingMatches';
 import AICompanion from '@/components/AICompanion';
+import MoreMomentsGrid from '@/components/MoreMomentsGrid';
 
 const Index: React.FC = () => {
   return (
@@ -17,6 +18,7 @@ const Index: React.FC = () => {
         <NewsGrid />
         <UpcomingMatches />
         <AICompanion />
+        <MoreMomentsGrid />
       </main>
       <Footer />
     </div>
