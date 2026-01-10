@@ -123,13 +123,13 @@ const NewsDetail: React.FC = () => {
           </div>
           
           {/* Main Content Grid - starts at image level */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
             {/* Left Column - Main Content */}
             <motion.article 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="lg:col-span-8"
+              className="lg:col-span-7"
             >
               {/* Featured Image */}
               <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden mb-8">
@@ -171,7 +171,7 @@ const NewsDetail: React.FC = () => {
             </motion.article>
             
             {/* Right Column - Sidebar */}
-            <aside className="lg:col-span-4">
+            <aside className="lg:col-span-3">
               <div className="sticky top-24">
                 <PopularNewsSidebar />
               </div>
