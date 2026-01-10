@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
 /* BOLAKAMI Sports Portal Design System */
 
 @layer base {
@@ -94,7 +92,7 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Circular Std', system-ui, -apple-system, sans-serif;
   }
 
   /* Custom scrollbar */
