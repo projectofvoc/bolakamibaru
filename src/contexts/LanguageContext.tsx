@@ -112,6 +112,16 @@ const translations: Record<string, Record<Language, string>> = {
   'auth.registerSuccess': { id: 'Registrasi berhasil!', en: 'Registration successful!' },
   'auth.welcomeBack': { id: 'Selamat datang kembali di BOLAKAMI', en: 'Welcome back to BOLAKAMI' },
   'auth.accountCreated': { id: 'Akun kamu berhasil dibuat', en: 'Your account has been created' },
+  'auth.forgotPasswordTitle': { id: 'Lupa kata sandi?', en: 'Forgot password?' },
+  'auth.resetPassword': { id: 'Reset Kata Sandi', en: 'Reset Password' },
+  'auth.resetPasswordDesc': { id: 'Masukkan email kamu dan kami akan mengirimkan link untuk reset kata sandi.', en: 'Enter your email and we will send you a link to reset your password.' },
+  'auth.sendResetLink': { id: 'Kirim Link Reset', en: 'Send Reset Link' },
+  'auth.backToLogin': { id: 'Kembali ke Login', en: 'Back to Login' },
+  'auth.checkYourEmail': { id: 'Cek Email Kamu', en: 'Check Your Email' },
+  'auth.resetEmailSent': { id: 'Email reset terkirim!', en: 'Reset email sent!' },
+  'auth.resetEmailSentTo': { id: 'Kami sudah mengirimkan link reset ke', en: 'We have sent a reset link to' },
+  'auth.checkInbox': { id: 'Silakan cek inbox email kamu', en: 'Please check your email inbox' },
+  'auth.didntReceiveEmail': { id: 'Tidak menerima email? Kirim ulang', en: "Didn't receive email? Resend" },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
