@@ -87,6 +87,31 @@ const translations: Record<string, Record<Language, string>> = {
   'common.minutes': { id: 'menit', en: 'minutes' },
   'common.hours': { id: 'jam', en: 'hours' },
   'common.ago': { id: 'yang lalu', en: 'ago' },
+  
+  // Auth
+  'auth.login': { id: 'Masuk', en: 'Login' },
+  'auth.register': { id: 'Daftar', en: 'Register' },
+  'auth.loginSubtitle': { id: 'Selamat datang kembali!', en: 'Welcome back!' },
+  'auth.registerSubtitle': { id: 'Buat akun baru', en: 'Create a new account' },
+  'auth.email': { id: 'Email', en: 'Email' },
+  'auth.password': { id: 'Kata Sandi', en: 'Password' },
+  'auth.whatsapp': { id: 'Nomor WhatsApp', en: 'WhatsApp Number' },
+  'auth.whatsappHint': { id: 'Masukkan nomor tanpa angka 0 di depan', en: 'Enter number without leading 0' },
+  'auth.loginButton': { id: 'Masuk', en: 'Sign In' },
+  'auth.registerButton': { id: 'Daftar Sekarang', en: 'Sign Up Now' },
+  'auth.forgotPassword': { id: 'Lupa kata sandi?', en: 'Forgot password?' },
+  'auth.noAccount': { id: 'Belum punya akun?', en: "Don't have an account?" },
+  'auth.hasAccount': { id: 'Sudah punya akun?', en: 'Already have an account?' },
+  'auth.termsAgree': { id: 'Saya setuju dengan', en: 'I agree to the' },
+  'auth.termsLink': { id: 'Syarat & Ketentuan', en: 'Terms & Conditions' },
+  'auth.privacyLink': { id: 'Kebijakan Privasi', en: 'Privacy Policy' },
+  'auth.and': { id: 'dan', en: 'and' },
+  'auth.or': { id: 'atau', en: 'or' },
+  'auth.continueWithGoogle': { id: 'Lanjutkan dengan Google', en: 'Continue with Google' },
+  'auth.loginSuccess': { id: 'Login berhasil!', en: 'Login successful!' },
+  'auth.registerSuccess': { id: 'Registrasi berhasil!', en: 'Registration successful!' },
+  'auth.welcomeBack': { id: 'Selamat datang kembali di BOLAKAMI', en: 'Welcome back to BOLAKAMI' },
+  'auth.accountCreated': { id: 'Akun kamu berhasil dibuat', en: 'Your account has been created' },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
