@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, MapPin, ChevronDown, Search, User, Radio, Brain, Trophy, Newspaper } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import logoBolakami from '@/assets/logo-bolakami.png';
 
 const Header: React.FC = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -54,9 +55,8 @@ const Header: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-1 text-2xl md:text-3xl font-black tracking-tight">
-              <span className="text-foreground">BOLA</span>
-              <span className="text-primary">KAMI</span>
+            <Link to="/" className="flex items-center">
+              <img src={logoBolakami} alt="BOLAKAMI" className="h-8 md:h-10" />
             </Link>
 
             {/* Desktop Navigation */}

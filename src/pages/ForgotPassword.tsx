@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import logoBolakami from '@/assets/logo-bolakami.png';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -34,8 +35,10 @@ const ForgotPassword = () => {
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary">BOLAKAMI</h1>
-          <p className="text-muted-foreground mt-2">
+          <Link to="/">
+            <img src={logoBolakami} alt="BOLAKAMI" className="h-12 mx-auto" />
+          </Link>
+          <p className="text-muted-foreground mt-4">
             {t('auth.forgotPasswordTitle')}
           </p>
         </div>
