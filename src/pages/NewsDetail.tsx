@@ -64,7 +64,65 @@ const NewsDetail: React.FC = () => {
             </BreadcrumbList>
           </Breadcrumb>
           
-          {/* Main Content Grid */}
+          {/* Category Badge */}
+          <span className="inline-block px-3 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded-full mb-4">
+            {article.category}
+          </span>
+          
+          {/* Title */}
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight mb-4">
+            {article.title[language]}
+          </h1>
+          
+          {/* Meta Info */}
+          <div className="flex flex-wrap items-center gap-4 mb-6">
+            {/* Publisher */}
+            <div className="flex items-center gap-2">
+              <span className="w-8 h-8 flex items-center justify-center bg-muted rounded-full text-sm">
+                {article.publisher.icon}
+              </span>
+              <div>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-medium text-foreground">
+                    {article.publisher.name}
+                  </span>
+                  {article.publisher.verified && (
+                    <CheckCircle className="w-3.5 h-3.5 text-primary fill-primary/20" />
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {t('news.by')} {article.author}
+                </span>
+              </div>
+            </div>
+            
+            {/* Separator */}
+            <span className="text-muted-foreground">•</span>
+            
+            {/* Date */}
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Calendar className="w-4 h-4" />
+              <span>{article.date}</span>
+            </div>
+            
+            {/* Timestamp */}
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Clock className="w-4 h-4" />
+              <span>{article.timestamp}</span>
+            </div>
+            
+            {/* Share buttons */}
+            <div className="flex items-center gap-2 ml-auto">
+              <button className="p-2 hover:bg-muted rounded-full transition-colors">
+                <Share2 className="w-4 h-4 text-muted-foreground" />
+              </button>
+              <button className="p-2 hover:bg-muted rounded-full transition-colors">
+                <Bookmark className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+          </div>
+          
+          {/* Main Content Grid - starts at image level */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left Column - Main Content */}
             <motion.article 
@@ -73,64 +131,6 @@ const NewsDetail: React.FC = () => {
               transition={{ duration: 0.5 }}
               className="lg:col-span-8"
             >
-              {/* Category Badge */}
-              <span className="inline-block px-3 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded-full mb-4">
-                {article.category}
-              </span>
-              
-              {/* Title */}
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight mb-4">
-                {article.title[language]}
-              </h1>
-              
-              {/* Meta Info */}
-              <div className="flex flex-wrap items-center gap-4 mb-6 pb-6 border-b border-border">
-                {/* Publisher */}
-                <div className="flex items-center gap-2">
-                  <span className="w-8 h-8 flex items-center justify-center bg-muted rounded-full text-sm">
-                    {article.publisher.icon}
-                  </span>
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm font-medium text-foreground">
-                        {article.publisher.name}
-                      </span>
-                      {article.publisher.verified && (
-                        <CheckCircle className="w-3.5 h-3.5 text-primary fill-primary/20" />
-                      )}
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {t('news.by')} {article.author}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Separator */}
-                <span className="text-muted-foreground">•</span>
-                
-                {/* Date */}
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  <span>{article.date}</span>
-                </div>
-                
-                {/* Timestamp */}
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Clock className="w-4 h-4" />
-                  <span>{article.timestamp}</span>
-                </div>
-                
-                {/* Share buttons */}
-                <div className="flex items-center gap-2 ml-auto">
-                  <button className="p-2 hover:bg-muted rounded-full transition-colors">
-                    <Share2 className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                  <button className="p-2 hover:bg-muted rounded-full transition-colors">
-                    <Bookmark className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                </div>
-              </div>
-              
               {/* Featured Image */}
               <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden mb-8">
                 <img
