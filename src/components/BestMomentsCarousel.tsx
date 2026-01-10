@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { bestMoments } from '@/data/dummyData';
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Heart, Send, X } from 'lucide-react';
@@ -15,6 +15,7 @@ const BestMomentsCarousel: React.FC = () => {
   const { language, t } = useLanguage();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -26,7 +27,7 @@ const BestMomentsCarousel: React.FC = () => {
     }
   };
 
-  const navigateMoment = (direction: 'prev' | 'next') => {
+  const navigateMoment = useCallback((direction: 'prev' | 'next') => {
     if (selectedIndex === null) return;
     
     if (direction === 'prev' && selectedIndex > 0) {
@@ -34,6 +35,48 @@ const BestMomentsCarousel: React.FC = () => {
     } else if (direction === 'next' && selectedIndex < bestMoments.length - 1) {
       setSelectedIndex(selectedIndex + 1);
     }
+  }, [selectedIndex]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (selectedIndex === null) return;
+      
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateMoment('prev');
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateMoment('next');
+      } else if (e.key === 'Escape') {
+        setSelectedIndex(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedIndex, navigateMoment]);
+
+  // Swipe handlers for mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientY);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    
+    const touchEnd = e.changedTouches[0].clientY;
+    const diff = touchStart - touchEnd;
+    
+    // Swipe up = next, swipe down = prev (threshold 50px)
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        navigateMoment('next');
+      } else {
+        navigateMoment('prev');
+      }
+    }
+    setTouchStart(null);
   };
 
   const selectedMoment = selectedIndex !== null ? bestMoments[selectedIndex] : null;
@@ -116,7 +159,11 @@ const BestMomentsCarousel: React.FC = () => {
                 className="relative"
               >
                 {/* Video/Image Area - Portrait */}
-                <div className="relative aspect-[9/16] bg-card">
+                <div 
+                  className="relative aspect-[9/16] bg-card"
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                >
                   <img
                     src={selectedMoment.thumbnail}
                     alt={selectedMoment.title[language]}
@@ -164,23 +211,30 @@ const BestMomentsCarousel: React.FC = () => {
             )}
           </AnimatePresence>
 
-          {/* Navigation Buttons - Outside modal content, on the right edge */}
+          {/* Navigation Buttons - Inside modal, visible on desktop only */}
           {selectedIndex !== null && (
-            <div className="absolute -right-14 top-1/2 -translate-y-1/2 flex flex-col gap-2">
+            <div className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 flex-col gap-2 z-50">
               <button
                 onClick={() => navigateMoment('prev')}
                 disabled={selectedIndex === 0}
-                className="w-10 h-10 rounded-full bg-secondary/80 flex items-center justify-center text-foreground hover:bg-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-10 h-10 rounded-full bg-background/70 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-background/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronUp className="w-5 h-5" />
               </button>
               <button
                 onClick={() => navigateMoment('next')}
                 disabled={selectedIndex === bestMoments.length - 1}
-                className="w-10 h-10 rounded-full bg-secondary/80 flex items-center justify-center text-foreground hover:bg-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-10 h-10 rounded-full bg-background/70 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-background/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronDown className="w-5 h-5" />
               </button>
+            </div>
+          )}
+
+          {/* Swipe indicator for mobile */}
+          {selectedIndex !== null && (
+            <div className="md:hidden absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-muted-foreground">
+              Swipe up/down to navigate
             </div>
           )}
         </DialogContent>
