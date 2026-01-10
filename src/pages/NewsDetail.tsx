@@ -84,13 +84,23 @@ const NewsDetail: React.FC = () => {
               {article.title[language]}
             </h1>
             
-            {/* Lead Paragraph - Italic excerpt */}
-            <p className="text-lg md:text-xl text-muted-foreground italic leading-relaxed mb-6">
+            {/* Lead Paragraph - Not italic */}
+            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-6">
               {article.excerpt[language]}
             </p>
             
-            {/* Author & Date - Simple format */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
+            {/* Author & Date - With publisher icon for consistency */}
+            <div className="flex items-center gap-3 text-sm text-muted-foreground mb-8">
+              {/* Publisher Icon */}
+              {article.publisher.icon.startsWith('http') ? (
+                <img 
+                  src={article.publisher.icon} 
+                  alt={article.publisher.name}
+                  className="w-6 h-6 rounded-full object-cover"
+                />
+              ) : (
+                <span className="text-lg">{article.publisher.icon}</span>
+              )}
               <span className="font-medium text-foreground">{t('news.by')} {article.author}</span>
               <span>•</span>
               <span>{article.date}</span>
@@ -105,8 +115,8 @@ const NewsDetail: React.FC = () => {
               />
             </div>
             
-            {/* Image Caption */}
-            <p className="text-sm text-muted-foreground mb-10 italic">
+            {/* Image Caption - Not italic, centered */}
+            <p className="text-sm text-muted-foreground mb-10 text-center">
               {article.publisher.name} / {article.author}
             </p>
             
