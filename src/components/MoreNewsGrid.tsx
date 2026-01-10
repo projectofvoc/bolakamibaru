@@ -183,7 +183,7 @@ const MoreNewsGrid: React.FC = () => {
   const { language, t } = useLanguage();
 
   return (
-    <section className="py-12 bg-card/50">
+    <section className="pt-12 pb-16">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <h2 className="text-xl md:text-2xl font-bold text-foreground mb-8">

@@ -157,6 +157,11 @@ const NewsDetail: React.FC = () => {
           </motion.article>
         </div>
         
+        {/* Separator - Smooth transition to Related News */}
+        <div className="max-w-4xl mx-auto px-4 mt-16">
+          <hr className="border-muted/30" />
+        </div>
+        
         {/* Related News Section - MoreNewsGrid */}
         <MoreNewsGrid />
       </main>
