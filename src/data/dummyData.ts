@@ -314,23 +314,28 @@ export const leagues: League[] = [
 export const matches: Match[] = [
   // Liga 1 Indonesia
   { id: '1', homeTeam: 'Persebaya Surabaya', awayTeam: 'Arema FC', homeScore: 2, awayScore: 1, time: '20:30', status: 'ft', league: 'Liga 1 Indonesia', leagueCountry: 'Indonesia' },
-  { id: '2', homeTeam: 'Persija Jakarta', awayTeam: 'Madura United', time: '19:00', status: 'live', league: 'Liga 1 Indonesia', leagueCountry: 'Indonesia', minute: 67 },
+  { id: '2', homeTeam: 'Persija Jakarta', awayTeam: 'Madura United', homeScore: 1, awayScore: 1, time: '19:00', status: 'live', league: 'Liga 1 Indonesia', leagueCountry: 'Indonesia', minute: 67 },
   { id: '3', homeTeam: 'PSM Makassar', awayTeam: 'Bali United', time: '15:30', status: 'scheduled', league: 'Liga 1 Indonesia', leagueCountry: 'Indonesia' },
   { id: '4', homeTeam: 'Persib Bandung', awayTeam: 'PSIS Semarang', homeScore: 3, awayScore: 0, time: '16:00', status: 'ft', league: 'Liga 1 Indonesia', leagueCountry: 'Indonesia' },
   
   // Premier League
   { id: '5', homeTeam: 'Manchester City', awayTeam: 'Liverpool', time: '22:00', status: 'scheduled', league: 'Premier League', leagueCountry: 'England' },
   { id: '6', homeTeam: 'Arsenal', awayTeam: 'Chelsea', homeScore: 2, awayScore: 2, time: '19:30', status: 'ft', league: 'Premier League', leagueCountry: 'England' },
-  { id: '7', homeTeam: 'Manchester United', awayTeam: 'Tottenham', time: '21:00', status: 'live', league: 'Premier League', leagueCountry: 'England', minute: 34 },
+  { id: '7', homeTeam: 'Manchester United', awayTeam: 'Tottenham', homeScore: 0, awayScore: 0, time: '21:00', status: 'live', league: 'Premier League', leagueCountry: 'England', minute: 34 },
   
   // La Liga
   { id: '8', homeTeam: 'Real Madrid', awayTeam: 'Barcelona', time: '03:00', status: 'scheduled', league: 'La Liga', leagueCountry: 'Spain' },
   { id: '9', homeTeam: 'Atletico Madrid', awayTeam: 'Sevilla', homeScore: 1, awayScore: 0, time: '23:00', status: 'post', league: 'La Liga', leagueCountry: 'Spain' },
+  { id: '13', homeTeam: 'Real Oviedo', awayTeam: 'Real Betis', homeScore: 1, awayScore: 1, time: '21:00', status: 'live', league: 'La Liga', leagueCountry: 'Spain', minute: 45 },
   
   // Serie A
   { id: '10', homeTeam: 'Inter Milan', awayTeam: 'AC Milan', homeScore: 2, awayScore: 1, time: '02:45', status: 'ft', league: 'Serie A', leagueCountry: 'Italy' },
   { id: '11', homeTeam: 'Juventus', awayTeam: 'Napoli', time: '23:45', status: 'scheduled', league: 'Serie A', leagueCountry: 'Italy' },
+  { id: '14', homeTeam: 'Como', awayTeam: 'Bologna', homeScore: 0, awayScore: 0, time: '21:00', status: 'live', league: 'Serie A', leagueCountry: 'Italy', minute: 32 },
+  { id: '15', homeTeam: 'Udinese', awayTeam: 'Pisa', homeScore: 2, awayScore: 1, time: '21:00', status: 'live', league: 'Serie A', leagueCountry: 'Italy', minute: 78 },
   
   // Bundesliga
   { id: '12', homeTeam: 'Bayern Munich', awayTeam: 'Borussia Dortmund', homeScore: 4, awayScore: 2, time: '00:30', status: 'ft', league: 'Bundesliga', leagueCountry: 'Germany' },
+  { id: '16', homeTeam: 'FC Union Berlin', awayTeam: 'FSV Mainz 05', homeScore: 0, awayScore: 0, time: '20:30', status: 'live', league: 'Bundesliga', leagueCountry: 'Germany', minute: 23 },
+  { id: '17', homeTeam: 'SC Freiburg', awayTeam: 'Hamburger SV', homeScore: 0, awayScore: 0, time: '20:30', status: 'live', league: 'Bundesliga', leagueCountry: 'Germany', minute: 18 },
 ];
