@@ -31,8 +31,15 @@ const ForgotPassword = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md relative"
       >
+        {/* Close Button - outside card */}
+        <Link
+          to="/"
+          className="absolute -top-2 right-0 p-2 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors z-10"
+        >
+          <X className="h-5 w-5" />
+        </Link>
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/">
@@ -44,14 +51,7 @@ const ForgotPassword = () => {
         </div>
 
         {/* Card */}
-        <div className="bg-card border border-border rounded-2xl p-8 relative">
-          {/* Close Button */}
-          <Link
-            to="/"
-            className="absolute top-4 right-4 p-2 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </Link>
+        <div className="bg-card border border-border rounded-2xl p-8">
           {!isSubmitted ? (
             <>
               {/* Back Link */}
