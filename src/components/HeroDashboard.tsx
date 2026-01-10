@@ -90,15 +90,15 @@ const HeroDashboard: React.FC = () => {
               </div>
               
               {/* Table Header */}
-              <div className="grid grid-cols-[80px_1fr_60px_70px] px-4 py-2 text-[10px] font-medium text-muted-foreground uppercase border-b border-border bg-muted/30">
+              <div className="grid grid-cols-[80px_1fr_60px_70px] px-4 py-2 text-[11px] font-medium text-muted-foreground border-b border-border bg-muted/30">
                 <span>{t('liveScore.league')}</span>
                 <span>{t('liveScore.match')}</span>
                 <span className="text-center">{t('liveScore.score')}</span>
                 <span className="text-right">{t('liveScore.status')}</span>
               </div>
               
-              {/* Match Rows */}
-              <div className="flex-1 overflow-y-auto divide-y divide-border">
+              {/* Match Rows - Scrollable */}
+              <div className="flex-1 overflow-y-auto max-h-[320px] divide-y divide-border">
                 {displayMatches.map((match) => (
                   <div
                     key={match.id}
