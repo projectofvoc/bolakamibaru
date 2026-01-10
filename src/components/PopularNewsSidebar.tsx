@@ -23,10 +23,10 @@ const PopularNewsSidebar: React.FC = () => {
             to={`/news/${article.slug}`}
             className="block group"
           >
-            {/* Thumbnail with badges */}
-            <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden mb-2">
+            {/* Thumbnail with badges - 16:9 aspect ratio */}
+            <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden mb-3">
               <img
-                src={article.image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=300&fit=crop'}
+                src={article.image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=225&fit=crop'}
                 alt={article.title[language]}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
@@ -44,8 +44,8 @@ const PopularNewsSidebar: React.FC = () => {
               )}
             </div>
             
-            {/* Title */}
-            <h4 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-2">
+            {/* Title - larger font, primary color on hover */}
+            <h4 className="text-base font-medium text-primary group-hover:text-primary/80 transition-colors line-clamp-2 mb-2">
               {article.title[language]}
             </h4>
             
