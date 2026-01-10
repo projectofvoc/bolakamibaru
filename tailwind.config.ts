@@ -67,6 +67,12 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+        header: {
+          DEFAULT: "hsl(var(--header-primary))",
+          secondary: "hsl(var(--header-secondary))",
+          accent: "hsl(var(--header-accent))",
+          foreground: "hsl(var(--header-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
