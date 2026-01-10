@@ -21,6 +21,7 @@ const translations: Record<string, Record<Language, string>> = {
   
   // Sections
   'section.bestMoments': { id: 'Momen Terbaik 2025/26', en: 'Best Moments of 2025/26' },
+  'section.moreMoments': { id: 'Momen Lainnya', en: 'More Moments' },
   'section.fromClubs': { id: 'Dari Klub-Klub', en: 'From the Clubs' },
   'section.latestUpdates': { id: 'Update Terbaru', en: 'Latest Updates' },
   'section.seeMore': { id: 'Lihat Lebih Banyak', en: 'See More' },
