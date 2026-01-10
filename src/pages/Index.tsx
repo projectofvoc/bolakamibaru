@@ -1,7 +1,7 @@
 import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import HeroSection from '@/components/HeroSection';
+import HeroDashboard from '@/components/HeroDashboard';
 import BestMomentsCarousel from '@/components/BestMomentsCarousel';
 import NewsGrid from '@/components/NewsGrid';
 import LatestUpdates from '@/components/LatestUpdates';
@@ -12,7 +12,7 @@ const Index: React.FC = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main>
-        <HeroSection />
+        <HeroDashboard />
         <BestMomentsCarousel />
         <NewsGrid />
         <LatestUpdates />
