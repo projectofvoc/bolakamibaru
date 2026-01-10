@@ -49,7 +49,7 @@ const NewsGrid: React.FC = () => {
               </div>
               
               <div className="mt-4">
-                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
                   {article.title[language]}
                 </h3>
                 
