@@ -91,6 +91,69 @@ export const upcomingMatches: UpcomingMatch[] = [
     leagueColor: 'red',
     dateLabel: { id: 'Minggu', en: 'Sunday' },
     time: '03.00 WIB'
+  },
+  {
+    id: '6',
+    homeTeam: 'Bayern Munich',
+    awayTeam: 'Dortmund',
+    league: 'Bundesliga',
+    leagueColor: 'yellow',
+    dateLabel: { id: 'Senin', en: 'Monday' },
+    time: '01.30 WIB'
+  },
+  {
+    id: '7',
+    homeTeam: 'PSG',
+    awayTeam: 'Lyon',
+    league: 'Ligue 1',
+    leagueColor: 'blue',
+    dateLabel: { id: 'Selasa', en: 'Tuesday' },
+    time: '02.00 WIB'
+  },
+  {
+    id: '8',
+    homeTeam: 'Persib',
+    awayTeam: 'PSM Makassar',
+    league: 'Liga 1',
+    leagueColor: 'green',
+    dateLabel: { id: 'Rabu', en: 'Wednesday' },
+    time: '20.00 WIB'
+  },
+  {
+    id: '9',
+    homeTeam: 'Liverpool',
+    awayTeam: 'Chelsea',
+    league: 'EPL',
+    leagueColor: 'blue',
+    dateLabel: { id: 'Kamis', en: 'Thursday' },
+    time: '02.30 WIB'
+  },
+  {
+    id: '10',
+    homeTeam: 'Juventus',
+    awayTeam: 'Roma',
+    league: 'Serie A',
+    leagueColor: 'orange',
+    dateLabel: { id: 'Jumat', en: 'Friday' },
+    time: '02.45 WIB'
+  },
+  {
+    id: '11',
+    homeTeam: 'Arema FC',
+    awayTeam: 'Bali United',
+    league: 'Liga 1',
+    leagueColor: 'green',
+    dateLabel: { id: 'Sabtu', en: 'Saturday' },
+    time: '15.30 WIB'
+  },
+  {
+    id: '12',
+    homeTeam: 'Atletico Madrid',
+    awayTeam: 'Sevilla',
+    league: 'La Liga',
+    leagueColor: 'red',
+    dateLabel: { id: 'Minggu', en: 'Sunday' },
+    time: '22.00 WIB'
   }
 ];
 

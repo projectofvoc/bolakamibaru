@@ -26,6 +26,7 @@ const translations: Record<string, Record<Language, string>> = {
   'section.seeMore': { id: 'Lihat Lebih Banyak', en: 'See More' },
   'section.upcomingMatches': { id: 'Jadwal Terdekat', en: 'Upcoming Matches' },
   'match.quickAnalysis': { id: 'Analisa Cepat', en: 'Quick Analysis' },
+  'button.loadMore': { id: 'Muat Lebih Banyak', en: 'Load More' },
   
   // AI Companion
   'ai.headline1': { id: 'Mau menang parlay?', en: 'Want to win parlay?' },
