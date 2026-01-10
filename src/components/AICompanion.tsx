@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Bot, Send, Sparkles } from 'lucide-react';
+import { Flag, Plus, Mic, ArrowUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const AICompanion: React.FC = () => {
@@ -26,18 +26,46 @@ const AICompanion: React.FC = () => {
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-2xl" />
           
           <div className="relative z-10 max-w-2xl mx-auto text-center">
-            {/* Icon */}
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-6">
-              <Bot className="w-8 h-8 text-primary" />
-            </div>
+            {/* Icon - Simple Flag */}
+            <Flag className="w-8 h-8 text-primary mx-auto mb-4" />
             
-            {/* Title */}
-            <h2 className="text-xl md:text-2xl font-bold text-foreground mb-6">
-              {t('ai.title')}
+            {/* Headline */}
+            <h2 className="text-xl md:text-2xl font-bold text-primary mb-2">
+              {t('ai.headline')}
             </h2>
             
-            {/* Suggested Prompts */}
-            <div className="flex flex-wrap justify-center gap-2 mb-8">
+            {/* Subtitle */}
+            <p className="text-muted-foreground mb-8">
+              {t('ai.subtitle')}
+            </p>
+            
+            {/* Input Field - Rounded Full with Icons */}
+            <div className="relative max-w-xl mx-auto flex items-center gap-2 bg-input border border-border rounded-full px-4 py-3 mb-6">
+              {/* Plus icon */}
+              <button className="text-muted-foreground hover:text-foreground transition-colors">
+                <Plus className="w-5 h-5" />
+              </button>
+              
+              {/* Input */}
+              <input
+                type="text"
+                placeholder={t('ai.placeholder')}
+                className="flex-1 bg-transparent border-none text-foreground placeholder:text-muted-foreground focus:outline-none text-sm"
+              />
+              
+              {/* Microphone icon */}
+              <button className="text-muted-foreground hover:text-foreground transition-colors">
+                <Mic className="w-5 h-5" />
+              </button>
+              
+              {/* Send button - rounded-full */}
+              <button className="w-9 h-9 flex items-center justify-center bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors">
+                <ArrowUp className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* Suggested Prompts - Below Input */}
+            <div className="flex flex-wrap justify-center gap-2">
               {prompts.map((prompt, index) => (
                 <motion.button
                   key={index}
@@ -48,24 +76,6 @@ const AICompanion: React.FC = () => {
                   {prompt}
                 </motion.button>
               ))}
-            </div>
-            
-            {/* Input Field */}
-            <div className="relative max-w-xl mx-auto">
-              <input
-                type="text"
-                placeholder={t('ai.placeholder')}
-                className="w-full px-5 py-4 pr-14 bg-input border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-              <button className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
-                <Send className="w-5 h-5" />
-              </button>
-            </div>
-            
-            {/* Powered By */}
-            <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span>{t('ai.poweredBy')}</span>
             </div>
           </div>
         </motion.div>
