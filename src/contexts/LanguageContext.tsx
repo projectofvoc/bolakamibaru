@@ -1,3 +1,4 @@
+// Language context for bilingual support (ID/EN)
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 type Language = 'id' | 'en';
