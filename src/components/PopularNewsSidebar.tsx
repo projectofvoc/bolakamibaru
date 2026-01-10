@@ -2,16 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { articles, featuredArticle } from '@/data/dummyData';
-import { Share2 } from 'lucide-react';
+import { CheckCircle, Bookmark } from 'lucide-react';
 
 const PopularNewsSidebar: React.FC = () => {
   const { language, t } = useLanguage();
   
   // Combine featured and regular articles for popular news
-  const allArticles = [featuredArticle, ...articles].slice(0, 6);
-  
-  // Dummy share counts
-  const shareCounts = [1234, 892, 756, 534, 423, 312];
+  const allArticles = [featuredArticle, ...articles].slice(0, 5);
 
   return (
     <div className="bg-card rounded-xl border border-border p-5">
@@ -20,40 +17,68 @@ const PopularNewsSidebar: React.FC = () => {
       </h3>
       
       <div className="space-y-4">
-        {allArticles.map((article, index) => (
+        {allArticles.map((article) => (
           <Link
             key={article.id}
             to={`/news/${article.slug}`}
-            className="flex gap-3 group"
+            className="block group"
           >
-            {/* Number Badge */}
-            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <span className="text-sm font-bold text-primary">
-                {String(index + 1).padStart(2, '0')}
+            {/* Thumbnail with badges */}
+            <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden mb-2">
+              <img
+                src={article.image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=300&fit=crop'}
+                alt={article.title[language]}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              
+              {/* Category Badge - Top Left */}
+              <span className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
+                {article.category}
               </span>
+              
+              {/* Club Badge - Top Right */}
+              {article.club && (
+                <span className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm text-foreground text-xs font-medium px-2 py-0.5 rounded-full">
+                  {article.club}
+                </span>
+              )}
             </div>
             
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              {/* Thumbnail */}
-              <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden mb-2">
-                <img
-                  src={article.image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=250&fit=crop'}
-                  alt={article.title[language]}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
+            {/* Title */}
+            <h4 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-2">
+              {article.title[language]}
+            </h4>
+            
+            {/* Publisher metadata row */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                {/* Publisher icon */}
+                <span className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[10px]">
+                  {article.publisher.icon}
+                </span>
+                
+                {/* Publisher name */}
+                <span>{article.publisher.name}</span>
+                
+                {/* Verified badge */}
+                {article.publisher.verified && (
+                  <CheckCircle className="w-3 h-3 text-primary fill-primary" />
+                )}
+                
+                {/* Separator */}
+                <span>·</span>
+                
+                {/* Timestamp */}
+                <span>{article.timestamp}</span>
               </div>
               
-              {/* Title */}
-              <h4 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                {article.title[language]}
-              </h4>
-              
-              {/* Share count */}
-              <div className="flex items-center gap-1.5 mt-1.5 text-muted-foreground">
-                <Share2 className="w-3 h-3" />
-                <span className="text-xs">{shareCounts[index]} {t('news.shares')}</span>
-              </div>
+              {/* Bookmark button */}
+              <button 
+                className="p-1 hover:bg-muted rounded-full transition-colors"
+                onClick={(e) => e.preventDefault()}
+              >
+                <Bookmark className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
             </div>
           </Link>
         ))}
