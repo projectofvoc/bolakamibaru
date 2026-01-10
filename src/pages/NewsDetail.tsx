@@ -140,8 +140,8 @@ const NewsDetail: React.FC = () => {
                 />
               </div>
               
-              {/* Article Content - Medium-style narrow width */}
-              <div className="max-w-2xl">
+              {/* Article Content - Medium-style narrow width, centered */}
+              <div className="max-w-2xl mx-auto">
                 {article.content[language].split('\n\n').map((paragraph, index) => (
                   <p key={index} className="text-foreground/90 text-lg leading-relaxed mb-6">
                     {paragraph}
@@ -149,8 +149,8 @@ const NewsDetail: React.FC = () => {
                 ))}
               </div>
               
-              {/* Social Share Bar */}
-              <div className="mt-10 pt-6 border-t border-border">
+              {/* Social Share Bar - aligned with content */}
+              <div className="max-w-2xl mx-auto mt-10 pt-6 border-t border-border">
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-medium text-muted-foreground">Share:</span>
                   <div className="flex gap-2">
