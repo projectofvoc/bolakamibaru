@@ -280,7 +280,7 @@ export const articles: Article[] = [
       en: 'Liverpool Edges Past Newcastle at Anfield'
     },
     excerpt: { id: '', en: '' },
-    image: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=400&h=250&fit=crop',
+    image: 'https://images.unsplash.com/photo-1522778526097-ce0a22ceb253?w=400&h=250&fit=crop',
     category: 'Premier League',
     author: 'James Wilson',
     timestamp: '14 jam lalu',
