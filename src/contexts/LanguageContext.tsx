@@ -44,6 +44,14 @@ const translations: Record<string, Record<Language, string>> = {
   'match.quickAnalysis': { id: 'Analisa Cepat', en: 'Quick Analysis' },
   'button.loadMore': { id: 'Muat Lebih Banyak', en: 'Load More' },
   
+  // Live Score Widget
+  'liveScore.title': { id: 'Skor Live', en: 'Live Scores' },
+  'liveScore.league': { id: 'Liga', en: 'League' },
+  'liveScore.match': { id: 'Pertandingan', en: 'Match' },
+  'liveScore.score': { id: 'Skor', en: 'Score' },
+  'liveScore.status': { id: 'Status', en: 'Status' },
+  'liveScore.viewAll': { id: 'Lihat semua', en: 'View all' },
+  
   // AI Companion
   'ai.headline1': { id: 'Mau menang parlay?', en: 'Want to win parlay?' },
   'ai.headline2': { id: 'Gue bantu lu analisa!', en: 'Let me help you analyze!' },
