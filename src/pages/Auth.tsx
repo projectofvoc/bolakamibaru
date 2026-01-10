@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, Phone, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -179,9 +179,9 @@ const Auth = () => {
             {/* Forgot Password (Login Only) */}
             {isLogin && (
               <div className="text-right">
-                <a href="#" className="text-sm text-primary hover:underline">
+                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
                   {t('auth.forgotPassword')}
-                </a>
+                </Link>
               </div>
             )}
 
@@ -206,7 +206,7 @@ const Auth = () => {
             <Button
               type="button"
               variant="outline"
-              className="w-full h-12 rounded-full border-border bg-muted hover:bg-muted/80"
+              className="w-full h-12 rounded-full border-border bg-muted hover:bg-muted/80 text-foreground hover:text-foreground"
               onClick={() => {
                 toast({ title: isLogin ? t('auth.loginSuccess') : t('auth.registerSuccess') });
                 navigate('/');
