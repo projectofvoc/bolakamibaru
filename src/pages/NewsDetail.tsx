@@ -173,11 +173,18 @@ const NewsDetail: React.FC = () => {
           </motion.article>
         </div>
         
-        {/* Spacer - Smooth transition to Related News */}
-        <div className="mt-16" />
-        
-        {/* Related News Section - MoreNewsGrid */}
-        <MoreNewsGrid />
+        {/* Related News Section */}
+        <div className="mt-16">
+          <div className="container mx-auto px-4 mb-6">
+            <h2 className="text-xl md:text-2xl font-bold text-foreground">
+              {t('news.relatedNews')}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t('news.relatedNewsSubtitle')}
+            </p>
+          </div>
+          <MoreNewsGrid />
+        </div>
       </main>
       
       <Footer />

@@ -135,6 +135,7 @@ const translations: Record<string, Record<Language, string>> = {
   'news.shares': { id: 'Shares', en: 'Shares' },
   'news.by': { id: 'Oleh', en: 'By' },
   'news.relatedNews': { id: 'Berita Terkait', en: 'Related News' },
+  'news.relatedNewsSubtitle': { id: 'Artikel lain yang mungkin kamu suka', en: 'Other articles you might like' },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);

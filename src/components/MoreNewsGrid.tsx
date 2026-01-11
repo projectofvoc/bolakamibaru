@@ -198,10 +198,8 @@ const MoreNewsGrid: React.FC = () => {
   const hasMore = visibleCount < moreArticles.length;
 
   return (
-    <section className="pt-12 pb-16">
+    <section className="pb-16">
       <div className="container mx-auto px-4">
-        {/* Spacer - maintains same height as previous heading */}
-        <div className="mb-8" />
 
         {/* Grid - 5 columns on desktop */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
