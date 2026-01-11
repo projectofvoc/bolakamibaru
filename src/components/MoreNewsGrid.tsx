@@ -23,7 +23,8 @@ const moreArticles: Article[] = [
     timestamp: '1 jam lalu',
     date: '10 Januari 2026',
     club: 'Persebaya',
-    publisher: { name: 'Kompas Bola', icon: '📰', verified: true }
+    publisher: { name: 'Kompas Bola', icon: '📰', verified: true },
+    tags: ['liga 1', 'persebaya', 'derby jawa timur', 'strategi', 'arema']
   },
   {
     id: 'm2',
@@ -40,7 +41,8 @@ const moreArticles: Article[] = [
     timestamp: '2 jam lalu',
     date: '10 Januari 2026',
     club: 'Tottenham',
-    publisher: { name: 'Sky Sports', icon: '📺', verified: true }
+    publisher: { name: 'Sky Sports', icon: '📺', verified: true },
+    tags: ['premier league', 'tottenham', 'aston villa', 'hasil pertandingan']
   },
   {
     id: 'm3',
@@ -57,7 +59,8 @@ const moreArticles: Article[] = [
     timestamp: '3 jam lalu',
     date: '10 Januari 2026',
     club: 'AC Milan',
-    publisher: { name: 'Gazzetta', icon: '🇮🇹', verified: true }
+    publisher: { name: 'Gazzetta', icon: '🇮🇹', verified: true },
+    tags: ['serie a', 'ac milan', 'transfer', 'liga arab', 'pemain asing']
   },
   {
     id: 'm4',
@@ -74,7 +77,8 @@ const moreArticles: Article[] = [
     timestamp: '4 jam lalu',
     date: '10 Januari 2026',
     club: 'PSM',
-    publisher: { name: 'Detik Sport', icon: '⚽', verified: true }
+    publisher: { name: 'Detik Sport', icon: '⚽', verified: true },
+    tags: ['liga 1', 'psm makassar', 'transfer', 'kiper', 'pemain asing']
   },
   {
     id: 'm5',
@@ -91,7 +95,8 @@ const moreArticles: Article[] = [
     timestamp: '5 jam lalu',
     date: '10 Januari 2026',
     club: 'Barcelona',
-    publisher: { name: 'Marca', icon: '📰', verified: true }
+    publisher: { name: 'Marca', icon: '📰', verified: true },
+    tags: ['la liga', 'barcelona', 'atletico madrid', 'el clasico', 'hasil pertandingan']
   },
   {
     id: 'm6',
@@ -108,7 +113,8 @@ const moreArticles: Article[] = [
     timestamp: '6 jam lalu',
     date: '10 Januari 2026',
     club: 'Bali United',
-    publisher: { name: 'Bola.com', icon: '🏟️', verified: true }
+    publisher: { name: 'Bola.com', icon: '🏟️', verified: true },
+    tags: ['liga 1', 'bali united', 'hasil pertandingan', 'kemenangan']
   },
   {
     id: 'm7',
@@ -125,7 +131,8 @@ const moreArticles: Article[] = [
     timestamp: '7 jam lalu',
     date: '10 Januari 2026',
     club: 'PSG',
-    publisher: { name: 'L\'Equipe', icon: '🇫🇷', verified: true }
+    publisher: { name: 'L\'Equipe', icon: '🇫🇷', verified: true },
+    tags: ['ligue 1', 'psg', 'lens', 'hasil pertandingan', 'pesta gol']
   },
   {
     id: 'm8',
@@ -142,7 +149,8 @@ const moreArticles: Article[] = [
     timestamp: '8 jam lalu',
     date: '10 Januari 2026',
     club: 'Leipzig',
-    publisher: { name: 'Kicker', icon: '⚽', verified: true }
+    publisher: { name: 'Kicker', icon: '⚽', verified: true },
+    tags: ['bundesliga', 'rb leipzig', 'wolfsburg', 'hasil pertandingan']
   },
   {
     id: 'm9',
@@ -159,7 +167,8 @@ const moreArticles: Article[] = [
     timestamp: '9 jam lalu',
     date: '10 Januari 2026',
     club: 'Persib',
-    publisher: { name: 'Goal Indonesia', icon: '🎯', verified: false }
+    publisher: { name: 'Goal Indonesia', icon: '🎯', verified: false },
+    tags: ['liga 1', 'persib', 'klasemen', 'puncak klasemen']
   },
   {
     id: 'm10',
@@ -176,7 +185,8 @@ const moreArticles: Article[] = [
     timestamp: '10 jam lalu',
     date: '10 Januari 2026',
     club: 'Napoli',
-    publisher: { name: 'Gazzetta', icon: '🇮🇹', verified: true }
+    publisher: { name: 'Gazzetta', icon: '🇮🇹', verified: true },
+    tags: ['serie a', 'napoli', 'klasemen', 'tiga besar']
   }
 ];
 

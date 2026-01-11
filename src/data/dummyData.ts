@@ -17,6 +17,7 @@ export interface Article {
   date: string;
   club?: string;
   publisher: Publisher;
+  tags: string[];
 }
 
 export interface Match {
@@ -180,7 +181,8 @@ export const featuredArticle: Article = {
   author: 'Ahmad Rizky',
   timestamp: '2 jam lalu',
   date: '10 Januari 2026',
-  publisher: { name: 'Kompas Bola', icon: '📰', verified: true }
+  publisher: { name: 'Kompas Bola', icon: '📰', verified: true },
+  tags: ['liga 1', 'persebaya', 'arema', 'derby jawa timur', 'hasil pertandingan', 'gol menit akhir']
 };
 
 export const articles: Article[] = [
@@ -202,7 +204,8 @@ export const articles: Article[] = [
     timestamp: '3 jam lalu',
     date: '10 Januari 2026',
     club: 'Persija',
-    publisher: { name: 'Detik Sport', icon: '⚽', verified: true }
+    publisher: { name: 'Detik Sport', icon: '⚽', verified: true },
+    tags: ['liga 1', 'persija', 'pelatih', 'transfer', 'manajemen']
   },
   {
     id: '3',
@@ -222,7 +225,8 @@ export const articles: Article[] = [
     timestamp: '5 jam lalu',
     date: '10 Januari 2026',
     club: 'Madura United',
-    publisher: { name: 'Bola.com', icon: '🏟️', verified: true }
+    publisher: { name: 'Bola.com', icon: '🏟️', verified: true },
+    tags: ['liga 1', 'madura united', 'transfer', 'striker', 'pemain asing']
   },
   {
     id: '4',
@@ -242,7 +246,8 @@ export const articles: Article[] = [
     timestamp: '4 jam lalu',
     date: '10 Januari 2026',
     club: 'Persib',
-    publisher: { name: 'Pikiran Rakyat', icon: '📰', verified: true }
+    publisher: { name: 'Pikiran Rakyat', icon: '📰', verified: true },
+    tags: ['liga 1', 'persib', 'psis semarang', 'hasil pertandingan', 'kemenangan telak']
   },
   {
     id: '4b',
@@ -262,7 +267,8 @@ export const articles: Article[] = [
     timestamp: '6 jam lalu',
     date: '10 Januari 2026',
     club: 'Arema',
-    publisher: { name: 'Jawa Pos', icon: '📰', verified: true }
+    publisher: { name: 'Jawa Pos', icon: '📰', verified: true },
+    tags: ['liga 1', 'arema', 'bali united', 'hasil pertandingan', 'derby pulau']
   },
   {
     id: '4c',
@@ -282,7 +288,8 @@ export const articles: Article[] = [
     timestamp: '7 jam lalu',
     date: '10 Januari 2026',
     club: 'PSM',
-    publisher: { name: 'Tribun Timur', icon: '📰', verified: true }
+    publisher: { name: 'Tribun Timur', icon: '📰', verified: true },
+    tags: ['liga 1', 'psm makassar', 'borneo fc', 'hasil pertandingan']
   },
   {
     id: '4d',
@@ -302,7 +309,8 @@ export const articles: Article[] = [
     timestamp: '8 jam lalu',
     date: '10 Januari 2026',
     club: 'Timnas',
-    publisher: { name: 'PSSI', icon: '🇮🇩', verified: true }
+    publisher: { name: 'PSSI', icon: '🇮🇩', verified: true },
+    tags: ['timnas', 'sea games', 'shin tae-yong', 'pemain muda', 'pemusatan latihan']
   },
   {
     id: '4e',
@@ -322,7 +330,8 @@ export const articles: Article[] = [
     timestamp: '9 jam lalu',
     date: '10 Januari 2026',
     club: 'Bali United',
-    publisher: { name: 'Bali Post', icon: '📰', verified: true }
+    publisher: { name: 'Bali Post', icon: '📰', verified: true },
+    tags: ['liga 1', 'bali united', 'transfer', 'pemain asing', 'striker']
   },
   {
     id: '4f',
@@ -342,7 +351,8 @@ export const articles: Article[] = [
     timestamp: '10 jam lalu',
     date: '10 Januari 2026',
     club: 'PSIS',
-    publisher: { name: 'Suara Merdeka', icon: '📰', verified: true }
+    publisher: { name: 'Suara Merdeka', icon: '📰', verified: true },
+    tags: ['liga 1', 'psis semarang', 'putaran kedua', 'evaluasi']
   },
   {
     id: '4g',
@@ -362,7 +372,8 @@ export const articles: Article[] = [
     timestamp: '11 jam lalu',
     date: '10 Januari 2026',
     club: 'Borneo FC',
-    publisher: { name: 'Kaltim Post', icon: '📰', verified: true }
+    publisher: { name: 'Kaltim Post', icon: '📰', verified: true },
+    tags: ['liga 1', 'borneo fc', 'target klasemen', 'empat besar']
   },
   {
     id: '5',
@@ -382,7 +393,8 @@ export const articles: Article[] = [
     timestamp: '7 jam lalu',
     date: '10 Januari 2026',
     club: 'Man City',
-    publisher: { name: 'Sky Sports', icon: '📺', verified: true }
+    publisher: { name: 'Sky Sports', icon: '📺', verified: true },
+    tags: ['premier league', 'manchester city', 'haaland', 'guardiola', 'hasil pertandingan']
   },
   {
     id: '6',
@@ -402,7 +414,8 @@ export const articles: Article[] = [
     timestamp: '8 jam lalu',
     date: '10 Januari 2026',
     club: 'Real Madrid',
-    publisher: { name: 'Marca', icon: '📰', verified: true }
+    publisher: { name: 'Marca', icon: '📰', verified: true },
+    tags: ['la liga', 'real madrid', 'vinicius jr', 'kontrak', 'transfer']
   },
   {
     id: '7',
@@ -422,7 +435,8 @@ export const articles: Article[] = [
     timestamp: '10 jam lalu',
     date: '9 Januari 2026',
     club: 'Bayern',
-    publisher: { name: 'Kicker', icon: '⚽', verified: true }
+    publisher: { name: 'Kicker', icon: '⚽', verified: true },
+    tags: ['bundesliga', 'bayern munich', 'dortmund', 'der klassiker', 'hasil pertandingan']
   },
   {
     id: '8',
@@ -442,7 +456,8 @@ export const articles: Article[] = [
     timestamp: '12 jam lalu',
     date: '9 Januari 2026',
     club: 'Inter',
-    publisher: { name: 'Gazzetta', icon: '🇮🇹', verified: true }
+    publisher: { name: 'Gazzetta', icon: '🇮🇹', verified: true },
+    tags: ['serie a', 'inter milan', 'klasemen', 'scudetto']
   },
   {
     id: '9',
@@ -462,7 +477,8 @@ export const articles: Article[] = [
     timestamp: '14 jam lalu',
     date: '9 Januari 2026',
     club: 'Liverpool',
-    publisher: { name: 'BBC Sport', icon: '📻', verified: true }
+    publisher: { name: 'BBC Sport', icon: '📻', verified: true },
+    tags: ['premier league', 'liverpool', 'newcastle', 'hasil pertandingan', 'anfield']
   },
   {
     id: '10',
@@ -482,7 +498,8 @@ export const articles: Article[] = [
     timestamp: '16 jam lalu',
     date: '9 Januari 2026',
     club: 'Barcelona',
-    publisher: { name: 'Sport', icon: '📰', verified: true }
+    publisher: { name: 'Sport', icon: '📰', verified: true },
+    tags: ['la liga', 'barcelona', 'atletico madrid', 'hasil pertandingan', 'camp nou']
   },
   {
     id: '11',
@@ -502,7 +519,8 @@ export const articles: Article[] = [
     timestamp: '18 jam lalu',
     date: '9 Januari 2026',
     club: 'Napoli',
-    publisher: { name: 'Corriere dello Sport', icon: '🇮🇹', verified: true }
+    publisher: { name: 'Corriere dello Sport', icon: '🇮🇹', verified: true },
+    tags: ['serie a', 'napoli', 'fiorentina', 'osimhen', 'hasil pertandingan']
   },
   {
     id: '12',
@@ -522,7 +540,8 @@ export const articles: Article[] = [
     timestamp: '20 jam lalu',
     date: '8 Januari 2026',
     club: 'Chelsea',
-    publisher: { name: 'The Guardian', icon: '📰', verified: true }
+    publisher: { name: 'The Guardian', icon: '📰', verified: true },
+    tags: ['premier league', 'chelsea', 'brighton', 'kekalahan', 'stamford bridge']
   },
   {
     id: '13',
@@ -542,7 +561,8 @@ export const articles: Article[] = [
     timestamp: '22 jam lalu',
     date: '8 Januari 2026',
     club: 'Arsenal',
-    publisher: { name: 'ESPN', icon: '📺', verified: true }
+    publisher: { name: 'ESPN', icon: '📺', verified: true },
+    tags: ['premier league', 'arsenal', 'west ham', 'klasemen', 'hasil pertandingan']
   }
 ];
 
