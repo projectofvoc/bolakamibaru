@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import { CheckCircle, Bookmark } from 'lucide-react';
 import { Article, Publisher } from '@/data/dummyData';
+import { Button } from '@/components/ui/button';
 
 // Additional articles for this section
 const moreArticles: Article[] = [
@@ -181,6 +182,10 @@ const moreArticles: Article[] = [
 
 const MoreNewsGrid: React.FC = () => {
   const { language, t } = useLanguage();
+  const [visibleCount, setVisibleCount] = useState(10);
+
+  const visibleArticles = moreArticles.slice(0, visibleCount);
+  const hasMore = visibleCount < moreArticles.length;
 
   return (
     <section className="pt-12 pb-16">
@@ -190,7 +195,7 @@ const MoreNewsGrid: React.FC = () => {
 
         {/* Grid - 5 columns on desktop */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-          {moreArticles.map((article, index) => (
+          {visibleArticles.map((article, index) => (
             <Link key={article.id} to={`/news/${article.slug}`}>
               <motion.article
                 initial={{ opacity: 0, y: 20 }}
@@ -263,16 +268,18 @@ const MoreNewsGrid: React.FC = () => {
           ))}
         </div>
 
-        {/* See More Button */}
-        <div className="mt-10 text-center">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="px-8 py-3 border border-primary text-primary font-semibold rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
-          >
-            {t('section.seeMore')}
-          </motion.button>
-        </div>
+        {/* Load More Button */}
+        {hasMore && (
+          <div className="mt-10 text-center">
+            <Button
+              variant="outline"
+              className="rounded-full px-8"
+              onClick={() => setVisibleCount(prev => prev + 10)}
+            >
+              {t('section.seeMore')}
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );
