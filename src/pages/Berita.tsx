@@ -37,23 +37,68 @@ const filterTypes: FilterInfo[] = [
   },
 ];
 
+// Indonesian clubs/keywords for filtering
+const indonesianClubs = ['Persebaya', 'Persija', 'Persib', 'Arema', 'Bali United', 'Madura United', 'PSM', 'PSIS', 'Borneo FC'];
+const indonesianLeagues = ['Liga 1 Indonesia', 'Liga 1'];
+const internationalLeagues = ['Premier League', 'La Liga', 'Serie A', 'Bundesliga'];
+
 const Berita: React.FC = () => {
   const { filter } = useParams<{ filter?: string }>();
   const { language, t } = useLanguage();
   const [visibleCount, setVisibleCount] = useState(10);
+  const [activeRegion, setActiveRegion] = useState<'indonesia' | 'international'>('indonesia');
 
   const currentFilter = filter ? filterTypes.find(f => f.id === filter) : null;
   
   // All articles (in real app, would filter by type)
   const allArticles = [featuredArticle, ...articles];
-  const visibleArticles = allArticles.slice(0, visibleCount);
-  const hasMore = visibleCount < allArticles.length;
 
-  // Get live matches from all leagues
-  const liveMatches = matches.filter(m => m.status === 'live').slice(0, 6);
+  // Filter articles by region
+  const isIndonesianArticle = (article: typeof featuredArticle) => {
+    const title = article.title.id + ' ' + article.title.en;
+    return article.category === 'Liga 1' || 
+           indonesianClubs.some(club => title.includes(club));
+  };
+
+  const isInternationalArticle = (article: typeof featuredArticle) => {
+    return internationalLeagues.some(league => article.category === league) ||
+           article.category === 'Transfer' ||
+           article.category === 'Premier League' ||
+           article.category === 'La Liga' ||
+           article.category === 'Serie A';
+  };
+
+  const isTrending = filter === 'trending';
+  
+  // Get filtered articles based on region (only for trending)
+  const filteredArticles = isTrending
+    ? activeRegion === 'indonesia'
+      ? allArticles.filter(isIndonesianArticle)
+      : allArticles.filter(isInternationalArticle)
+    : allArticles;
+
+  const visibleArticles = filteredArticles.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredArticles.length;
+
+  // Get featured article based on region
+  const regionFeatured = isTrending
+    ? activeRegion === 'indonesia'
+      ? allArticles.find(isIndonesianArticle) || featuredArticle
+      : allArticles.find(isInternationalArticle) || featuredArticle
+    : featuredArticle;
+
+  // Filter matches by region
+  const regionMatches = isTrending
+    ? activeRegion === 'indonesia'
+      ? matches.filter(m => indonesianLeagues.includes(m.league))
+      : matches.filter(m => internationalLeagues.includes(m.league))
+    : matches;
+
+  // Get live matches from filtered region
+  const liveMatches = regionMatches.filter(m => m.status === 'live').slice(0, 6);
   const displayMatches = liveMatches.length > 0 
     ? liveMatches 
-    : matches.filter(m => m.status === 'ft' || m.status === 'post').slice(0, 5);
+    : regionMatches.filter(m => m.status === 'ft' || m.status === 'post' || m.status === 'scheduled').slice(0, 5);
 
   const getLeagueShortName = (league: string) => {
     const mapping: Record<string, string> = {
@@ -65,8 +110,6 @@ const Berita: React.FC = () => {
     };
     return mapping[league] || league;
   };
-
-  const isTrending = filter === 'trending';
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -87,10 +130,10 @@ const Berita: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[450px]">
                   
                   {/* Card 1: Featured Article (Left - 8 cols) */}
-                  <Link to={`/news/${featuredArticle.slug}`} className="lg:col-span-8 relative overflow-hidden block">
+                  <Link to={`/news/${regionFeatured.slug}`} className="lg:col-span-8 relative overflow-hidden block">
                     <div
                       className="absolute inset-0 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${heroImage})` }}
+                      style={{ backgroundImage: `url(${regionFeatured.image || heroImage})` }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
                     
@@ -98,7 +141,7 @@ const Berita: React.FC = () => {
                       {/* Category Badge - Top Left */}
                       <span className="inline-flex items-center gap-1 w-fit px-3 py-1 mb-auto text-xs font-semibold bg-primary text-primary-foreground rounded-full">
                         <Play className="w-3 h-3" />
-                        {featuredArticle.category}
+                        {regionFeatured.category}
                       </span>
                       
                       {/* Content at bottom */}
@@ -110,16 +153,16 @@ const Berita: React.FC = () => {
                         
                         {/* Headline */}
                         <h2 className="text-[26px] md:text-[34px] lg:text-[42px] font-bold text-white mb-3 leading-tight max-w-2xl">
-                          {featuredArticle.title[language]}
+                          {regionFeatured.title[language]}
                         </h2>
                       </div>
                       
                       {/* Meta */}
                       <div className="flex items-center gap-4 text-sm text-white/70">
-                        <span>{featuredArticle.author}</span>
+                        <span>{regionFeatured.author}</span>
                         <div className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          <span>{featuredArticle.timestamp}</span>
+                          <span>{regionFeatured.timestamp}</span>
                         </div>
                       </div>
                     </div>
@@ -155,7 +198,7 @@ const Berita: React.FC = () => {
                     
                     {/* Match Rows */}
                     <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-border">
-                      {displayMatches.map((match) => (
+                      {displayMatches.length > 0 ? displayMatches.map((match) => (
                         <div
                           key={match.id}
                           className="grid grid-cols-[80px_1fr_60px_70px] px-4 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer items-center"
@@ -203,7 +246,11 @@ const Berita: React.FC = () => {
                             )}
                           </div>
                         </div>
-                      ))}
+                      )) : (
+                        <div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
+                          {language === 'id' ? 'Tidak ada pertandingan' : 'No matches available'}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -264,6 +311,43 @@ const Berita: React.FC = () => {
                 </Link>
               ))}
             </div>
+
+            {/* Sub-Tabs for Trending: Indonesia vs International */}
+            {isTrending && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center gap-1 mt-4 bg-muted/30 p-1 rounded-full w-fit"
+              >
+                <button
+                  onClick={() => {
+                    setActiveRegion('indonesia');
+                    setVisibleCount(10);
+                  }}
+                  className={`px-4 py-2 text-sm rounded-full transition-all ${
+                    activeRegion === 'indonesia'
+                      ? 'bg-primary text-primary-foreground font-medium'
+                      : 'text-muted-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  🇮🇩 Indonesia
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveRegion('international');
+                    setVisibleCount(10);
+                  }}
+                  className={`px-4 py-2 text-sm rounded-full transition-all ${
+                    activeRegion === 'international'
+                      ? 'bg-primary text-primary-foreground font-medium'
+                      : 'text-muted-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  🌍 International
+                </button>
+              </motion.div>
+            )}
           </div>
         </section>
 
@@ -271,14 +355,18 @@ const Berita: React.FC = () => {
         <section className="py-12 bg-card/50">
           <div className="container mx-auto px-4">
             <h2 className="text-xl font-bold text-foreground mb-6">
-              {currentFilter 
-                ? currentFilter.name[language]
-                : (language === 'id' ? 'Semua Berita' : 'All News')}
+              {isTrending 
+                ? activeRegion === 'indonesia'
+                  ? (language === 'id' ? 'Trending Indonesia' : 'Trending Indonesia')
+                  : (language === 'id' ? 'Trending International' : 'Trending International')
+                : currentFilter 
+                  ? currentFilter.name[language]
+                  : (language === 'id' ? 'Semua Berita' : 'All News')}
             </h2>
 
             {/* 5-column grid for trending, 4 for others */}
             <div className={`grid grid-cols-1 sm:grid-cols-2 ${isTrending ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-6`}>
-              {visibleArticles.map((article, index) => (
+              {visibleArticles.length > 0 ? visibleArticles.map((article, index) => (
                 <Link key={article.id} to={`/news/${article.slug}`}>
                   <motion.article
                     initial={{ opacity: 0, y: 20 }}
@@ -335,7 +423,11 @@ const Berita: React.FC = () => {
                     </div>
                   </motion.article>
                 </Link>
-              ))}
+              )) : (
+                <div className="col-span-full flex items-center justify-center py-16 text-muted-foreground">
+                  {language === 'id' ? 'Tidak ada berita untuk ditampilkan' : 'No news to display'}
+                </div>
+              )}
             </div>
 
             {/* Load More */}
