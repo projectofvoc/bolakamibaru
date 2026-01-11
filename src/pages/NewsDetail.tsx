@@ -154,6 +154,22 @@ const NewsDetail: React.FC = () => {
                 </p>
               ))}
             </div>
+            
+            {/* Tags Section */}
+            {article.tags && article.tags.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 mt-8 pt-8 border-t border-white/10">
+                <span className="text-sm text-muted-foreground mr-2">Tags:</span>
+                {article.tags.map((tag, index) => (
+                  <Link
+                    key={index}
+                    to={`/berita?tag=${tag.toLowerCase().replace(/\s+/g, '-')}`}
+                    className="px-3 py-1.5 bg-secondary text-sm text-muted-foreground rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                  >
+                    {tag}
+                  </Link>
+                ))}
+              </div>
+            )}
           </motion.article>
         </div>
         
