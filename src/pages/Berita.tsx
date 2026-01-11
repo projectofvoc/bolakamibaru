@@ -497,7 +497,7 @@ const Berita: React.FC = () => {
 
                 {/* Text-only Headlines List */}
                 {textOnlyHeadlines.length > 0 && (
-                  <div className="mt-8 space-y-0">
+                  <div className="mt-8 border-y border-white divide-y divide-white">
                     {textOnlyHeadlines.map((article, index) => (
                       <motion.div
                         key={`text-${article.id}`}
@@ -508,7 +508,7 @@ const Berita: React.FC = () => {
                       >
                         <Link 
                           to={`/news/${article.slug}`}
-                          className="block border-b border-white py-4 last:border-b-0 group"
+                          className="block py-4 group"
                         >
                           <h3 className="text-lg text-muted-foreground group-hover:text-primary transition-colors line-clamp-2">
                             {article.title[language]}
