@@ -15,6 +15,7 @@ const AICompanion: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   const prompts = [
     t('ai.prompt1'),
@@ -23,7 +24,7 @@ const AICompanion: React.FC = () => {
   ];
 
   // Call Predicto AI API with retry logic
-  const callPredictorAPI = async (message: string): Promise<string> => {
+  const callPredictorAPI = useCallback(async (message: string): Promise<string> => {
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 1000; // 1 detik
     
@@ -36,7 +37,11 @@ const AICompanion: React.FC = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ message }),
+          body: JSON.stringify({ 
+            message,
+            sessionId: sessionId || undefined,
+            mode: "lengkap"
+          }),
         });
         
         if (!response.ok) {
@@ -44,7 +49,18 @@ const AICompanion: React.FC = () => {
         }
         
         const data = await response.json();
-        return data.response || data.message || data.reply || 'Maaf, terjadi kesalahan. Silakan coba lagi.';
+        
+        // Handle error dari API
+        if (data.success === false) {
+          throw new Error(data.error || 'API returned error');
+        }
+        
+        // Simpan sessionId untuk percakapan berkelanjutan
+        if (data.sessionId) {
+          setSessionId(data.sessionId);
+        }
+        
+        return data.response || 'Maaf, terjadi kesalahan. Silakan coba lagi.';
         
       } catch (error) {
         console.error(`Predicto AI Error (Attempt ${attempt}):`, error);
@@ -59,7 +75,7 @@ const AICompanion: React.FC = () => {
     
     // Semua retry gagal
     return 'Maaf, saya sedang tidak bisa merespons setelah beberapa percobaan. Silakan coba lagi dalam beberapa saat. 🙏';
-  };
+  }, [sessionId]);
 
   // Handle sending message
   const handleSend = useCallback(async () => {
@@ -88,7 +104,7 @@ const AICompanion: React.FC = () => {
     };
     setMessages(prev => [...prev, aiResponse]);
     setIsTyping(false);
-  }, [inputValue]);
+  }, [inputValue, callPredictorAPI]);
 
   // Handle prompt chip click
   const handlePromptClick = async (prompt: string) => {
