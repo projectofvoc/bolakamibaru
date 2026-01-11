@@ -477,13 +477,25 @@ const Berita: React.FC = () => {
                       transition={{ delay: index * 0.1 }}
                     >
                       <Link to={`/news/${article.slug}`} className="block group">
-                        {/* Image */}
-                        <div className="aspect-video rounded-lg overflow-hidden mb-3">
+                        {/* Image with Badge and Video Play Button */}
+                        <div className="aspect-video rounded-lg overflow-hidden mb-3 relative">
                           <img 
                             src={article.image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=250&fit=crop'} 
                             alt={article.title[language]}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
+                          {/* Category Badge */}
+                          <span className="absolute top-3 left-3 px-3 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full">
+                            {article.category || 'Trending'}
+                          </span>
+                          {/* Video Play Button - Show on second card (index 1) */}
+                          {index === 1 && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center group-hover:bg-primary transition-colors">
+                                <Play className="w-6 h-6 text-background ml-1" fill="currentColor" />
+                              </div>
+                            </div>
+                          )}
                         </div>
                         
                         {/* Headline */}
