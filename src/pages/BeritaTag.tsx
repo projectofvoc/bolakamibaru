@@ -59,25 +59,25 @@ const BeritaTag: React.FC = () => {
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-primary/20 via-background to-background py-12">
+        <section className="bg-gradient-to-br from-primary/20 via-background to-background py-10 md:py-12">
           <div className="container mx-auto px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-3 mb-2"
+              className="flex items-center gap-3 mb-1"
             >
-              <Tag className="w-8 h-8 text-primary" />
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+              <Tag className="w-7 h-7 text-primary" />
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">
                 {tagDisplay 
                   ? <span className="capitalize">{tagDisplay}</span>
                   : (language === 'id' ? 'Semua Tag' : 'All Tags')}
               </h1>
             </motion.div>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground ml-10">
               {tagDisplay
                 ? (language === 'id' 
-                    ? `Menampilkan ${filteredArticles.length} artikel dengan tag "${tagDisplay}"` 
-                    : `Showing ${filteredArticles.length} articles tagged "${tagDisplay}"`)
+                    ? `${filteredArticles.length} artikel ditemukan` 
+                    : `${filteredArticles.length} articles found`)
                 : (language === 'id' 
                     ? 'Jelajahi berita berdasarkan topik' 
                     : 'Explore news by topic')}
@@ -87,18 +87,18 @@ const BeritaTag: React.FC = () => {
 
         {/* Active Tag Filter Badge */}
         {tagParam && (
-          <section className="py-4 border-b border-border">
+          <section className="py-3 border-b border-border/50">
             <div className="container mx-auto px-4">
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground">
-                  {language === 'id' ? 'Filter aktif:' : 'Active filter:'}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {language === 'id' ? 'Filter:' : 'Filter:'}
                 </span>
                 <Link
                   to="/berita"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:bg-primary/90 transition-colors"
                 >
                   <span className="capitalize">{tagDisplay}</span>
-                  <X className="w-4 h-4" />
+                  <X className="w-3 h-3" />
                 </Link>
               </div>
             </div>
@@ -107,56 +107,50 @@ const BeritaTag: React.FC = () => {
 
         {/* Tag Search & Popular Tags (show when no filter) */}
         {!tagParam && (
-          <section className="py-6 border-b border-border">
+          <section className="py-6">
             <div className="container mx-auto px-4">
               {/* Search Input */}
-              <div className="relative max-w-md mb-6">
+              <div className="relative max-w-sm mb-5">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder={language === 'id' ? 'Cari tag...' : 'Search tags...'}
                   value={tagSearch}
                   onChange={(e) => setTagSearch(e.target.value)}
-                  className="pl-10 rounded-full bg-secondary border-0 focus-visible:ring-primary"
+                  className="pl-9 h-9 text-sm rounded-full bg-secondary border-0 focus-visible:ring-primary"
                 />
                 {tagSearch && (
                   <button
                     onClick={() => setTagSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 hover:bg-muted rounded-full transition-colors"
                   >
-                    <X className="w-4 h-4 text-muted-foreground" />
+                    <X className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
                 )}
               </div>
 
-              {/* Tags Display */}
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-medium text-muted-foreground">
-                  {tagSearch 
-                    ? (language === 'id' 
-                        ? `${filteredTags.length} tag ditemukan` 
-                        : `${filteredTags.length} tags found`)
-                    : (language === 'id' ? 'Semua Tag' : 'All Tags')}
-                </h2>
-                {tagSearch && (
-                  <span className="text-xs text-muted-foreground">
-                    {language === 'id' ? `Mencari "${tagSearch}"` : `Searching "${tagSearch}"`}
-                  </span>
-                )}
-              </div>
+              {/* Tags Label */}
+              <p className="text-xs text-muted-foreground mb-3">
+                {tagSearch 
+                  ? (language === 'id' 
+                      ? `${filteredTags.length} tag ditemukan` 
+                      : `${filteredTags.length} tags found`)
+                  : (language === 'id' ? `${allTags.length} tag tersedia` : `${allTags.length} tags available`)}
+              </p>
 
+              {/* Tags Grid */}
               {filteredTags.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {filteredTags.map((tag, index) => (
                     <motion.div
                       key={tag}
-                      initial={{ opacity: 0, scale: 0.9 }}
+                      initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: Math.min(index * 0.02, 0.3) }}
+                      transition={{ delay: Math.min(index * 0.015, 0.2) }}
                     >
                       <Link
                         to={`/berita?tag=${tag.toLowerCase().replace(/\s+/g, '-')}`}
-                        className="px-4 py-2 bg-secondary text-muted-foreground rounded-full text-sm hover:bg-primary hover:text-primary-foreground transition-colors"
+                        className="inline-block px-3 py-1.5 bg-secondary text-muted-foreground rounded-full text-xs hover:bg-primary hover:text-primary-foreground transition-colors"
                       >
                         {tag}
                       </Link>
@@ -164,12 +158,12 @@ const BeritaTag: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <Tag className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">
+                <div className="text-center py-6">
+                  <Tag className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">
                     {language === 'id' 
-                      ? `Tidak ada tag dengan kata "${tagSearch}"` 
-                      : `No tags found matching "${tagSearch}"`}
+                      ? `Tidak ada tag "${tagSearch}"` 
+                      : `No tags matching "${tagSearch}"`}
                   </p>
                 </div>
               )}
@@ -178,11 +172,11 @@ const BeritaTag: React.FC = () => {
         )}
 
         {/* News Articles Grid */}
-        <section className="py-12 bg-card/50">
+        <section className="py-8 md:py-10">
           <div className="container mx-auto px-4">
-            <h2 className="text-xl font-bold text-foreground mb-6">
+            <h2 className="text-lg font-bold text-foreground mb-5">
               {tagDisplay 
-                ? (language === 'id' ? `Berita tentang "${tagDisplay}"` : `News about "${tagDisplay}"`)
+                ? (language === 'id' ? `Berita "${tagDisplay}"` : `"${tagDisplay}" News`)
                 : (language === 'id' ? 'Semua Berita' : 'All News')}
             </h2>
 
@@ -310,27 +304,27 @@ const BeritaTag: React.FC = () => {
 
         {/* All Tags Section with Search (show when filtering) */}
         {tagParam && (
-          <section className="py-12 bg-background">
+          <section className="py-8 border-t border-border/50">
             <div className="container mx-auto px-4">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                <h2 className="text-xl font-bold text-foreground">
-                  {language === 'id' ? 'Jelajahi Tag Lainnya' : 'Explore Other Tags'}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <h2 className="text-base font-semibold text-foreground">
+                  {language === 'id' ? 'Tag Lainnya' : 'Other Tags'}
                 </h2>
                 
                 {/* Search Input */}
-                <div className="relative max-w-xs w-full">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <div className="relative max-w-[200px] w-full">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder={language === 'id' ? 'Cari tag...' : 'Search tags...'}
+                    placeholder={language === 'id' ? 'Cari...' : 'Search...'}
                     value={tagSearch}
                     onChange={(e) => setTagSearch(e.target.value)}
-                    className="pl-10 rounded-full bg-secondary border-0 focus-visible:ring-primary text-sm h-9"
+                    className="pl-8 h-8 text-xs rounded-full bg-secondary border-0 focus-visible:ring-primary"
                   />
                   {tagSearch && (
                     <button
                       onClick={() => setTagSearch('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full transition-colors"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 hover:bg-muted rounded-full transition-colors"
                     >
                       <X className="w-3 h-3 text-muted-foreground" />
                     </button>
@@ -338,58 +332,40 @@ const BeritaTag: React.FC = () => {
                 </div>
               </div>
 
-              {/* Search Result Info */}
-              {tagSearch && (
-                <p className="text-sm text-muted-foreground mb-4">
-                  {language === 'id' 
-                    ? `${filteredTags.length} tag ditemukan untuk "${tagSearch}"` 
-                    : `${filteredTags.length} tags found for "${tagSearch}"`}
-                </p>
-              )}
-
+              {/* Tags */}
               {filteredTags.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {filteredTags.map((tag, index) => {
                     const tagSlug = tag.toLowerCase().replace(/\s+/g, '-');
                     const isActive = tagSlug === tagParam;
                     
                     return (
-                      <motion.div
+                      <Link
                         key={tag}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: Math.min(index * 0.02, 0.3) }}
+                        to={`/berita?tag=${tagSlug}`}
+                        className={`px-2.5 py-1 rounded-full text-xs transition-colors ${
+                          isActive
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-secondary text-muted-foreground hover:bg-primary hover:text-primary-foreground'
+                        }`}
                       >
-                        <Link
-                          to={`/berita?tag=${tagSlug}`}
-                          className={`px-4 py-2 rounded-full text-sm transition-colors ${
-                            isActive
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-secondary text-muted-foreground hover:bg-primary hover:text-primary-foreground'
-                          }`}
-                        >
-                          {tag}
-                        </Link>
-                      </motion.div>
+                        {tag}
+                      </Link>
                     );
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <Tag className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">
-                    {language === 'id' 
-                      ? `Tidak ada tag dengan kata "${tagSearch}"` 
-                      : `No tags found matching "${tagSearch}"`}
-                  </p>
+                <p className="text-xs text-muted-foreground py-3">
+                  {language === 'id' 
+                    ? `Tidak ada tag "${tagSearch}"` 
+                    : `No tags "${tagSearch}"`}
                   <button
                     onClick={() => setTagSearch('')}
-                    className="text-primary text-sm mt-2 hover:underline"
+                    className="text-primary ml-2 hover:underline"
                   >
-                    {language === 'id' ? 'Hapus pencarian' : 'Clear search'}
+                    {language === 'id' ? 'Reset' : 'Reset'}
                   </button>
-                </div>
+                </p>
               )}
             </div>
           </section>
