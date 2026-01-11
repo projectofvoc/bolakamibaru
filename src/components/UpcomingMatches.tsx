@@ -24,9 +24,14 @@ const UpcomingMatches: React.FC = () => {
     <section className="py-12 bg-background">
       <div className="container mx-auto px-4">
         {/* Section Header */}
-        <h2 className="text-xl md:text-2xl font-bold text-foreground mb-6">
-          {t('section.upcomingMatches')}
-        </h2>
+        <div className="mb-6">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">
+            {t('section.upcomingMatches')}
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t('section.upcomingMatchesSubtitle')}
+          </p>
+        </div>
 
         {/* Grid Layout: 2 cols mobile, 4 cols desktop */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
