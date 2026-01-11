@@ -226,23 +226,143 @@ export const articles: Article[] = [
   },
   {
     id: '4',
-    slug: 'psim-yogyakarta-targetkan-promosi-ke-liga-1',
+    slug: 'persib-bandung-pesta-gol-di-kandang',
     title: {
-      id: 'PSIM Yogyakarta Targetkan Promosi ke Liga 1',
-      en: 'PSIM Yogyakarta Targets Promotion to Liga 1'
+      id: 'Persib Bandung Pesta Gol di Kandang Lawan PSIS Semarang',
+      en: 'Persib Bandung Goal Fest at Home Against PSIS Semarang'
     },
-    excerpt: { id: 'PSIM optimis bisa naik kasta musim ini.', en: 'PSIM is optimistic about promotion this season.' },
+    excerpt: { id: 'Maung Bandung menang telak 3-0 di Si Jalak Harupat.', en: 'Maung Bandung wins convincingly 3-0 at Si Jalak Harupat.' },
     content: {
-      id: 'PSIM Yogyakarta menargetkan promosi ke Liga 1 di akhir musim ini setelah sempat gagal di musim sebelumnya. Tim berjuluk Laskar Mataram ini telah mempersiapkan strategi khusus untuk mencapai target tersebut dengan melakukan pembenahan di berbagai lini. Manajemen telah melakukan evaluasi menyeluruh terhadap performa tim dan mengidentifikasi area-area yang perlu ditingkatkan untuk memastikan target promosi tercapai.\n\nPersiapan menjelang putaran kedua Liga 2 dilakukan dengan sangat serius. PSIM telah mendatangkan beberapa pemain baru yang dianggap mampu memberikan kontribusi signifikan. Di antaranya adalah mantan pemain Liga 1 yang memiliki pengalaman bermain di level tertinggi. Selain itu, pemain-pemain muda dari akademi juga mulai dipromosikan ke tim utama untuk memberikan kesegaran dan energi baru.\n\nDukungan penuh dari suporter setia Brajamusti menjadi modal penting bagi tim dalam mengejar target promosi. Setiap pertandingan kandang di Stadion Mandala Krida selalu dipenuhi oleh ribuan suporter yang memberikan dukungan tanpa henti. Atmosfer yang tercipta menjadi motivasi tambahan bagi para pemain untuk tampil maksimal dan meraih hasil positif di setiap pertandingan.\n\nPelatih menyampaikan optimismenya bahwa dengan persiapan yang matang dan dukungan suporter, PSIM memiliki peluang besar untuk meraih promosi. Ia menekankan pentingnya menjaga konsistensi performa dan mentalitas juara di setiap pertandingan. Target minimal adalah finis di posisi dua besar klasemen yang memberikan tiket langsung ke Liga 1 tanpa harus melalui babak playoff.\n\nDengan dukungan penuh dari suporter setia dan persiapan yang telah dilakukan, PSIM yakin bisa meraih tiket promosi ke kasta tertinggi sepak bola Indonesia. Ini akan menjadi pencapaian bersejarah mengingat PSIM sudah lama absen dari kompetisi Liga 1. Seluruh elemen klub berkomitmen untuk bekerja keras demi mewujudkan mimpi tersebut.',
-      en: 'PSIM Yogyakarta is targeting promotion to Liga 1 at the end of this season after failing in the previous season. The team nicknamed Laskar Mataram has prepared a special strategy to achieve this target by making improvements in various areas. Management has conducted a thorough evaluation of the team\'s performance and identified areas that need improvement to ensure the promotion target is achieved.\n\nPreparations ahead of the second round of Liga 2 are being done very seriously. PSIM has brought in several new players who are considered capable of making significant contributions. Among them are former Liga 1 players who have experience playing at the highest level. In addition, young players from the academy have also begun to be promoted to the first team to provide freshness and new energy.\n\nFull support from loyal Brajamusti supporters is an important asset for the team in pursuing the promotion target. Every home match at Mandala Krida Stadium is always filled with thousands of supporters who provide non-stop support. The atmosphere created becomes additional motivation for the players to perform at their best and achieve positive results in every match.\n\nThe coach conveyed his optimism that with mature preparation and supporter support, PSIM has a great chance of achieving promotion. He emphasized the importance of maintaining consistency in performance and a championship mentality in every match. The minimum target is to finish in the top two of the standings which provides a direct ticket to Liga 1 without having to go through the playoff round.\n\nWith full support from loyal supporters and the preparations that have been made, PSIM is confident they can secure a promotion ticket to the highest caste of Indonesian football. This will be a historic achievement considering PSIM has been absent from Liga 1 competition for a long time. All elements of the club are committed to working hard to realize this dream.'
+      id: 'Persib Bandung menunjukkan performa gemilang dengan mengalahkan PSIS Semarang 3-0 di Stadion Si Jalak Harupat. Kemenangan telak ini mengokohkan posisi Maung Bandung di papan atas klasemen Liga 1 Indonesia.\n\nGol pembuka diciptakan oleh striker andalan di menit ke-23 melalui sepakan keras dari dalam kotak penalti. PSIS mencoba bangkit namun pertahanan solid Persib berhasil meredam serangan-serangan berbahaya tim tamu.\n\nDi babak kedua, Persib semakin dominan dengan menambah dua gol lagi di menit ke-56 dan 78. Penguasaan bola mencapai 65% menunjukkan kontrol penuh tuan rumah atas jalannya pertandingan.\n\nRibuan Bobotoh yang memenuhi stadion menyaksikan kemenangan meyakinkan tim kesayangan mereka. Atmosfer luar biasa tercipta dengan nyanyian dan dukungan tanpa henti selama 90 menit.\n\nDengan kemenangan ini, Persib berhasil menjaga tren positif dan semakin optimis bersaing untuk gelar juara Liga 1 musim ini.',
+      en: 'Persib Bandung showed brilliant performance by defeating PSIS Semarang 3-0 at Si Jalak Harupat Stadium. This convincing victory solidifies Maung Bandung position at the top of Liga 1 Indonesia standings.\n\nThe opening goal was created by the main striker in the 23rd minute through a powerful shot from inside the penalty area. PSIS tried to fight back but Persib solid defense managed to contain the away team dangerous attacks.\n\nIn the second half, Persib became more dominant by adding two more goals in the 56th and 78th minutes. Ball possession reaching 65% showed the complete control of the home team.\n\nThousands of Bobotoh who filled the stadium witnessed their beloved team convincing victory. An extraordinary atmosphere was created with non-stop songs and support for 90 minutes.\n\nWith this victory, Persib managed to maintain their positive trend and is increasingly optimistic about competing for the Liga 1 title this season.'
     },
     image: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=400&h=250&fit=crop',
-    category: 'Liga 2',
-    author: 'Eko Prasetyo',
+    category: 'Liga 1',
+    author: 'Rizky Fauzan',
+    timestamp: '4 jam lalu',
+    date: '10 Januari 2026',
+    club: 'Persib',
+    publisher: { name: 'Pikiran Rakyat', icon: '📰', verified: true }
+  },
+  {
+    id: '4b',
+    slug: 'arema-fc-kalahkan-bali-united-di-derby-pulau',
+    title: {
+      id: 'Arema FC Kalahkan Bali United di Derby Pulau',
+      en: 'Arema FC Defeats Bali United in Island Derby'
+    },
+    excerpt: { id: 'Singo Edan menang tipis 2-1 di Kanjuruhan.', en: 'Singo Edan wins narrowly 2-1 at Kanjuruhan.' },
+    content: {
+      id: 'Arema FC berhasil meraih kemenangan tipis 2-1 atas Bali United dalam pertandingan yang berlangsung sengit di Stadion Kanjuruhan. Kemenangan ini sangat penting bagi Singo Edan dalam menjaga asa mereka untuk finis di papan atas.\n\nGol pembuka datang dari tuan rumah di menit ke-18 melalui serangan balik cepat yang dieksekusi dengan sempurna. Bali United menyamakan kedudukan di menit ke-35 lewat tendangan bebas yang tak terjangkau kiper.\n\nMomen penentu terjadi di menit ke-72 ketika striker Arema berhasil menyundul bola hasil tendangan sudut ke gawang Bali United. Stadion meledak dalam kegembiraan.\n\nDukungan Aremania yang memenuhi setiap sudut stadion menjadi motivasi besar bagi para pemain. Mereka terus bernyanyi dan memberikan semangat hingga peluit akhir dibunyikan.\n\nKemenangan ini membawa Arema naik ke posisi lima klasemen dengan poin 32 dari 18 pertandingan.',
+      en: 'Arema FC secured a narrow 2-1 victory over Bali United in an intense match at Kanjuruhan Stadium. This victory is crucial for Singo Edan in keeping their hopes to finish at the top.\n\nThe opening goal came from the home team in the 18th minute through a quick counter-attack executed perfectly. Bali United equalized in the 35th minute through a free-kick that was out of the goalkeeper reach.\n\nThe decisive moment came in the 72nd minute when Arema striker headed the ball from a corner kick into Bali United goal. The stadium erupted in joy.\n\nAremania support filling every corner of the stadium was a great motivation for the players. They kept singing and providing encouragement until the final whistle.\n\nThis victory brought Arema up to fifth place with 32 points from 18 matches.'
+    },
+    image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=250&fit=crop',
+    category: 'Liga 1',
+    author: 'Dimas Putra',
     timestamp: '6 jam lalu',
     date: '10 Januari 2026',
-    club: 'PSIM',
-    publisher: { name: 'Goal Indonesia', icon: '🎯', verified: false }
+    club: 'Arema',
+    publisher: { name: 'Jawa Pos', icon: '📰', verified: true }
+  },
+  {
+    id: '4c',
+    slug: 'psm-makassar-amankan-tiga-poin-di-kandang',
+    title: {
+      id: 'PSM Makassar Amankan Tiga Poin Penting di Kandang',
+      en: 'PSM Makassar Secures Important Three Points at Home'
+    },
+    excerpt: { id: 'Juku Eja menang 1-0 atas Borneo FC.', en: 'Juku Eja wins 1-0 against Borneo FC.' },
+    content: {
+      id: 'PSM Makassar berhasil meraih kemenangan tipis namun penting 1-0 atas Borneo FC di Stadion Gelora Mattoanging. Gol semata wayang yang menentukan datang di babak kedua.\n\nPertandingan berlangsung ketat di babak pertama dengan kedua tim saling jual beli serangan. PSM lebih banyak menguasai bola sementara Borneo mengandalkan serangan balik cepat.\n\nMomen penentu terjadi di menit ke-65 ketika tendangan jarak jauh dari gelandang PSM berhasil merobek gawang Borneo FC. Gol indah yang disambut riuh oleh suporter setia PSM.\n\nDukungan luar biasa dari The Macz Man menjadi faktor penting dalam kemenangan ini. Stadion Mattoanging bergema dengan nyanyian dan tepukan tangan tanpa henti.\n\nDengan kemenangan ini, PSM kokoh di posisi empat klasemen dan semakin dekat dengan zona Liga Champions Asia.',
+      en: 'PSM Makassar secured a narrow but important 1-0 victory over Borneo FC at Gelora Mattoanging Stadium. The only decisive goal came in the second half.\n\nThe first half was tight with both teams exchanging attacks. PSM had more ball possession while Borneo relied on quick counter-attacks.\n\nThe decisive moment came in the 65th minute when a long-range shot from PSM midfielder broke through Borneo FC goal. A beautiful goal welcomed by the roar of loyal PSM supporters.\n\nThe incredible support from The Macz Man was an important factor in this victory. Mattoanging Stadium echoed with non-stop songs and applause.\n\nWith this victory, PSM is solid in fourth place and closer to the Asian Champions League zone.'
+    },
+    image: 'https://images.unsplash.com/photo-1522778526097-ce0a22ceb253?w=400&h=250&fit=crop',
+    category: 'Liga 1',
+    author: 'Andi Mappanyuki',
+    timestamp: '7 jam lalu',
+    date: '10 Januari 2026',
+    club: 'PSM',
+    publisher: { name: 'Tribun Timur', icon: '📰', verified: true }
+  },
+  {
+    id: '4d',
+    slug: 'timnas-indonesia-u23-persiapan-sea-games',
+    title: {
+      id: 'Timnas Indonesia U-23 Intensifkan Persiapan SEA Games',
+      en: 'Indonesia U-23 National Team Intensifies SEA Games Preparation'
+    },
+    excerpt: { id: 'Shin Tae-yong panggil 30 pemain untuk TC.', en: 'Shin Tae-yong calls 30 players for training camp.' },
+    content: {
+      id: 'Timnas Indonesia U-23 mulai mengintensifkan persiapan menjelang SEA Games dengan menggelar pemusatan latihan di Jakarta. Pelatih Shin Tae-yong memanggil 30 pemain terbaik dari berbagai klub Liga 1.\n\nTC ini akan berlangsung selama tiga minggu dengan fokus pada penguatan fisik dan taktik. Beberapa pemain muda berbakat dari luar negeri juga dipanggil untuk memperkuat skuad.\n\nShin Tae-yong menyatakan target utama adalah meraih medali emas SEA Games. Indonesia terakhir kali menjuarai SEA Games pada tahun 1991 dan ingin mengulang kesuksesan tersebut.\n\nPara pemain menunjukkan antusiasme tinggi dan semangat juang untuk membawa nama Indonesia di kancah regional. Latihan intensif dilakukan dua kali sehari dengan berbagai variasi latihan.\n\nDukungan penuh dari PSSI dan masyarakat Indonesia diharapkan bisa memotivasi para pemain untuk tampil maksimal dan meraih prestasi tertinggi.',
+      en: 'Indonesia U-23 National Team is intensifying preparations ahead of the SEA Games by holding a training camp in Jakarta. Coach Shin Tae-yong has called up 30 best players from various Liga 1 clubs.\n\nThis training camp will last for three weeks focusing on physical and tactical strengthening. Several talented young players from abroad were also called up to strengthen the squad.\n\nShin Tae-yong stated the main target is to win SEA Games gold medal. Indonesia last won the SEA Games in 1991 and wants to repeat that success.\n\nThe players showed high enthusiasm and fighting spirit to bring Indonesia name in the regional stage. Intensive training is conducted twice a day with various training variations.\n\nFull support from PSSI and Indonesian people is expected to motivate the players to perform at their best and achieve the highest achievement.'
+    },
+    image: 'https://images.unsplash.com/photo-1606925797300-0b35e9d1794e?w=400&h=250&fit=crop',
+    category: 'Liga 1',
+    author: 'Bambang Sudrajat',
+    timestamp: '8 jam lalu',
+    date: '10 Januari 2026',
+    club: 'Timnas',
+    publisher: { name: 'PSSI', icon: '🇮🇩', verified: true }
+  },
+  {
+    id: '4e',
+    slug: 'bali-united-datangkan-pemain-asing-baru',
+    title: {
+      id: 'Bali United Datangkan Pemain Asing Baru dari Eropa',
+      en: 'Bali United Signs New Foreign Player from Europe'
+    },
+    excerpt: { id: 'Striker asal Kroasia resmi perkuat Serdadu Tridatu.', en: 'Croatian striker officially joins Serdadu Tridatu.' },
+    content: {
+      id: 'Bali United resmi mengumumkan kedatangan striker baru asal Kroasia untuk memperkuat lini depan tim menjelang paruh kedua Liga 1. Pemain berusia 27 tahun ini memiliki pengalaman bermain di liga-liga Eropa.\n\nTransfer ini menjadi salah satu yang terbesar di bursa transfer musim dingin Liga 1. Manajemen Bali United optimis pemain baru ini bisa memberikan kontribusi signifikan.\n\nStriker berbadan tinggi ini dikenal dengan kemampuan mencetak gol yang sangat baik. Musim lalu ia mencetak 18 gol di liga domestik negaranya.\n\nPelatih menyatakan sangat senang dengan kedatangan pemain berkualitas ini. Ia yakin kombinasi dengan pemain lokal akan menghasilkan chemistry yang bagus.\n\nDengan tambahan pemain baru ini, Bali United semakin optimis bisa bersaing untuk gelar juara Liga 1 dan tampil maksimal di kompetisi Asia.',
+      en: 'Bali United officially announced the arrival of a new Croatian striker to strengthen the team front line ahead of the second half of Liga 1. The 27-year-old player has experience playing in European leagues.\n\nThis transfer is one of the biggest in the Liga 1 winter transfer window. Bali United management is optimistic the new player can make a significant contribution.\n\nThis tall striker is known for his excellent goal-scoring ability. Last season he scored 18 goals in his domestic league.\n\nThe coach expressed great pleasure with the arrival of this quality player. He believes the combination with local players will produce good chemistry.\n\nWith the addition of this new player, Bali United is increasingly optimistic about competing for the Liga 1 title and performing at their best in Asian competitions.'
+    },
+    image: 'https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?w=400&h=250&fit=crop',
+    category: 'Transfer',
+    author: 'Made Surya',
+    timestamp: '9 jam lalu',
+    date: '10 Januari 2026',
+    club: 'Bali United',
+    publisher: { name: 'Bali Post', icon: '📰', verified: true }
+  },
+  {
+    id: '4f',
+    slug: 'psis-semarang-optimis-bangkit-di-putaran-kedua',
+    title: {
+      id: 'PSIS Semarang Optimis Bangkit di Putaran Kedua Liga 1',
+      en: 'PSIS Semarang Optimistic to Rise in Second Round of Liga 1'
+    },
+    excerpt: { id: 'Laskar Mahesa Jenar siap tampil lebih baik.', en: 'Laskar Mahesa Jenar ready to perform better.' },
+    content: {
+      id: 'PSIS Semarang menyatakan optimisme tinggi untuk bangkit di putaran kedua Liga 1 setelah hasil kurang memuaskan di paruh pertama musim. Tim berjuluk Laskar Mahesa Jenar ini telah melakukan evaluasi menyeluruh.\n\nManajemen telah mendatangkan beberapa pemain baru yang dianggap mampu memperkuat skuad. Persiapan intensif dilakukan selama jeda kompetisi.\n\nPelatih baru yang didatangkan membawa semangat dan filosofi permainan berbeda. Para pemain menunjukkan antusiasme tinggi untuk membuktikan kemampuan mereka.\n\nDukungan setia dari Panser Biru menjadi motivasi besar bagi tim. Stadion Jatidiri diharapkan selalu penuh untuk mendukung PSIS di setiap pertandingan kandang.\n\nTarget PSIS di putaran kedua adalah mengamankan posisi di papan tengah dan menjauh dari zona degradasi yang sempat mengancam di awal musim.',
+      en: 'PSIS Semarang expressed high optimism to rise in the second round of Liga 1 after unsatisfactory results in the first half of the season. Laskar Mahesa Jenar team has conducted a thorough evaluation.\n\nManagement has brought in several new players considered capable of strengthening the squad. Intensive preparation was carried out during the competition break.\n\nThe new coach brought a different spirit and playing philosophy. The players showed high enthusiasm to prove their abilities.\n\nLoyal support from Panser Biru is a great motivation for the team. Jatidiri Stadium is expected to always be full to support PSIS in every home match.\n\nPSIS target in the second round is to secure a mid-table position and stay away from the relegation zone that threatened at the beginning of the season.'
+    },
+    image: 'https://images.unsplash.com/photo-1518604666860-9ed391f76460?w=400&h=250&fit=crop',
+    category: 'Liga 1',
+    author: 'Wahyu Prasetyo',
+    timestamp: '10 jam lalu',
+    date: '10 Januari 2026',
+    club: 'PSIS',
+    publisher: { name: 'Suara Merdeka', icon: '📰', verified: true }
+  },
+  {
+    id: '4g',
+    slug: 'borneo-fc-targetkan-empat-besar-liga-1',
+    title: {
+      id: 'Borneo FC Targetkan Empat Besar Klasemen Liga 1',
+      en: 'Borneo FC Targets Top Four in Liga 1 Standings'
+    },
+    excerpt: { id: 'Pesut Etam optimis finis di zona elite.', en: 'Pesut Etam optimistic to finish in elite zone.' },
+    content: {
+      id: 'Borneo FC menetapkan target ambisius untuk finis di empat besar klasemen Liga 1 musim ini. Tim asal Samarinda ini telah menunjukkan performa konsisten di paruh pertama kompetisi.\n\nDengan dukungan manajemen yang solid dan skuad berkualitas, Borneo yakin bisa bersaing dengan tim-tim besar. Beberapa pemain bintang telah menunjukkan performa gemilang.\n\nPelatih menyatakan timnya memiliki kualitas untuk bersaing di level tertinggi. Fokus utama adalah menjaga konsistensi performa di setiap pertandingan.\n\nDukungan suporter setia Pesut Etam di Stadion Segiri menjadi kekuatan tambahan. Atmosfer kandang yang luar biasa selalu menjadi motivasi bagi para pemain.\n\nJika target ini tercapai, Borneo FC berpeluang tampil di kompetisi Asia musim depan dan mengharumkan nama Kalimantan.',
+      en: 'Borneo FC set an ambitious target to finish in the top four of Liga 1 standings this season. The Samarinda-based team has shown consistent performance in the first half of the competition.\n\nWith solid management support and a quality squad, Borneo is confident they can compete with big teams. Several star players have shown brilliant performances.\n\nThe coach stated his team has the quality to compete at the highest level. The main focus is to maintain consistent performance in every match.\n\nLoyal Pesut Etam supporter support at Segiri Stadium is an additional strength. The extraordinary home atmosphere is always a motivation for the players.\n\nIf this target is achieved, Borneo FC has the opportunity to appear in Asian competition next season and bring honor to Kalimantan.'
+    },
+    image: 'https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=400&h=250&fit=crop',
+    category: 'Liga 1',
+    author: 'Fajar Kurniawan',
+    timestamp: '11 jam lalu',
+    date: '10 Januari 2026',
+    club: 'Borneo FC',
+    publisher: { name: 'Kaltim Post', icon: '📰', verified: true }
   },
   {
     id: '5',

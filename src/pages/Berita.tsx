@@ -38,7 +38,7 @@ const filterTypes: FilterInfo[] = [
 ];
 
 // Indonesian clubs/keywords for filtering
-const indonesianClubs = ['Persebaya', 'Persija', 'Persib', 'Arema', 'Bali United', 'Madura United', 'PSM', 'PSIS', 'Borneo FC'];
+const indonesianClubs = ['Persebaya', 'Persija', 'Persib', 'Arema', 'Bali United', 'Madura United', 'PSM', 'PSIS', 'Borneo FC', 'Timnas', 'Indonesia'];
 const indonesianLeagues = ['Liga 1 Indonesia', 'Liga 1'];
 const internationalLeagues = ['Premier League', 'La Liga', 'Serie A', 'Bundesliga'];
 
@@ -56,16 +56,20 @@ const Berita: React.FC = () => {
   // Filter articles by region
   const isIndonesianArticle = (article: typeof featuredArticle) => {
     const title = article.title.id + ' ' + article.title.en;
+    const clubMatch = article.club && indonesianClubs.some(club => article.club?.includes(club));
     return article.category === 'Liga 1' || 
-           indonesianClubs.some(club => title.includes(club));
+           indonesianClubs.some(club => title.includes(club)) ||
+           clubMatch;
   };
 
   const isInternationalArticle = (article: typeof featuredArticle) => {
-    return internationalLeagues.some(league => article.category === league) ||
+    const title = article.title.id + ' ' + article.title.en;
+    const isIndonesian = indonesianClubs.some(club => title.includes(club)) || 
+                         article.club && indonesianClubs.some(club => article.club?.includes(club));
+    return !isIndonesian && (
+           internationalLeagues.some(league => article.category === league) ||
            article.category === 'Transfer' ||
-           article.category === 'Premier League' ||
-           article.category === 'La Liga' ||
-           article.category === 'Serie A';
+           article.category === 'Bundesliga');
   };
 
   const isTrending = filter === 'trending';
