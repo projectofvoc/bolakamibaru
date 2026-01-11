@@ -61,6 +61,8 @@ const translations: Record<string, Record<Language, string>> = {
   'ai.prompt1': { id: 'Siapa pencetak gol terbanyak Liga 1?', en: 'Who is the top scorer in Liga 1?' },
   'ai.prompt2': { id: 'Jadwal pertandingan Persebaya', en: 'Persebaya match schedule' },
   'ai.prompt3': { id: 'Statistik pemain terbaik', en: 'Best player statistics' },
+  'ai.chatTitle': { id: 'AI Assistant', en: 'AI Assistant' },
+  'ai.chatSubtitle': { id: 'Siap bantu analisa parlay kamu', en: 'Ready to help analyze your parlay' },
   
   // Fixtures
   'fixtures.allUpdates': { id: 'SEMUA UPDATE', en: 'ALL UPDATES' },
