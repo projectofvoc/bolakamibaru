@@ -4,34 +4,7 @@ import { Flag, Plus, Mic, ArrowUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AIChatSidebar, { ChatMessage } from './AIChatSidebar';
 
-// Dummy AI responses for simulation
-const dummyResponses = [
-  {
-    id: 'resp_btts',
-    trigger: ['btts', 'arsenal', 'mu', 'manchester'],
-    response: 'Berdasarkan analisa saya untuk MU vs Arsenal:\n\n⚽ **BTTS: Ya** (odds 1.85)\n📊 Head-to-head: 4 dari 5 pertemuan terakhir BTTS\n🔥 MU mencetak gol di 8 laga kandang berturut-turut\n⚠️ Arsenal bobol di 6 dari 7 laga tandang\n\nRekomendasi: BTTS + Over 2.5 @ 2.10',
-  },
-  {
-    id: 'resp_liga1',
-    trigger: ['liga 1', 'pencetak', 'top skor', 'gol terbanyak'],
-    response: 'Top Skor Liga 1 Indonesia 2025/26:\n\n🥇 1. Matheus Pato (Persebaya) - 15 gol\n🥈 2. Wiljan Pluim (PSM) - 12 gol\n🥉 3. Marko Simic (Persija) - 11 gol\n4. David da Silva (Persib) - 10 gol\n5. Ezechiel N\'Douassel (Borneo FC) - 9 gol',
-  },
-  {
-    id: 'resp_jadwal',
-    trigger: ['jadwal', 'persebaya', 'schedule'],
-    response: 'Jadwal Persebaya Surabaya minggu ini:\n\n📅 Sabtu, 18 Jan 2025\n🆚 Persebaya vs Arema FC\n🏟️ Stadion Gelora Bung Tomo\n⏰ 19:00 WIB\n\n📅 Rabu, 22 Jan 2025\n🆚 Madura United vs Persebaya\n🏟️ Stadion Gelora Madura Ratu Pamelingan\n⏰ 15:30 WIB',
-  },
-  {
-    id: 'resp_statistik',
-    trigger: ['statistik', 'pemain', 'terbaik', 'best'],
-    response: 'Pemain Terbaik Liga 1 2025/26:\n\n🏆 **MVP Sementara**: Marko Simic (Persija)\n📊 Rating: 8.2 | Gol: 11 | Assist: 5\n\n🔥 **Form Terbaik**:\n• Matheus Pato - 6 gol dalam 5 laga\n• Wiljan Pluim - 4 assist dalam 3 laga\n\n🛡️ **Kiper Terbaik**: Ernando Ari (Persebaya)\n• Clean sheet: 8 | Save rate: 78%',
-  },
-  {
-    id: 'resp_default',
-    trigger: [],
-    response: 'Terima kasih atas pertanyaannya! 🙏\n\nSaya adalah AI Assistant BolaKami yang siap membantu analisa:\n\n• Prediksi pertandingan & odds\n• Statistik pemain & tim\n• Jadwal pertandingan\n• Rekomendasi parlay\n\nSilakan tanyakan hal spesifik yang ingin kamu ketahui!',
-  },
-];
+const PREDICTO_API_URL = 'https://jfzjqdxqpqiayckjolpr.supabase.co/functions/v1/bolakami-chat';
 
 const AICompanion: React.FC = () => {
   const { t } = useLanguage();
@@ -46,23 +19,31 @@ const AICompanion: React.FC = () => {
     t('ai.prompt3'),
   ];
 
-  // Get AI response based on user message
-  const getAIResponse = (userMessage: string): string => {
-    const lowerMessage = userMessage.toLowerCase();
-    
-    for (const item of dummyResponses) {
-      if (item.trigger.length === 0) continue;
-      if (item.trigger.some(keyword => lowerMessage.includes(keyword))) {
-        return item.response;
+  // Call Predicto AI API
+  const callPredictorAPI = async (message: string): Promise<string> => {
+    try {
+      const response = await fetch(PREDICTO_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
       }
+      
+      const data = await response.json();
+      return data.response || data.message || data.reply || 'Maaf, terjadi kesalahan. Silakan coba lagi.';
+    } catch (error) {
+      console.error('Predicto AI Error:', error);
+      return 'Maaf, saya sedang tidak bisa merespons. Silakan coba lagi dalam beberapa saat. 🙏';
     }
-    
-    // Default response
-    return dummyResponses.find(r => r.id === 'resp_default')?.response || 'Saya sedang memproses permintaan kamu...';
   };
 
   // Handle sending message
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     if (!inputValue.trim()) return;
 
     const userMessage: ChatMessage = {
@@ -77,49 +58,44 @@ const AICompanion: React.FC = () => {
     setIsOpen(true);
     setIsTyping(true);
 
-    // Simulate AI response delay
-    const responseDelay = 1000 + Math.random() * 1500;
-    setTimeout(() => {
-      const aiResponse: ChatMessage = {
-        id: `msg_${Date.now()}`,
-        role: 'ai',
-        content: getAIResponse(userMessage.content),
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, aiResponse]);
-      setIsTyping(false);
-    }, responseDelay);
+    // Call real API
+    const aiResponseText = await callPredictorAPI(userMessage.content);
+    
+    const aiResponse: ChatMessage = {
+      id: `msg_${Date.now()}`,
+      role: 'ai',
+      content: aiResponseText,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, aiResponse]);
+    setIsTyping(false);
   }, [inputValue]);
 
   // Handle prompt chip click
-  const handlePromptClick = (prompt: string) => {
-    setInputValue(prompt);
-    // Trigger send after state update
-    setTimeout(() => {
-      const userMessage: ChatMessage = {
-        id: `msg_${Date.now()}`,
-        role: 'user',
-        content: prompt,
-        timestamp: new Date(),
-      };
+  const handlePromptClick = async (prompt: string) => {
+    const userMessage: ChatMessage = {
+      id: `msg_${Date.now()}`,
+      role: 'user',
+      content: prompt,
+      timestamp: new Date(),
+    };
 
-      setMessages(prev => [...prev, userMessage]);
-      setInputValue('');
-      setIsOpen(true);
-      setIsTyping(true);
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+    setIsOpen(true);
+    setIsTyping(true);
 
-      const responseDelay = 1000 + Math.random() * 1500;
-      setTimeout(() => {
-        const aiResponse: ChatMessage = {
-          id: `msg_${Date.now()}`,
-          role: 'ai',
-          content: getAIResponse(prompt),
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, aiResponse]);
-        setIsTyping(false);
-      }, responseDelay);
-    }, 0);
+    // Call real API
+    const aiResponseText = await callPredictorAPI(prompt);
+    
+    const aiResponse: ChatMessage = {
+      id: `msg_${Date.now()}`,
+      role: 'ai',
+      content: aiResponseText,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, aiResponse]);
+    setIsTyping(false);
   };
 
   // Handle Enter key in widget input
