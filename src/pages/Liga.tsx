@@ -213,9 +213,20 @@ const Liga: React.FC = () => {
         {/* News Articles */}
         <section className="py-12 bg-card/50">
           <div className="container mx-auto px-4">
-            <h2 className="text-xl font-bold text-foreground mb-6">
-              {language === 'id' ? 'Berita Terbaru' : 'Latest News'}
-            </h2>
+            <div className="mb-6">
+              <h2 className="text-xl md:text-2xl font-bold text-foreground">
+                {language === 'id' ? 'Berita Terbaru' : 'Latest News'}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {currentLeague 
+                  ? (language === 'id' 
+                      ? `Update terkini seputar ${currentLeague.name[language]}` 
+                      : `Latest updates about ${currentLeague.name[language]}`)
+                  : (language === 'id' 
+                      ? 'Berita dan update terbaru dari semua liga' 
+                      : 'News and updates from all leagues')}
+              </p>
+            </div>
 
             {visibleArticles.length > 0 ? (
               <>
