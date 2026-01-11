@@ -343,6 +343,86 @@ export const articles: Article[] = [
     date: '9 Januari 2026',
     club: 'Liverpool',
     publisher: { name: 'BBC Sport', icon: '📻', verified: true }
+  },
+  {
+    id: '10',
+    slug: 'barcelona-taklukkan-atletico-madrid-di-camp-nou',
+    title: {
+      id: 'Barcelona Taklukkan Atletico Madrid di Camp Nou',
+      en: 'Barcelona Defeats Atletico Madrid at Camp Nou'
+    },
+    excerpt: { id: 'Blaugrana raih kemenangan penting di kandang.', en: 'Blaugrana secure important home victory.' },
+    content: {
+      id: 'Barcelona berhasil meraih kemenangan penting 3-1 atas Atletico Madrid di Camp Nou dalam laga pekan ke-19 La Liga. Pertandingan berjalan dengan intensitas tinggi dan penuh drama dari awal hingga akhir.\n\nLamine Yamal membuka keunggulan Barcelona di menit ke-22 dengan tendangan melengkung indah dari luar kotak penalti. Atletico menyamakan kedudukan melalui Antoine Griezmann di babak kedua, namun Raphinha membalas dengan cepat.\n\nGol pamungkas datang dari Pedri di menit ke-78 yang mengunci kemenangan bagi tuan rumah. Barcelona kini berada di posisi kedua klasemen, hanya terpaut 2 poin dari Real Madrid.\n\nKemenangan ini sangat penting bagi Barcelona dalam persaingan gelar La Liga musim ini. Pelatih memuji performa seluruh skuad yang tampil luar biasa.\n\nDengan momentum positif ini, Barcelona optimis bisa terus bersaing untuk meraih gelar juara La Liga dan memperkecil jarak dengan Real Madrid di puncak klasemen.',
+      en: 'Barcelona secured an important 3-1 victory over Atletico Madrid at Camp Nou in La Liga week 19. The match was played with high intensity and full of drama from start to finish.\n\nLamine Yamal opened Barcelona\'s lead in the 22nd minute with a beautiful curling shot from outside the penalty area. Atletico equalized through Antoine Griezmann in the second half, but Raphinha quickly responded.\n\nThe winning goal came from Pedri in the 78th minute which sealed the victory for the hosts. Barcelona is now in second place, only 2 points behind Real Madrid.\n\nThis victory is very important for Barcelona in the La Liga title race this season. The coach praised the performance of the entire squad who performed excellently.\n\nWith this positive momentum, Barcelona is optimistic about continuing to compete for the La Liga title and closing the gap with Real Madrid at the top of the standings.'
+    },
+    image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=250&fit=crop',
+    category: 'La Liga',
+    author: 'Pablo Garcia',
+    timestamp: '16 jam lalu',
+    date: '9 Januari 2026',
+    club: 'Barcelona',
+    publisher: { name: 'Sport', icon: '📰', verified: true }
+  },
+  {
+    id: '11',
+    slug: 'napoli-perpanjang-tren-kemenangan-di-serie-a',
+    title: {
+      id: 'Napoli Perpanjang Tren Kemenangan di Serie A',
+      en: 'Napoli Extends Winning Streak in Serie A'
+    },
+    excerpt: { id: 'Gli Azzurri menang 3-0 atas Fiorentina.', en: 'Gli Azzurri win 3-0 against Fiorentina.' },
+    content: {
+      id: 'Napoli memperpanjang tren kemenangan mereka dengan mengalahkan Fiorentina 3-0 di Stadio Diego Armando Maradona. Kemenangan ini menjadi yang kelima beruntun bagi Gli Azzurri di Serie A.\n\nVictor Osimhen tampil gemilang dengan mencetak brace di babak pertama. Gol pertama datang di menit ke-15 melalui sundulan, diikuti gol kedua di menit ke-38 dari tendangan jarak dekat.\n\nGol penutup diciptakan oleh Khvicha Kvaratskhelia di menit ke-72 yang mengunci kemenangan telak bagi tuan rumah. Napoli kini berada di posisi ketiga klasemen dengan poin 45.\n\nPerforma luar biasa Napoli musim ini membuat mereka menjadi kandidat kuat untuk merebut Scudetto. Pelatih menyatakan sangat puas dengan konsistensi yang ditunjukkan tim.\n\nDengan skuad yang solid dan semangat juang tinggi, Napoli optimis bisa terus bersaing di papan atas Serie A dan mengulang kesuksesan musim lalu.',
+      en: 'Napoli extended their winning streak by defeating Fiorentina 3-0 at Stadio Diego Armando Maradona. This victory marks the fifth consecutive win for Gli Azzurri in Serie A.\n\nVictor Osimhen performed brilliantly by scoring a brace in the first half. The first goal came in the 15th minute through a header, followed by a second goal in the 38th minute from close range.\n\nThe closing goal was created by Khvicha Kvaratskhelia in the 72nd minute which sealed the convincing victory for the hosts. Napoli is now in third place with 45 points.\n\nNapoli\'s outstanding performance this season makes them a strong candidate to win the Scudetto. The coach expressed great satisfaction with the consistency shown by the team.\n\nWith a solid squad and high fighting spirit, Napoli is optimistic about continuing to compete at the top of Serie A and repeating last season\'s success.'
+    },
+    image: 'https://images.unsplash.com/photo-1522778526097-ce0a22ceb253?w=400&h=250&fit=crop',
+    category: 'Serie A',
+    author: 'Giuseppe Verdi',
+    timestamp: '18 jam lalu',
+    date: '9 Januari 2026',
+    club: 'Napoli',
+    publisher: { name: 'Corriere dello Sport', icon: '🇮🇹', verified: true }
+  },
+  {
+    id: '12',
+    slug: 'chelsea-kalah-dari-brighton-di-stamford-bridge',
+    title: {
+      id: 'Chelsea Kalah dari Brighton di Stamford Bridge',
+      en: 'Chelsea Loses to Brighton at Stamford Bridge'
+    },
+    excerpt: { id: 'The Blues menderita kekalahan mengejutkan.', en: 'The Blues suffer shocking defeat.' },
+    content: {
+      id: 'Chelsea menderita kekalahan mengejutkan 1-2 dari Brighton di kandang mereka sendiri, Stamford Bridge. Kekalahan ini semakin memperbesar tekanan terhadap manajemen dan pelatih The Blues.\n\nBrighton tampil sangat percaya diri dan berhasil unggul 2-0 di babak pertama melalui gol dari Kaoru Mitoma dan Danny Welbeck. Chelsea kesulitan menembus pertahanan solid Brighton.\n\nDi babak kedua, Cole Palmer berhasil memperkecil ketinggalan melalui tendangan bebas indah. Namun Chelsea tidak mampu menyamakan kedudukan meski menekan habis-habisan.\n\nKekalahan ini membuat Chelsea tergelincir ke posisi keenam klasemen dengan poin 30. Fans mulai kehilangan kesabaran dengan performa tidak konsisten tim musim ini.\n\nPelatih Chelsea menyatakan kekecewaan dengan hasil pertandingan dan berjanji akan melakukan evaluasi menyeluruh untuk memperbaiki performa di pertandingan-pertandingan mendatang.',
+      en: 'Chelsea suffered a shocking 1-2 defeat to Brighton at their own home, Stamford Bridge. This defeat further increases the pressure on The Blues management and coach.\n\nBrighton performed very confidently and took a 2-0 lead in the first half through goals from Kaoru Mitoma and Danny Welbeck. Chelsea struggled to break through Brighton\'s solid defense.\n\nIn the second half, Cole Palmer managed to reduce the deficit through a beautiful free-kick. However, Chelsea was unable to equalize despite pressing relentlessly.\n\nThis defeat saw Chelsea slip to sixth place in the standings with 30 points. Fans are beginning to lose patience with the team\'s inconsistent performance this season.\n\nThe Chelsea coach expressed disappointment with the result and promised to conduct a thorough evaluation to improve performance in upcoming matches.'
+    },
+    image: 'https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?w=400&h=250&fit=crop',
+    category: 'Premier League',
+    author: 'William Smith',
+    timestamp: '20 jam lalu',
+    date: '8 Januari 2026',
+    club: 'Chelsea',
+    publisher: { name: 'The Guardian', icon: '📰', verified: true }
+  },
+  {
+    id: '13',
+    slug: 'arsenal-puncaki-klasemen-premier-league',
+    title: {
+      id: 'Arsenal Puncaki Klasemen Premier League Sementara',
+      en: 'Arsenal Tops Premier League Standings Temporarily'
+    },
+    excerpt: { id: 'The Gunners naik ke puncak klasemen.', en: 'The Gunners rise to top of standings.' },
+    content: {
+      id: 'Arsenal berhasil naik ke puncak klasemen sementara Premier League setelah mengalahkan West Ham United 2-0 di Emirates Stadium. Kemenangan ini membuat The Gunners unggul 1 poin dari Manchester City.\n\nBukayo Saka membuka keunggulan Arsenal di menit ke-34 dengan tendangan keras dari tepi kotak penalti. Gol kedua diciptakan oleh Martin Odegaard di menit ke-67 melalui serangan balik cepat.\n\nArsenal tampil dominan sepanjang pertandingan dengan penguasaan bola mencapai 68%. Pertahanan solid yang dikawal William Saliba membuat West Ham kesulitan menciptakan peluang berbahaya.\n\nKemenangan ini sangat penting bagi Arsenal dalam persaingan gelar Premier League musim ini. Fans The Gunners optimis tim kesayangan mereka bisa meraih gelar juara setelah absen begitu lama.\n\nPelatih Mikel Arteta menyatakan timnya harus tetap fokus dan tidak boleh terlena dengan posisi di puncak klasemen. Masih ada banyak pertandingan penting yang harus dimenangkan.',
+      en: 'Arsenal managed to rise to the top of the temporary Premier League standings after defeating West Ham United 2-0 at Emirates Stadium. This victory puts The Gunners 1 point ahead of Manchester City.\n\nBukayo Saka opened Arsenal\'s lead in the 34th minute with a powerful shot from the edge of the penalty area. The second goal was created by Martin Odegaard in the 67th minute through a quick counter-attack.\n\nArsenal performed dominantly throughout the match with ball possession reaching 68%. The solid defense guarded by William Saliba made it difficult for West Ham to create dangerous chances.\n\nThis victory is very important for Arsenal in the Premier League title race this season. The Gunners fans are optimistic that their beloved team can win the title after being absent for so long.\n\nCoach Mikel Arteta stated that his team must stay focused and not be complacent with their position at the top of the standings. There are still many important matches to be won.'
+    },
+    image: 'https://images.unsplash.com/photo-1606925797300-0b35e9d1794e?w=400&h=250&fit=crop',
+    category: 'Premier League',
+    author: 'David Jones',
+    timestamp: '22 jam lalu',
+    date: '8 Januari 2026',
+    club: 'Arsenal',
+    publisher: { name: 'ESPN', icon: '📺', verified: true }
   }
 ];
 

@@ -448,40 +448,80 @@ const Berita: React.FC = () => {
           </div>
         </section>
 
-        {/* Featured Stories Section - 3 Column */}
-        {filteredArticles.length > 5 && (
-          <section className="py-12 bg-background">
-            <div className="container mx-auto px-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {filteredArticles.slice(5, 8).map((article, index) => (
-                  <motion.div
-                    key={`featured-${article.id}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <Link to={`/news/${article.slug}`} className="block group">
-                      {/* Image */}
-                      <div className="aspect-video rounded-lg overflow-hidden mb-3">
-                        <img 
-                          src={article.image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=250&fit=crop'} 
-                          alt={article.title[language]}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      
-                      {/* Headline */}
-                      <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-3">
-                        {article.title[language]}
-                      </h3>
-                    </Link>
-                  </motion.div>
-                ))}
+        {/* Featured Stories Section - 3 Column Cards + Text List */}
+        {(() => {
+          // Get articles for featured stories (with fallback to all articles)
+          const featuredStoriesData = filteredArticles.length > 5 
+            ? filteredArticles.slice(5) 
+            : allArticles.slice(5);
+          
+          // 3 articles with images for cards
+          const featuredStoriesWithImages = featuredStoriesData.slice(0, 3);
+          
+          // 3 more articles for text-only list
+          const textOnlyHeadlines = featuredStoriesData.slice(3, 6);
+
+          if (featuredStoriesWithImages.length === 0) return null;
+
+          return (
+            <section className="py-12 bg-background">
+              <div className="container mx-auto px-4">
+                {/* 3 Column Featured Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {featuredStoriesWithImages.map((article, index) => (
+                    <motion.div
+                      key={`featured-${article.id}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <Link to={`/news/${article.slug}`} className="block group">
+                        {/* Image */}
+                        <div className="aspect-video rounded-lg overflow-hidden mb-3">
+                          <img 
+                            src={article.image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=250&fit=crop'} 
+                            alt={article.title[language]}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                        
+                        {/* Headline */}
+                        <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-3">
+                          {article.title[language]}
+                        </h3>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Text-only Headlines List */}
+                {textOnlyHeadlines.length > 0 && (
+                  <div className="mt-8 space-y-0">
+                    {textOnlyHeadlines.map((article, index) => (
+                      <motion.div
+                        key={`text-${article.id}`}
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.05 }}
+                      >
+                        <Link 
+                          to={`/news/${article.slug}`}
+                          className="block border-b border-border py-4 last:border-b-0 group"
+                        >
+                          <h3 className="text-lg md:text-xl text-muted-foreground group-hover:text-primary transition-colors">
+                            {article.title[language]}
+                          </h3>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-          </section>
-        )}
+            </section>
+          );
+        })()}
       </main>
 
       <Footer />
