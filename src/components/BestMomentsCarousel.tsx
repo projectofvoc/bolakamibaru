@@ -9,6 +9,7 @@ interface MomentType {
   id: string;
   title: { id: string; en: string };
   thumbnail: string;
+  videoUrl?: string;
 }
 
 const BestMomentsCarousel: React.FC = () => {
@@ -169,11 +170,20 @@ const BestMomentsCarousel: React.FC = () => {
                   onTouchStart={handleTouchStart}
                   onTouchEnd={handleTouchEnd}
                 >
-                  <img
-                    src={selectedMoment.thumbnail}
-                    alt={selectedMoment.title[language]}
-                    className="w-full h-full object-cover"
-                  />
+                  {selectedMoment.videoUrl ? (
+                    <iframe
+                      src={`https://www.tiktok.com/embed/v2/${selectedMoment.videoUrl.split('/video/')[1]}`}
+                      className="w-full h-full"
+                      allowFullScreen
+                      allow="encrypted-media"
+                    />
+                  ) : (
+                    <img
+                      src={selectedMoment.thumbnail}
+                      alt={selectedMoment.title[language]}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                   
                   {/* Close Button */}
                   <button 
