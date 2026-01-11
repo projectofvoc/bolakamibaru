@@ -76,7 +76,7 @@ const NewsDetail: React.FC = () => {
             transition={{ duration: 0.5 }}
           >
             {/* Category Badge - Border style like NatGeo */}
-            <span className="inline-block px-3 py-1.5 text-xs font-semibold uppercase tracking-widest border border-primary text-primary mb-6">
+            <span className="inline-block px-4 py-1.5 text-xs font-semibold uppercase tracking-widest border border-primary text-primary rounded-full mb-6">
               {article.category}
             </span>
             
