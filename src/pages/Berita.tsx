@@ -508,9 +508,9 @@ const Berita: React.FC = () => {
                       >
                         <Link 
                           to={`/news/${article.slug}`}
-                          className="block border-b border-border py-4 last:border-b-0 group"
+                          className="block border-b border-white/10 py-4 last:border-b-0 group"
                         >
-                          <h3 className="text-lg text-muted-foreground group-hover:text-primary transition-colors">
+                          <h3 className="text-lg text-muted-foreground group-hover:text-primary transition-colors line-clamp-2">
                             {article.title[language]}
                           </h3>
                         </Link>
