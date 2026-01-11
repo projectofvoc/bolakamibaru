@@ -464,7 +464,7 @@ const Berita: React.FC = () => {
           if (featuredStoriesWithImages.length === 0) return null;
 
           return (
-            <section className="py-12 bg-background">
+            <section className="pt-12 pb-24 bg-background">
               <div className="container mx-auto px-4">
                 {/* 3 Column Featured Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
