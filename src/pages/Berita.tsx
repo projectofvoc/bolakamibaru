@@ -291,63 +291,66 @@ const Berita: React.FC = () => {
         {/* Filter Navigation */}
         <section className="py-4 border-b border-border">
           <div className="container mx-auto px-4">
-            <div className="flex items-center gap-2 overflow-x-auto pb-2">
-              {filterTypes.map((f, idx) => (
-                <Link key={f.id} to={`/berita/${f.id}`}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                  >
-                    <Button 
-                      variant={f.id === filter ? 'default' : 'ghost'} 
-                      size="sm" 
-                      className="rounded-full whitespace-nowrap gap-2"
+            <div className="flex items-center justify-between gap-4">
+              {/* LEFT: Main Filter Tabs */}
+              <div className="flex items-center gap-2 overflow-x-auto">
+                {filterTypes.map((f, idx) => (
+                  <Link key={f.id} to={`/berita/${f.id}`}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
                     >
-                      <f.icon className="w-4 h-4" />
-                      {f.name[language]}
-                    </Button>
-                  </motion.div>
-                </Link>
-              ))}
-            </div>
+                      <Button 
+                        variant={f.id === filter ? 'default' : 'ghost'} 
+                        size="sm" 
+                        className="rounded-full whitespace-nowrap gap-2"
+                      >
+                        <f.icon className="w-4 h-4" />
+                        {f.name[language]}
+                      </Button>
+                    </motion.div>
+                  </Link>
+                ))}
+              </div>
 
-            {/* Sub-Tabs for Trending: Indonesia vs International */}
-            {isTrending && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="flex items-center gap-1 mt-4 bg-muted/30 p-1 rounded-full w-fit"
-              >
-                <button
-                  onClick={() => {
-                    setActiveRegion('indonesia');
-                    setVisibleCount(10);
-                  }}
-                  className={`px-4 py-2 text-sm rounded-full transition-all ${
-                    activeRegion === 'indonesia'
-                      ? 'bg-primary text-primary-foreground font-medium'
-                      : 'text-muted-foreground hover:bg-muted/50'
-                  }`}
+              {/* RIGHT: Sub-Tabs for Trending (Indonesia vs International) */}
+              {isTrending && (
+                <motion.div
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex items-center gap-1 bg-muted/30 p-1 rounded-full flex-shrink-0"
                 >
-                  🇮🇩 Indonesia
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveRegion('international');
-                    setVisibleCount(10);
-                  }}
-                  className={`px-4 py-2 text-sm rounded-full transition-all ${
-                    activeRegion === 'international'
-                      ? 'bg-primary text-primary-foreground font-medium'
-                      : 'text-muted-foreground hover:bg-muted/50'
-                  }`}
-                >
-                  🌍 International
-                </button>
-              </motion.div>
-            )}
+                  <button
+                    onClick={() => {
+                      setActiveRegion('indonesia');
+                      setVisibleCount(10);
+                    }}
+                    className={`px-3 py-1.5 text-sm rounded-full transition-all ${
+                      activeRegion === 'indonesia'
+                        ? 'bg-primary text-primary-foreground font-medium'
+                        : 'text-muted-foreground hover:bg-muted/50'
+                    }`}
+                  >
+                    🇮🇩 Indonesia
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveRegion('international');
+                      setVisibleCount(10);
+                    }}
+                    className={`px-3 py-1.5 text-sm rounded-full transition-all ${
+                      activeRegion === 'international'
+                        ? 'bg-primary text-primary-foreground font-medium'
+                        : 'text-muted-foreground hover:bg-muted/50'
+                    }`}
+                  >
+                    🌍 International
+                  </button>
+                </motion.div>
+              )}
+            </div>
           </div>
         </section>
 
