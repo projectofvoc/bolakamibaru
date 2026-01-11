@@ -12,19 +12,19 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
     switch (match.status) {
       case 'live':
         return (
-          <span className="px-2 py-0.5 text-xs font-bold bg-live text-live-foreground rounded live-pulse">
+          <span className="px-2 py-0.5 text-xs font-bold bg-live text-live-foreground rounded-full live-pulse">
             {match.minute}'
           </span>
         );
       case 'ft':
         return (
-          <span className="px-2 py-0.5 text-xs font-semibold bg-finished text-finished-foreground rounded">
+          <span className="px-2 py-0.5 text-xs font-semibold bg-finished text-finished-foreground rounded-full">
             FT
           </span>
         );
       case 'post':
         return (
-          <span className="px-2 py-0.5 text-xs font-semibold bg-warning text-warning-foreground rounded">
+          <span className="px-2 py-0.5 text-xs font-semibold bg-warning text-warning-foreground rounded-full">
             POST
           </span>
         );

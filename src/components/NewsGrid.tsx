@@ -40,7 +40,7 @@ const NewsGrid: React.FC = () => {
                 />
                 {/* Category Badge */}
                 <div className="absolute top-3 left-3">
-                  <span className="px-2 py-1 text-xs font-semibold bg-primary/90 text-primary-foreground rounded">
+                  <span className="px-3 py-1 text-xs font-semibold bg-primary/90 text-primary-foreground rounded-full">
                     {article.category}
                   </span>
                 </div>
