@@ -6,6 +6,9 @@ import AIChatSidebar, { ChatMessage } from './AIChatSidebar';
 
 const PREDICTO_API_URL = 'https://jfzjqdxqpqiayckjolpr.supabase.co/functions/v1/bolakami-chat';
 
+// Helper function for delay between retries
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const AICompanion: React.FC = () => {
   const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -19,27 +22,43 @@ const AICompanion: React.FC = () => {
     t('ai.prompt3'),
   ];
 
-  // Call Predicto AI API
+  // Call Predicto AI API with retry logic
   const callPredictorAPI = async (message: string): Promise<string> => {
-    try {
-      const response = await fetch(PREDICTO_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000; // 1 detik
+    
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        console.log(`Predicto API - Attempt ${attempt}/${MAX_RETRIES}`);
+        
+        const response = await fetch(PREDICTO_API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message }),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data.response || data.message || data.reply || 'Maaf, terjadi kesalahan. Silakan coba lagi.';
+        
+      } catch (error) {
+        console.error(`Predicto AI Error (Attempt ${attempt}):`, error);
+        
+        // Jika belum mencapai max retry, tunggu lalu coba lagi
+        if (attempt < MAX_RETRIES) {
+          console.log(`Retrying in ${RETRY_DELAY}ms...`);
+          await delay(RETRY_DELAY);
+        }
       }
-      
-      const data = await response.json();
-      return data.response || data.message || data.reply || 'Maaf, terjadi kesalahan. Silakan coba lagi.';
-    } catch (error) {
-      console.error('Predicto AI Error:', error);
-      return 'Maaf, saya sedang tidak bisa merespons. Silakan coba lagi dalam beberapa saat. 🙏';
     }
+    
+    // Semua retry gagal
+    return 'Maaf, saya sedang tidak bisa merespons setelah beberapa percobaan. Silakan coba lagi dalam beberapa saat. 🙏';
   };
 
   // Handle sending message
