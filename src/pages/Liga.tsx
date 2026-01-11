@@ -155,9 +155,14 @@ const Liga: React.FC = () => {
         {filteredMatches.length > 0 && (
           <section className="py-8">
             <div className="container mx-auto px-4">
-              <h2 className="text-lg font-bold text-foreground mb-4">
-                {language === 'id' ? 'Jadwal Mendatang' : 'Upcoming Fixtures'}
-              </h2>
+              <div className="mb-6">
+                <h2 className="text-xl md:text-2xl font-bold text-foreground">
+                  {language === 'id' ? 'Jadwal Mendatang' : 'Upcoming Fixtures'}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {language === 'id' ? 'Pertandingan yang akan datang minggu ini' : 'Matches coming up this week'}
+                </p>
+              </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {filteredMatches.slice(0, 4).map((match, idx) => (
                   <motion.div
