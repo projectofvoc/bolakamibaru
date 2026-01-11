@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Tag, X, CheckCircle, Bookmark } from 'lucide-react';
+import { Tag, X, CheckCircle, Bookmark, Search } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { articles, featuredArticle } from '@/data/dummyData';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const BeritaTag: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { language } = useLanguage();
   const [visibleCount, setVisibleCount] = useState(10);
-
+  const [tagSearch, setTagSearch] = useState('');
   const tagParam = searchParams.get('tag');
   
   // Convert slug back to readable format
@@ -35,9 +36,22 @@ const BeritaTag: React.FC = () => {
   const hasMore = visibleCount < filteredArticles.length;
 
   // Get all unique tags from articles
-  const allTags = Array.from(
-    new Set(allArticles.flatMap(article => article.tags || []))
-  ).sort();
+  const allTags = useMemo(() => 
+    Array.from(
+      new Set(allArticles.flatMap(article => article.tags || []))
+    ).sort(),
+    []
+  );
+
+  // Filter tags by search query
+  const filteredTags = useMemo(() => 
+    tagSearch.trim()
+      ? allTags.filter(tag => 
+          tag.toLowerCase().includes(tagSearch.toLowerCase())
+        )
+      : allTags,
+    [allTags, tagSearch]
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -91,30 +105,74 @@ const BeritaTag: React.FC = () => {
           </section>
         )}
 
-        {/* Popular Tags (show when no filter) */}
+        {/* Tag Search & Popular Tags (show when no filter) */}
         {!tagParam && (
           <section className="py-6 border-b border-border">
             <div className="container mx-auto px-4">
-              <h2 className="text-sm font-medium text-muted-foreground mb-3">
-                {language === 'id' ? 'Tag Populer' : 'Popular Tags'}
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {allTags.slice(0, 15).map((tag, index) => (
-                  <motion.div
-                    key={tag}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.03 }}
+              {/* Search Input */}
+              <div className="relative max-w-md mb-6">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder={language === 'id' ? 'Cari tag...' : 'Search tags...'}
+                  value={tagSearch}
+                  onChange={(e) => setTagSearch(e.target.value)}
+                  className="pl-10 rounded-full bg-secondary border-0 focus-visible:ring-primary"
+                />
+                {tagSearch && (
+                  <button
+                    onClick={() => setTagSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full transition-colors"
                   >
-                    <Link
-                      to={`/berita?tag=${tag.toLowerCase().replace(/\s+/g, '-')}`}
-                      className="px-4 py-2 bg-secondary text-muted-foreground rounded-full text-sm hover:bg-primary hover:text-primary-foreground transition-colors"
-                    >
-                      {tag}
-                    </Link>
-                  </motion.div>
-                ))}
+                    <X className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                )}
               </div>
+
+              {/* Tags Display */}
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-medium text-muted-foreground">
+                  {tagSearch 
+                    ? (language === 'id' 
+                        ? `${filteredTags.length} tag ditemukan` 
+                        : `${filteredTags.length} tags found`)
+                    : (language === 'id' ? 'Semua Tag' : 'All Tags')}
+                </h2>
+                {tagSearch && (
+                  <span className="text-xs text-muted-foreground">
+                    {language === 'id' ? `Mencari "${tagSearch}"` : `Searching "${tagSearch}"`}
+                  </span>
+                )}
+              </div>
+
+              {filteredTags.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {filteredTags.map((tag, index) => (
+                    <motion.div
+                      key={tag}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: Math.min(index * 0.02, 0.3) }}
+                    >
+                      <Link
+                        to={`/berita?tag=${tag.toLowerCase().replace(/\s+/g, '-')}`}
+                        className="px-4 py-2 bg-secondary text-muted-foreground rounded-full text-sm hover:bg-primary hover:text-primary-foreground transition-colors"
+                      >
+                        {tag}
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Tag className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground">
+                    {language === 'id' 
+                      ? `Tidak ada tag dengan kata "${tagSearch}"` 
+                      : `No tags found matching "${tagSearch}"`}
+                  </p>
+                </div>
+              )}
             </div>
           </section>
         )}
@@ -250,40 +308,89 @@ const BeritaTag: React.FC = () => {
           </div>
         </section>
 
-        {/* All Tags Section (show when filtering) */}
+        {/* All Tags Section with Search (show when filtering) */}
         {tagParam && (
           <section className="py-12 bg-background">
             <div className="container mx-auto px-4">
-              <h2 className="text-xl font-bold text-foreground mb-6">
-                {language === 'id' ? 'Jelajahi Tag Lainnya' : 'Explore Other Tags'}
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {allTags.map((tag, index) => {
-                  const tagSlug = tag.toLowerCase().replace(/\s+/g, '-');
-                  const isActive = tagSlug === tagParam;
-                  
-                  return (
-                    <motion.div
-                      key={tag}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.02 }}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <h2 className="text-xl font-bold text-foreground">
+                  {language === 'id' ? 'Jelajahi Tag Lainnya' : 'Explore Other Tags'}
+                </h2>
+                
+                {/* Search Input */}
+                <div className="relative max-w-xs w-full">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder={language === 'id' ? 'Cari tag...' : 'Search tags...'}
+                    value={tagSearch}
+                    onChange={(e) => setTagSearch(e.target.value)}
+                    className="pl-10 rounded-full bg-secondary border-0 focus-visible:ring-primary text-sm h-9"
+                  />
+                  {tagSearch && (
+                    <button
+                      onClick={() => setTagSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full transition-colors"
                     >
-                      <Link
-                        to={`/berita?tag=${tagSlug}`}
-                        className={`px-4 py-2 rounded-full text-sm transition-colors ${
-                          isActive
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-secondary text-muted-foreground hover:bg-primary hover:text-primary-foreground'
-                        }`}
-                      >
-                        {tag}
-                      </Link>
-                    </motion.div>
-                  );
-                })}
+                      <X className="w-3 h-3 text-muted-foreground" />
+                    </button>
+                  )}
+                </div>
               </div>
+
+              {/* Search Result Info */}
+              {tagSearch && (
+                <p className="text-sm text-muted-foreground mb-4">
+                  {language === 'id' 
+                    ? `${filteredTags.length} tag ditemukan untuk "${tagSearch}"` 
+                    : `${filteredTags.length} tags found for "${tagSearch}"`}
+                </p>
+              )}
+
+              {filteredTags.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {filteredTags.map((tag, index) => {
+                    const tagSlug = tag.toLowerCase().replace(/\s+/g, '-');
+                    const isActive = tagSlug === tagParam;
+                    
+                    return (
+                      <motion.div
+                        key={tag}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: Math.min(index * 0.02, 0.3) }}
+                      >
+                        <Link
+                          to={`/berita?tag=${tagSlug}`}
+                          className={`px-4 py-2 rounded-full text-sm transition-colors ${
+                            isActive
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-secondary text-muted-foreground hover:bg-primary hover:text-primary-foreground'
+                          }`}
+                        >
+                          {tag}
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Tag className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground">
+                    {language === 'id' 
+                      ? `Tidak ada tag dengan kata "${tagSearch}"` 
+                      : `No tags found matching "${tagSearch}"`}
+                  </p>
+                  <button
+                    onClick={() => setTagSearch('')}
+                    className="text-primary text-sm mt-2 hover:underline"
+                  >
+                    {language === 'id' ? 'Hapus pencarian' : 'Clear search'}
+                  </button>
+                </div>
+              )}
             </div>
           </section>
         )}
