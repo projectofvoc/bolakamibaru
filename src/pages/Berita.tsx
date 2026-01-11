@@ -487,7 +487,7 @@ const Berita: React.FC = () => {
                         </div>
                         
                         {/* Headline */}
-                        <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors line-clamp-3">
+                        <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-3">
                           {article.title[language]}
                         </h3>
                       </Link>
@@ -510,7 +510,7 @@ const Berita: React.FC = () => {
                           to={`/news/${article.slug}`}
                           className="block border-b border-border py-4 last:border-b-0 group"
                         >
-                          <h3 className="text-base text-muted-foreground group-hover:text-primary transition-colors">
+                          <h3 className="text-lg text-muted-foreground group-hover:text-primary transition-colors">
                             {article.title[language]}
                           </h3>
                         </Link>
