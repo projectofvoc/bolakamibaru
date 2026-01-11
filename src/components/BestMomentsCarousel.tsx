@@ -129,7 +129,7 @@ const BestMomentsCarousel: React.FC = () => {
                   />
                   {/* New Badge */}
                   <div className="absolute top-2 left-2">
-                    <span className="px-2 py-0.5 text-[10px] font-bold bg-primary text-primary-foreground rounded">
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-primary text-primary-foreground rounded-full">
                       New
                     </span>
                   </div>
