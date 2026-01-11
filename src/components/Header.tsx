@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, MapPin, ChevronDown, Search, User, Radio, Brain, Trophy, Newspaper } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import logoBolakami from '@/assets/logo-bolakami.png';
+import SearchModal from './SearchModal';
 
 const Header: React.FC = () => {
   const { language, setLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [ligaDropdownOpen, setLigaDropdownOpen] = useState(false);
   const [beritaDropdownOpen, setBeritaDropdownOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
+
+  // Global keyboard shortcut for search (Cmd/Ctrl + K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const navItems = [
     { key: 'nav.live', path: 'https://stream.bolakami.com/', icon: Radio, priority: 'high', isExternal: true },
@@ -149,9 +164,15 @@ const Header: React.FC = () => {
             {/* Right Side Utilities */}
             <div className="hidden md:flex items-center gap-3">
               {/* Search */}
-              <button className="flex items-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-secondary">
+              <button 
+                onClick={() => setSearchOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-secondary"
+              >
                 <Search className="w-4 h-4" />
+                <span className="text-xs text-muted-foreground hidden lg:inline">⌘K</span>
               </button>
+
+              <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
               {/* Language Toggle */}
               <button
