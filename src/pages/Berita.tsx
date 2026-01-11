@@ -495,29 +495,53 @@ const Berita: React.FC = () => {
                   ))}
                 </div>
 
-                {/* Text-only Headlines List */}
-                {textOnlyHeadlines.length > 0 && (
-                  <div className="mt-8 border-y border-white divide-y divide-white">
-                    {textOnlyHeadlines.map((article, index) => (
-                      <motion.div
-                        key={`text-${article.id}`}
-                        initial={{ opacity: 0, x: -10 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: index * 0.05 }}
-                      >
-                        <Link 
-                          to={`/news/${article.slug}`}
-                          className="block py-4 group"
-                        >
-                          <h3 className="text-lg text-muted-foreground group-hover:text-primary transition-colors line-clamp-2">
-                            {article.title[language]}
-                          </h3>
-                        </Link>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
+                {/* Text-only Headlines List - 3 Columns */}
+                {(() => {
+                  // Extended dummy headlines for 3-column grid (9 items total, 3 per column)
+                  const extendedHeadlines = [
+                    { id: 'hl-1', slug: 'liverpool-menang-tipis', title: { id: 'Liverpool Menang Tipis Atas Newcastle di Anfield', en: 'Liverpool Edges Past Newcastle at Anfield' } },
+                    { id: 'hl-2', slug: 'barcelona-taklukkan-atletico', title: { id: 'Barcelona Taklukkan Atletico Madrid di Camp Nou', en: 'Barcelona Defeats Atletico Madrid at Camp Nou' } },
+                    { id: 'hl-3', slug: 'napoli-perpanjang-tren', title: { id: 'Napoli Perpanjang Tren Kemenangan di Serie A', en: 'Napoli Extends Winning Streak in Serie A' } },
+                    { id: 'hl-4', slug: 'arsenal-gagal-menang', title: { id: 'Arsenal Gagal Menang di Kandang West Ham', en: 'Arsenal Fails to Win at West Ham' } },
+                    { id: 'hl-5', slug: 'dortmund-pesta-gol', title: { id: 'Dortmund Pesta Gol Lawan Wolfsburg', en: 'Dortmund Scores Big Against Wolfsburg' } },
+                    { id: 'hl-6', slug: 'psg-amankan-puncak', title: { id: 'PSG Amankan Posisi Puncak Ligue 1', en: 'PSG Secures Top Spot in Ligue 1' } },
+                    { id: 'hl-7', slug: 'juventus-imbang-lawan-milan', title: { id: 'Juventus Imbang Lawan AC Milan di Derby Italia', en: 'Juventus Draws Against AC Milan in Italian Derby' } },
+                    { id: 'hl-8', slug: 'chelsea-bangkit-dari-ketertinggalan', title: { id: 'Chelsea Bangkit dari Ketertinggalan Lawan Everton', en: 'Chelsea Comes Back Against Everton' } },
+                    { id: 'hl-9', slug: 'tottenham-kalah-di-derby', title: { id: 'Tottenham Kalah di Derby London Utara', en: 'Tottenham Loses North London Derby' } },
+                  ];
+                  
+                  // Split into 3 columns
+                  const col1 = extendedHeadlines.slice(0, 3);
+                  const col2 = extendedHeadlines.slice(3, 6);
+                  const col3 = extendedHeadlines.slice(6, 9);
+                  
+                  return (
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {[col1, col2, col3].map((column, colIndex) => (
+                        <div key={`col-${colIndex}`} className="border-t border-white/50 divide-y divide-white/50">
+                          {column.map((article, index) => (
+                            <motion.div
+                              key={article.id}
+                              initial={{ opacity: 0, x: -10 }}
+                              whileInView={{ opacity: 1, x: 0 }}
+                              viewport={{ once: true }}
+                              transition={{ delay: index * 0.05 }}
+                            >
+                              <Link 
+                                to={`/news/${article.slug}`}
+                                className="block py-4 group"
+                              >
+                                <h3 className="text-lg text-muted-foreground group-hover:text-primary transition-colors line-clamp-2">
+                                  {article.title[language]}
+                                </h3>
+                              </Link>
+                            </motion.div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             </section>
           );
