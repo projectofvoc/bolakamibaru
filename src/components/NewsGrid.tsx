@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { articles } from '@/data/dummyData';
 import { motion } from 'framer-motion';
 import { CheckCircle, Bookmark } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const NewsGrid: React.FC = () => {
   const { language, t } = useLanguage();
+  const [visibleCount, setVisibleCount] = useState(8);
+
+  const visibleArticles = articles.slice(0, visibleCount);
+  const hasMore = visibleCount < articles.length;
 
   return (
     <section className="py-12 bg-card/50">
@@ -18,7 +23,7 @@ const NewsGrid: React.FC = () => {
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {articles.slice(0, 8).map((article, index) => (
+          {visibleArticles.map((article, index) => (
             <Link key={article.id} to={`/news/${article.slug}`}>
               <motion.article
                 initial={{ opacity: 0, y: 20 }}
@@ -92,16 +97,18 @@ const NewsGrid: React.FC = () => {
           ))}
         </div>
 
-        {/* See More Button */}
-        <div className="mt-10 text-center">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="px-8 py-3 border border-primary text-primary font-semibold rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
-          >
-            {t('section.seeMore')}
-          </motion.button>
-        </div>
+        {/* Load More Button */}
+        {hasMore && (
+          <div className="mt-10 text-center">
+            <Button
+              variant="outline"
+              className="rounded-full px-8"
+              onClick={() => setVisibleCount(prev => prev + 8)}
+            >
+              {t('section.seeMore')}
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );
