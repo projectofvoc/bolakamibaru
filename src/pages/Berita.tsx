@@ -447,6 +447,41 @@ const Berita: React.FC = () => {
             )}
           </div>
         </section>
+
+        {/* Featured Stories Section - 3 Column */}
+        {filteredArticles.length > 5 && (
+          <section className="py-12 bg-background">
+            <div className="container mx-auto px-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {filteredArticles.slice(5, 8).map((article, index) => (
+                  <motion.div
+                    key={`featured-${article.id}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Link to={`/news/${article.slug}`} className="block group">
+                      {/* Image */}
+                      <div className="aspect-video rounded-lg overflow-hidden mb-3">
+                        <img 
+                          src={article.image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=250&fit=crop'} 
+                          alt={article.title[language]}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                      
+                      {/* Headline */}
+                      <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-3">
+                        {article.title[language]}
+                      </h3>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />
