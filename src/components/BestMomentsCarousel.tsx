@@ -87,9 +87,14 @@ const BestMomentsCarousel: React.FC = () => {
         <div className="container mx-auto px-4">
           {/* Section Header */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl md:text-2xl font-bold text-foreground">
-              {t('section.bestMoments')}
-            </h2>
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-foreground">
+                {t('section.bestMoments')}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t('section.bestMomentsSubtitle')}
+              </p>
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={() => scroll('left')}

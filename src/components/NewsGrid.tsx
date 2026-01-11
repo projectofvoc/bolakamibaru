@@ -17,9 +17,14 @@ const NewsGrid: React.FC = () => {
     <section className="py-12 bg-card/50">
       <div className="container mx-auto px-4">
         {/* Section Header */}
-        <h2 className="text-xl md:text-2xl font-bold text-foreground mb-8">
-          {t('section.fromClubs')}
-        </h2>
+        <div className="mb-8">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">
+            {t('section.fromClubs')}
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t('section.fromClubsSubtitle')}
+          </p>
+        </div>
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

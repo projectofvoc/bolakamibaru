@@ -36,12 +36,15 @@ const translations: Record<string, Record<Language, string>> = {
   
   // Sections
   'section.bestMoments': { id: 'Momen Terbaik 2025/26', en: 'Best Moments of 2025/26' },
+  'section.bestMomentsSubtitle': { id: 'Highlight dan aksi terbaik dari lapangan hijau', en: 'Highlights and best actions from the pitch' },
   'section.moreMoments': { id: 'Momen Lainnya', en: 'More Moments' },
   'section.moreNews': { id: 'Berita Lainnya', en: 'More News' },
   'section.fromClubs': { id: 'Dari Klub-Klub', en: 'From the Clubs' },
+  'section.fromClubsSubtitle': { id: 'Berita dan update langsung dari klub favoritmu', en: 'News and updates directly from your favorite clubs' },
   'section.latestUpdates': { id: 'Update Terbaru', en: 'Latest Updates' },
   'section.seeMore': { id: 'Lihat Lebih Banyak', en: 'See More' },
   'section.upcomingMatches': { id: 'Jadwal Terdekat', en: 'Upcoming Matches' },
+  'section.upcomingMatchesSubtitle': { id: 'Pertandingan yang akan datang minggu ini', en: 'Upcoming matches this week' },
   'match.quickAnalysis': { id: 'Analisa Cepat', en: 'Quick Analysis' },
   'button.loadMore': { id: 'Muat Lebih Banyak', en: 'Load More' },
   
