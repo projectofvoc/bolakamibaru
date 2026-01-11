@@ -518,7 +518,7 @@ const Berita: React.FC = () => {
                   return (
                     <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                       {[col1, col2, col3].map((column, colIndex) => (
-                        <div key={`col-${colIndex}`} className="border-t border-white/50 divide-y divide-white/50">
+                        <div key={`col-${colIndex}`} className="border-t border-white/25 divide-y divide-white/25">
                           {column.map((article, index) => (
                             <motion.div
                               key={article.id}
