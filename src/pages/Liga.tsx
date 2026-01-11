@@ -160,7 +160,13 @@ const Liga: React.FC = () => {
                   {language === 'id' ? 'Jadwal Mendatang' : 'Upcoming Fixtures'}
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {language === 'id' ? 'Pertandingan yang akan datang minggu ini' : 'Matches coming up this week'}
+                  {currentLeague 
+                    ? (language === 'id' 
+                        ? `Pertandingan ${currentLeague.name[language]} yang akan datang` 
+                        : `Upcoming ${currentLeague.name[language]} fixtures`)
+                    : (language === 'id' 
+                        ? 'Pertandingan yang akan datang minggu ini' 
+                        : 'Matches coming up this week')}
                 </p>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
