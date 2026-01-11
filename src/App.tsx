@@ -14,6 +14,7 @@ import Live from "./pages/Live";
 import PrediksiAI from "./pages/PrediksiAI";
 import Liga from "./pages/Liga";
 import Berita from "./pages/Berita";
+import BeritaTag from "./pages/BeritaTag";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/liga" element={<Liga />} />
             <Route path="/liga/:league" element={<Liga />} />
             <Route path="/berita/:filter" element={<Berita />} />
+            <Route path="/berita" element={<BeritaTag />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
