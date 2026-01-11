@@ -13,7 +13,7 @@ const Header: React.FC = () => {
   const location = useLocation();
 
   const navItems = [
-    { key: 'nav.live', path: '/live', icon: Radio, priority: 'high' },
+    { key: 'nav.live', path: 'https://stream.bolakami.com/', icon: Radio, priority: 'high', isExternal: true },
     { key: 'nav.prediksiAI', path: '/prediksi-ai', icon: Brain, priority: 'high' },
     { key: 'nav.liga', path: '/liga', icon: Trophy, priority: 'medium', hasDropdown: true },
     { key: 'nav.berita', path: '/berita', icon: Newspaper, priority: 'medium', hasDropdown: true },
@@ -74,18 +74,30 @@ const Header: React.FC = () => {
                     if (item.key === 'nav.berita') setBeritaDropdownOpen(false);
                   }}
                 >
-                  <Link
-                    to={item.path}
-                    className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full ${
-                      isActive(item.path)
-                        ? 'text-primary-foreground bg-primary'
-                        : 'text-foreground/80 hover:text-foreground hover:bg-secondary'
-                    } ${item.priority === 'high' ? 'text-primary' : ''}`}
-                  >
-                    <item.icon className="w-4 h-4" />
-                    {t(item.key)}
-                    {item.hasDropdown && <ChevronDown className="w-3 h-3 ml-0.5" />}
-                  </Link>
+                  {item.isExternal ? (
+                    <a
+                      href={item.path}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full text-foreground/80 hover:text-foreground hover:bg-secondary ${item.priority === 'high' ? 'text-primary' : ''}`}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      {t(item.key)}
+                    </a>
+                  ) : (
+                    <Link
+                      to={item.path}
+                      className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full ${
+                        isActive(item.path)
+                          ? 'text-primary-foreground bg-primary'
+                          : 'text-foreground/80 hover:text-foreground hover:bg-secondary'
+                      } ${item.priority === 'high' ? 'text-primary' : ''}`}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      {t(item.key)}
+                      {item.hasDropdown && <ChevronDown className="w-3 h-3 ml-0.5" />}
+                    </Link>
+                  )}
 
                   {/* Liga Dropdown */}
                   {item.key === 'nav.liga' && ligaDropdownOpen && (
@@ -184,19 +196,32 @@ const Header: React.FC = () => {
             <nav className="container mx-auto px-4 py-4 flex flex-col gap-2">
               {navItems.map((item) => (
                 <div key={item.key}>
-                  <Link
-                    to={item.path}
-                    onClick={() => !item.hasDropdown && setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 text-sm font-bold uppercase tracking-wide py-3 px-4 rounded-xl transition-colors ${
-                      isActive(item.path)
-                        ? 'text-primary-foreground bg-primary'
-                        : 'text-foreground/80 hover:bg-secondary'
-                    }`}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    {t(item.key)}
-                    {item.hasDropdown && <ChevronDown className="w-4 h-4 ml-auto" />}
-                  </Link>
+                  {item.isExternal ? (
+                    <a
+                      href={item.path}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 text-sm font-bold uppercase tracking-wide py-3 px-4 rounded-xl transition-colors text-foreground/80 hover:bg-secondary"
+                    >
+                      <item.icon className="w-5 h-5" />
+                      {t(item.key)}
+                    </a>
+                  ) : (
+                    <Link
+                      to={item.path}
+                      onClick={() => !item.hasDropdown && setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 text-sm font-bold uppercase tracking-wide py-3 px-4 rounded-xl transition-colors ${
+                        isActive(item.path)
+                          ? 'text-primary-foreground bg-primary'
+                          : 'text-foreground/80 hover:bg-secondary'
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      {t(item.key)}
+                      {item.hasDropdown && <ChevronDown className="w-4 h-4 ml-auto" />}
+                    </Link>
+                  )}
 
                   {/* Mobile Liga Submenu */}
                   {item.key === 'nav.liga' && (
