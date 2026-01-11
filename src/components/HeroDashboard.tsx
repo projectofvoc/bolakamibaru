@@ -1,32 +1,21 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { featuredArticle, matches } from '@/data/dummyData';
-import { Clock, ChevronRight, Play } from 'lucide-react';
+import { featuredArticle } from '@/data/dummyData';
+import { Clock, ChevronRight, Play, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import heroImage from '@/assets/hero-stadium.jpg';
+import { useLiveScores } from '@/hooks/useLiveScores';
 
 const HeroDashboard: React.FC = () => {
   const { language, t } = useLanguage();
+  const { matches: liveMatches, isLoading, error } = useLiveScores();
 
-  // Get live matches from all leagues
-  const liveMatches = matches.filter(m => m.status === 'live').slice(0, 6);
-  
-  // Fallback to recent finished if no live matches
-  const displayMatches = liveMatches.length > 0 
-    ? liveMatches 
-    : matches.filter(m => m.status === 'ft' || m.status === 'post').slice(0, 5);
-
-  const getLeagueShortName = (league: string) => {
-    const mapping: Record<string, string> = {
-      'Liga 1 Indonesia': 'Liga 1',
-      'Premier League': 'EPL',
-      'La Liga': 'La Liga',
-      'Serie A': 'Serie A',
-      'Bundesliga': 'Bund.',
-    };
-    return mapping[league] || league;
-  };
+  // Display live matches first, then finished
+  const displayMatches = liveMatches
+    .filter(m => m.status === 'live')
+    .concat(liveMatches.filter(m => m.status !== 'live'))
+    .slice(0, 6);
 
   return (
     <section className="w-full bg-background py-6">
@@ -110,55 +99,69 @@ const HeroDashboard: React.FC = () => {
             
             {/* Match Rows - Scrollable only when overflow */}
             <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-border">
-              {displayMatches.map((match) => (
-                <div
-                  key={match.id}
-                  className="grid grid-cols-[80px_1fr_60px_70px] px-4 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer items-center"
-                >
-                  {/* Liga */}
-                  <span className="text-[11px] text-muted-foreground truncate pr-2">
-                    {getLeagueShortName(match.league)}
-                  </span>
-                  
-                  {/* Pertandingan - Tim stacked */}
-                  <div className="flex flex-col gap-0.5 min-w-0">
-                    <span className={`text-xs truncate ${match.homeScore !== undefined && match.homeScore > (match.awayScore || 0) ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
-                      {match.homeTeam}
-                    </span>
-                    <span className={`text-xs truncate ${match.awayScore !== undefined && match.awayScore > (match.homeScore || 0) ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
-                      {match.awayTeam}
-                    </span>
-                  </div>
-                  
-                  {/* Skor - stacked */}
-                  <div className="flex flex-col gap-0.5 text-center">
-                    <span className={`text-xs font-bold ${match.homeScore !== undefined && match.homeScore > (match.awayScore || 0) ? 'text-foreground' : 'text-muted-foreground'}`}>
-                      {match.homeScore ?? '-'}
-                    </span>
-                    <span className={`text-xs font-bold ${match.awayScore !== undefined && match.awayScore > (match.homeScore || 0) ? 'text-foreground' : 'text-muted-foreground'}`}>
-                      {match.awayScore ?? '-'}
-                    </span>
-                  </div>
-                  
-                  {/* Status */}
-                  <div className="flex items-center gap-1 justify-end">
-                    {match.status === 'live' ? (
-                      <>
-                        <span className="w-1.5 h-1.5 bg-live rounded-full animate-pulse" />
-                        <span className="text-[10px] font-bold text-live">
-                          {match.minute}'
-                        </span>
-                      </>
-                    ) : match.status === 'ft' ? (
-                      <span className="text-[10px] font-medium text-muted-foreground">FT</span>
-                    ) : match.status === 'post' ? (
-                      <span className="text-[10px] font-medium text-warning">POST</span>
-                    ) : (
-                      <span className="text-[10px] text-muted-foreground">{match.time}</span>
-                    )}
-                  </div>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
-              ))}
+              ) : error ? (
+                <div className="flex items-center justify-center py-8 text-xs text-muted-foreground">
+                  {language === 'id' ? 'Gagal memuat data' : 'Failed to load data'}
+                </div>
+              ) : displayMatches.length === 0 ? (
+                <div className="flex items-center justify-center py-8 text-xs text-muted-foreground">
+                  {language === 'id' ? 'Tidak ada pertandingan' : 'No matches available'}
+                </div>
+              ) : (
+                displayMatches.map((match) => (
+                  <div
+                    key={match.id}
+                    className="grid grid-cols-[80px_1fr_60px_70px] px-4 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer items-center"
+                  >
+                    {/* Liga */}
+                    <span className="text-[11px] text-muted-foreground truncate pr-2">
+                      {match.leagueShort}
+                    </span>
+                    
+                    {/* Pertandingan - Tim stacked */}
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <span className={`text-xs truncate ${match.homeScore !== null && match.homeScore > (match.awayScore || 0) ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
+                        {match.homeTeam}
+                      </span>
+                      <span className={`text-xs truncate ${match.awayScore !== null && match.awayScore > (match.homeScore || 0) ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
+                        {match.awayTeam}
+                      </span>
+                    </div>
+                    
+                    {/* Skor - stacked */}
+                    <div className="flex flex-col gap-0.5 text-center">
+                      <span className={`text-xs font-bold ${match.homeScore !== null && match.homeScore > (match.awayScore || 0) ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        {match.homeScore ?? '-'}
+                      </span>
+                      <span className={`text-xs font-bold ${match.awayScore !== null && match.awayScore > (match.homeScore || 0) ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        {match.awayScore ?? '-'}
+                      </span>
+                    </div>
+                    
+                    {/* Status */}
+                    <div className="flex items-center gap-1 justify-end">
+                      {match.status === 'live' ? (
+                        <>
+                          <span className="w-1.5 h-1.5 bg-live rounded-full animate-pulse" />
+                          <span className="text-[10px] font-bold text-live">
+                            {match.minute}'
+                          </span>
+                        </>
+                      ) : match.status === 'ft' ? (
+                        <span className="text-[10px] font-medium text-muted-foreground">FT</span>
+                      ) : match.status === 'post' ? (
+                        <span className="text-[10px] font-medium text-warning">POST</span>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">{match.time}</span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </motion.div>
