@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, ChevronRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { upcomingMatches } from '@/data/dummyData';
+import { upcomingMatches } from '@/data/matchData';
 import { Button } from '@/components/ui/button';
 
 const leagueColorClasses: Record<string, string> = {

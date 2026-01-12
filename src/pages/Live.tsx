@@ -4,7 +4,7 @@ import { Radio, Clock } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { matches } from '@/data/dummyData';
+import { matches } from '@/data/matchData';
 
 const Live: React.FC = () => {
   const { t, language } = useLanguage();

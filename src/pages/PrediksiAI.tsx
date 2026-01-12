@@ -4,7 +4,7 @@ import { Brain, Sparkles, TrendingUp, Target, ChevronRight, Zap } from 'lucide-r
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { upcomingMatches } from '@/data/dummyData';
+import { upcomingMatches } from '@/data/matchData';
 import { Button } from '@/components/ui/button';
 
 interface Prediction {
