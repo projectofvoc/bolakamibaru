@@ -302,7 +302,7 @@ const CMSArticleEditor = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -344,9 +344,9 @@ const CMSArticleEditor = () => {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid lg:grid-cols-[1fr_380px] gap-6">
+        {/* Main Content - Konten Artikel */}
+        <div className="space-y-6">
           {/* Bilingual Content */}
           <Card>
             <CardHeader>
@@ -442,8 +442,8 @@ const CMSArticleEditor = () => {
           </Card>
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
+          {/* Sidebar */}
+          <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
           {/* Featured Image */}
           <Card>
             <CardHeader>
