@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Search, X, Newspaper, Trophy, Calendar, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { articles, featuredArticle, upcomingMatches } from '@/data/dummyData';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -23,6 +24,23 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
   const { language } = useLanguage();
   const navigate = useNavigate();
+
+  // Fetch articles for search
+  const { data: articles } = useQuery({
+    queryKey: ['search-articles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(50);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: isOpen
+  });
 
   // Reset query when modal opens
   useEffect(() => {
@@ -55,30 +73,20 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
     };
   }, [isOpen]);
 
-  const allArticles = useMemo(() => [featuredArticle, ...articles], []);
-
   const searchResults = useMemo(() => {
-    if (!query.trim()) {
-      return { news: [], matches: [], leagues: [] };
+    if (!query.trim() || !articles) {
+      return { news: [], leagues: [] };
     }
 
     const searchTerm = query.toLowerCase();
 
-    const filteredNews = allArticles
+    const filteredNews = articles
       .filter(article => 
-        article.title[language].toLowerCase().includes(searchTerm) ||
+        (language === 'id' ? article.title_id : article.title_en).toLowerCase().includes(searchTerm) ||
         article.category.toLowerCase().includes(searchTerm) ||
         article.club?.toLowerCase().includes(searchTerm)
       )
       .slice(0, 4);
-
-    const filteredMatches = upcomingMatches
-      .filter(match =>
-        match.homeTeam.toLowerCase().includes(searchTerm) ||
-        match.awayTeam.toLowerCase().includes(searchTerm) ||
-        match.league.toLowerCase().includes(searchTerm)
-      )
-      .slice(0, 3);
 
     const filteredLeagues = leagues
       .filter(league =>
@@ -88,12 +96,11 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
 
     return {
       news: filteredNews,
-      matches: filteredMatches,
       leagues: filteredLeagues
     };
-  }, [query, language, allArticles]);
+  }, [query, language, articles]);
 
-  const hasResults = searchResults.news.length > 0 || searchResults.matches.length > 0 || searchResults.leagues.length > 0;
+  const hasResults = searchResults.news.length > 0 || searchResults.leagues.length > 0;
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -192,9 +199,9 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
                             onClick={() => handleNavigate(`/news/${article.slug}`)}
                             className="w-full flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary transition-colors text-left"
                           >
-                            {article.image ? (
+                            {article.featured_image ? (
                               <img
-                                src={article.image}
+                                src={article.featured_image}
                                 alt=""
                                 className="w-12 h-12 rounded-lg object-cover shrink-0"
                               />
@@ -205,39 +212,12 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
                             )}
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-foreground line-clamp-2">
-                                {article.title[language]}
+                                {language === 'id' ? article.title_id : article.title_en}
                               </p>
                               <p className="text-xs text-muted-foreground mt-0.5">
-                                {article.category} • {article.timestamp}
-                              </p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Matches Results */}
-                    {searchResults.matches.length > 0 && (
-                      <div className="mb-4">
-                        <p className="text-xs uppercase font-medium text-muted-foreground px-3 py-2 flex items-center gap-2">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {language === 'id' ? 'Pertandingan' : 'Matches'}
-                        </p>
-                        {searchResults.matches.map((match) => (
-                          <button
-                            key={match.id}
-                            onClick={() => handleNavigate('/liga')}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary transition-colors text-left"
-                          >
-                            <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                              <Calendar className="w-5 h-5 text-muted-foreground" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground">
-                                {match.homeTeam} vs {match.awayTeam}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {match.league} • {match.dateLabel[language]} • {match.time}
+                                {article.category} • {article.published_at 
+                                  ? new Date(article.published_at).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' })
+                                  : ''}
                               </p>
                             </div>
                           </button>

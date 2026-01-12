@@ -5,9 +5,12 @@ import { Newspaper, TrendingUp, Calendar, BarChart3, CheckCircle, Bookmark, Cloc
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { articles, featuredArticle, matches } from '@/data/dummyData';
 import { Button } from '@/components/ui/button';
 import heroImage from '@/assets/hero-stadium.jpg';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useLiveScores } from '@/hooks/useLiveScores';
 
 interface FilterInfo {
   id: string;
@@ -40,7 +43,7 @@ const filterTypes: FilterInfo[] = [
 // Indonesian clubs/keywords for filtering
 const indonesianClubs = ['Persebaya', 'Persija', 'Persib', 'Arema', 'Bali United', 'Madura United', 'PSM', 'PSIS', 'Borneo FC', 'Timnas', 'Indonesia'];
 const indonesianLeagues = ['Liga 1 Indonesia', 'Liga 1'];
-const internationalLeagues = ['Premier League', 'La Liga', 'Serie A', 'Bundesliga'];
+const internationalLeagues = ['Premier League', 'La Liga', 'Serie A', 'Bundesliga', 'Ligue 1'];
 
 const Berita: React.FC = () => {
   const { filter } = useParams<{ filter?: string }>();
@@ -50,20 +53,36 @@ const Berita: React.FC = () => {
 
   const currentFilter = filter ? filterTypes.find(f => f.id === filter) : null;
   
-  // All articles (in real app, would filter by type)
-  const allArticles = [featuredArticle, ...articles];
+  // Fetch articles from database
+  const { data: allArticles, isLoading } = useQuery({
+    queryKey: ['berita-articles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(50);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Use live scores hook
+  const { matches: liveMatchesData } = useLiveScores();
 
   // Filter articles by region
-  const isIndonesianArticle = (article: typeof featuredArticle) => {
-    const title = article.title.id + ' ' + article.title.en;
+  const isIndonesianArticle = (article: any) => {
+    const title = article.title_id + ' ' + article.title_en;
     const clubMatch = article.club && indonesianClubs.some(club => article.club?.includes(club));
     return article.category === 'Liga 1' || 
            indonesianClubs.some(club => title.includes(club)) ||
            clubMatch;
   };
 
-  const isInternationalArticle = (article: typeof featuredArticle) => {
-    const title = article.title.id + ' ' + article.title.en;
+  const isInternationalArticle = (article: any) => {
+    const title = article.title_id + ' ' + article.title_en;
     const isIndonesian = indonesianClubs.some(club => title.includes(club)) || 
                          article.club && indonesianClubs.some(club => article.club?.includes(club));
     return !isIndonesian && (
@@ -77,9 +96,9 @@ const Berita: React.FC = () => {
   // Get filtered articles based on region (only for trending)
   const filteredArticles = isTrending
     ? activeRegion === 'indonesia'
-      ? allArticles.filter(isIndonesianArticle)
-      : allArticles.filter(isInternationalArticle)
-    : allArticles;
+      ? (allArticles || []).filter(isIndonesianArticle)
+      : (allArticles || []).filter(isInternationalArticle)
+    : allArticles || [];
 
   const visibleArticles = filteredArticles.slice(0, visibleCount);
   const hasMore = visibleCount < filteredArticles.length;
@@ -87,22 +106,15 @@ const Berita: React.FC = () => {
   // Get featured article based on region
   const regionFeatured = isTrending
     ? activeRegion === 'indonesia'
-      ? allArticles.find(isIndonesianArticle) || featuredArticle
-      : allArticles.find(isInternationalArticle) || featuredArticle
-    : featuredArticle;
+      ? (allArticles || []).find(isIndonesianArticle) || (allArticles || [])[0]
+      : (allArticles || []).find(isInternationalArticle) || (allArticles || [])[0]
+    : (allArticles || [])[0];
 
-  // Filter matches by region
-  const regionMatches = isTrending
-    ? activeRegion === 'indonesia'
-      ? matches.filter(m => indonesianLeagues.includes(m.league))
-      : matches.filter(m => internationalLeagues.includes(m.league))
-    : matches;
-
-  // Get live matches from filtered region
-  const liveMatches = regionMatches.filter(m => m.status === 'live').slice(0, 6);
+  // Get live matches
+  const liveMatches = (liveMatchesData || []).filter((m: any) => m.status === 'live').slice(0, 6);
   const displayMatches = liveMatches.length > 0 
     ? liveMatches 
-    : regionMatches.filter(m => m.status === 'ft' || m.status === 'post' || m.status === 'scheduled').slice(0, 5);
+    : (liveMatchesData || []).filter((m: any) => m.status === 'ft' || m.status === 'post' || m.status === 'scheduled').slice(0, 5);
 
   const getLeagueShortName = (league: string) => {
     const mapping: Record<string, string> = {
@@ -115,13 +127,35 @@ const Berita: React.FC = () => {
     return mapping[league] || league;
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1">
+          <div className="container mx-auto px-4 py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="space-y-4">
+                  <Skeleton className="aspect-[4/3] rounded-lg" />
+                  <Skeleton className="h-6 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       
       <main className="flex-1">
         {/* Hero Section - Different for trending vs other filters */}
-        {isTrending ? (
+        {isTrending && regionFeatured ? (
           /* Trending: Hero Dashboard Style */
           <section className="w-full bg-background py-6">
             <div className="container mx-auto px-4">
@@ -137,7 +171,7 @@ const Berita: React.FC = () => {
                   <Link to={`/news/${regionFeatured.slug}`} className="lg:col-span-8 relative overflow-hidden block">
                     <div
                       className="absolute inset-0 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${regionFeatured.image || heroImage})` }}
+                      style={{ backgroundImage: `url(${regionFeatured.featured_image || heroImage})` }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
                     
@@ -157,16 +191,20 @@ const Berita: React.FC = () => {
                         
                         {/* Headline */}
                         <h2 className="text-[26px] md:text-[34px] lg:text-[42px] font-bold text-white mb-3 leading-tight max-w-2xl">
-                          {regionFeatured.title[language]}
+                          {language === 'id' ? regionFeatured.title_id : regionFeatured.title_en}
                         </h2>
                       </div>
                       
                       {/* Meta */}
                       <div className="flex items-center gap-4 text-sm text-white/70">
-                        <span>{regionFeatured.author}</span>
+                        <span>{regionFeatured.author_name || 'Bolakama'}</span>
                         <div className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          <span>{regionFeatured.timestamp}</span>
+                          <span>
+                            {regionFeatured.published_at 
+                              ? new Date(regionFeatured.published_at).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' })
+                              : ''}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -202,7 +240,7 @@ const Berita: React.FC = () => {
                     
                     {/* Match Rows */}
                     <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-border">
-                      {displayMatches.length > 0 ? displayMatches.map((match) => (
+                      {displayMatches.length > 0 ? displayMatches.map((match: any) => (
                         <div
                           key={match.id}
                           className="grid grid-cols-[80px_1fr_60px_70px] px-4 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer items-center"
@@ -379,20 +417,22 @@ const Berita: React.FC = () => {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: index * 0.03 }}
+                    transition={{ delay: index * 0.05 }}
                     className="group cursor-pointer"
                   >
                     <div className="relative rounded-lg overflow-hidden bg-card aspect-[4/3]">
                       <img
-                        src={article.image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=250&fit=crop'}
-                        alt={article.title[language]}
+                        src={article.featured_image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=250&fit=crop'}
+                        alt={language === 'id' ? article.title_id : article.title_en}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
+                      {/* Category Badge */}
                       <div className="absolute top-3 left-3">
                         <span className="px-3 py-1 text-xs font-semibold bg-primary/90 text-primary-foreground rounded-full">
                           {article.category}
                         </span>
                       </div>
+                      {/* Club Badge */}
                       {article.club && (
                         <div className="absolute top-3 right-3">
                           <span className="w-8 h-8 flex items-center justify-center bg-background/80 rounded-full text-xs font-bold">
@@ -404,25 +444,39 @@ const Berita: React.FC = () => {
                     
                     <div className="mt-4">
                       <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                        {article.title[language]}
+                        {language === 'id' ? article.title_id : article.title_en}
                       </h3>
                       
+                      {/* Publisher Metadata Footer */}
                       <div className="mt-3 flex items-center justify-between">
                         <div className="flex items-center gap-1.5 min-w-0">
+                          {/* Publisher Icon */}
                           <span className="w-5 h-5 flex-shrink-0 flex items-center justify-center bg-muted rounded-full text-xs">
-                            {article.publisher.icon}
+                            {article.publisher_icon || '📰'}
                           </span>
+                          
+                          {/* Publisher Name */}
                           <span className="text-sm text-muted-foreground truncate max-w-[80px]">
-                            {article.publisher.name}
+                            {article.publisher_name || 'Bolakama'}
                           </span>
-                          {article.publisher.verified && (
+                          
+                          {/* Verified Badge */}
+                          {article.publisher_verified && (
                             <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 text-primary fill-primary/20" />
                           )}
+                          
+                          {/* Separator */}
                           <span className="text-muted-foreground/50 flex-shrink-0">·</span>
+                          
+                          {/* Timestamp */}
                           <span className="text-sm text-muted-foreground truncate">
-                            {article.timestamp}
+                            {article.published_at 
+                              ? new Date(article.published_at).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' })
+                              : ''}
                           </span>
                         </div>
+                        
+                        {/* Bookmark Button */}
                         <button className="p-1.5 hover:bg-muted rounded-md transition-colors flex-shrink-0">
                           <Bookmark className="w-4 h-4 text-muted-foreground" />
                         </button>
@@ -431,137 +485,26 @@ const Berita: React.FC = () => {
                   </motion.article>
                 </Link>
               )) : (
-                <div className="col-span-full flex items-center justify-center py-16 text-muted-foreground">
-                  {language === 'id' ? 'Tidak ada berita untuk ditampilkan' : 'No news to display'}
+                <div className="col-span-full text-center py-12 text-muted-foreground">
+                  {language === 'id' ? 'Tidak ada berita tersedia' : 'No news available'}
                 </div>
               )}
             </div>
 
-            {/* Load More */}
+            {/* Load More Button */}
             {hasMore && (
-              <div className="flex justify-center mt-8">
-                <Button 
-                  variant="outline" 
+              <div className="mt-10 text-center">
+                <Button
+                  variant="outline"
                   className="rounded-full px-8"
                   onClick={() => setVisibleCount(prev => prev + 10)}
                 >
-                  {language === 'id' ? 'Muat Lebih Banyak' : 'Load More'}
+                  {t('section.seeMore')}
                 </Button>
               </div>
             )}
           </div>
         </section>
-
-        {/* Featured Stories Section - 3 Column Cards + Text List */}
-        {(() => {
-          // Get articles for featured stories (with fallback to all articles)
-          const featuredStoriesData = filteredArticles.length > 5 
-            ? filteredArticles.slice(5) 
-            : allArticles.slice(5);
-          
-          // 3 articles with images for cards
-          const featuredStoriesWithImages = featuredStoriesData.slice(0, 3);
-          
-          // 3 more articles for text-only list
-          const textOnlyHeadlines = featuredStoriesData.slice(3, 6);
-
-          if (featuredStoriesWithImages.length === 0) return null;
-
-          return (
-            <section className="pt-12 pb-24 bg-background">
-              <div className="container mx-auto px-4">
-                {/* 3 Column Featured Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {featuredStoriesWithImages.map((article, index) => (
-                    <motion.div
-                      key={`featured-${article.id}`}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <Link to={`/news/${article.slug}`} className="block group">
-                        {/* Image with Badge and Video Play Button */}
-                        <div className="aspect-video rounded-lg overflow-hidden mb-3 relative">
-                          <img 
-                            src={article.image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=250&fit=crop'} 
-                            alt={article.title[language]}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                          {/* Category Badge */}
-                          <span className="absolute top-3 left-3 px-3 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full">
-                            {article.category || 'Trending'}
-                          </span>
-                          {/* Video Play Button - Show on second card (index 1) */}
-                          {index === 1 && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center group-hover:bg-primary transition-colors">
-                                <Play className="w-6 h-6 text-background ml-1" fill="currentColor" />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Headline */}
-                        <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-3">
-                          {article.title[language]}
-                        </h3>
-                      </Link>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* Text-only Headlines List - 3 Columns */}
-                {(() => {
-                  // Extended dummy headlines for 3-column grid (9 items total, 3 per column)
-                  const extendedHeadlines = [
-                    { id: 'hl-1', slug: 'liverpool-menang-tipis', title: { id: 'Liverpool Menang Tipis Atas Newcastle di Anfield', en: 'Liverpool Edges Past Newcastle at Anfield' } },
-                    { id: 'hl-2', slug: 'barcelona-taklukkan-atletico', title: { id: 'Barcelona Taklukkan Atletico Madrid di Camp Nou', en: 'Barcelona Defeats Atletico Madrid at Camp Nou' } },
-                    { id: 'hl-3', slug: 'napoli-perpanjang-tren', title: { id: 'Napoli Perpanjang Tren Kemenangan di Serie A', en: 'Napoli Extends Winning Streak in Serie A' } },
-                    { id: 'hl-4', slug: 'arsenal-gagal-menang', title: { id: 'Arsenal Gagal Menang di Kandang West Ham', en: 'Arsenal Fails to Win at West Ham' } },
-                    { id: 'hl-5', slug: 'dortmund-pesta-gol', title: { id: 'Dortmund Pesta Gol Lawan Wolfsburg', en: 'Dortmund Scores Big Against Wolfsburg' } },
-                    { id: 'hl-6', slug: 'psg-amankan-puncak', title: { id: 'PSG Amankan Posisi Puncak Ligue 1', en: 'PSG Secures Top Spot in Ligue 1' } },
-                    { id: 'hl-7', slug: 'juventus-imbang-lawan-milan', title: { id: 'Juventus Imbang Lawan AC Milan di Derby Italia', en: 'Juventus Draws Against AC Milan in Italian Derby' } },
-                    { id: 'hl-8', slug: 'chelsea-bangkit-dari-ketertinggalan', title: { id: 'Chelsea Bangkit dari Ketertinggalan Lawan Everton', en: 'Chelsea Comes Back Against Everton' } },
-                    { id: 'hl-9', slug: 'tottenham-kalah-di-derby', title: { id: 'Tottenham Kalah di Derby London Utara', en: 'Tottenham Loses North London Derby' } },
-                  ];
-                  
-                  // Split into 3 columns
-                  const col1 = extendedHeadlines.slice(0, 3);
-                  const col2 = extendedHeadlines.slice(3, 6);
-                  const col3 = extendedHeadlines.slice(6, 9);
-                  
-                  return (
-                    <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {[col1, col2, col3].map((column, colIndex) => (
-                        <div key={`col-${colIndex}`} className="border-t border-white/15 divide-y divide-white/15">
-                          {column.map((article, index) => (
-                            <motion.div
-                              key={article.id}
-                              initial={{ opacity: 0, x: -10 }}
-                              whileInView={{ opacity: 1, x: 0 }}
-                              viewport={{ once: true }}
-                              transition={{ delay: index * 0.05 }}
-                            >
-                              <Link 
-                                to={`/news/${article.slug}`}
-                                className="block py-4 group"
-                              >
-                                <h3 className="text-base text-muted-foreground group-hover:text-primary transition-colors line-clamp-2">
-                                  {article.title[language]}
-                                </h3>
-                              </Link>
-                            </motion.div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
-              </div>
-            </section>
-          );
-        })()}
       </main>
 
       <Footer />
