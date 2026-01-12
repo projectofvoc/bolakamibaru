@@ -1,21 +1,69 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { featuredArticle } from '@/data/dummyData';
+import { supabase } from '@/integrations/supabase/client';
 import { Clock, ChevronRight, Play, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import heroImage from '@/assets/hero-stadium.jpg';
 import { useLiveScores } from '@/hooks/useLiveScores';
+import { format } from 'date-fns';
 
 const HeroDashboard: React.FC = () => {
   const { language, t } = useLanguage();
-  const { matches: liveMatches, isLoading, error } = useLiveScores();
+  const { matches: liveMatches, isLoading: isLoadingScores, error: scoresError } = useLiveScores();
+
+  // Fetch featured article from database
+  const { data: featuredArticle, isLoading: isLoadingArticle } = useQuery({
+    queryKey: ['featured-article'],
+    queryFn: async () => {
+      // First try to get a featured article
+      const { data: featured, error: featuredError } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('status', 'published')
+        .eq('is_featured', true)
+        .order('published_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (featuredError) throw featuredError;
+      
+      // If we have a featured article, return it
+      if (featured) return featured;
+      
+      // Fallback: get the latest published article
+      const { data: latest, error: latestError } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (latestError) throw latestError;
+      return latest;
+    },
+  });
 
   // Display live matches first, then finished
   const displayMatches = liveMatches
     .filter(m => m.status === 'live')
     .concat(liveMatches.filter(m => m.status !== 'live'))
     .slice(0, 6);
+
+  // Format article data for display
+  const articleTitle = featuredArticle 
+    ? (language === 'id' ? featuredArticle.title_id : featuredArticle.title_en)
+    : (language === 'id' ? 'Berita Terbaru Akan Muncul Di Sini' : 'Latest News Will Appear Here');
+  
+  const articleCategory = featuredArticle?.category || 'Daily';
+  const articleAuthor = featuredArticle?.author_name || 'BOLAKAMI';
+  const articleDate = featuredArticle?.published_at 
+    ? format(new Date(featuredArticle.published_at), 'dd MMM yyyy')
+    : format(new Date(), 'dd MMM yyyy');
+  const articleSlug = featuredArticle?.slug || '';
+  const articleImage = featuredArticle?.featured_image || heroImage;
 
   return (
     <section className="w-full bg-background py-6">
@@ -29,44 +77,52 @@ const HeroDashboard: React.FC = () => {
         >
           {/* Card 1: Featured Article (Left - 8 cols) */}
           <Link 
-            to={`/news/${featuredArticle.slug}`} 
+            to={articleSlug ? `/news/${articleSlug}` : '#'} 
             className="lg:col-span-8 relative overflow-hidden block bg-card rounded-2xl border border-border min-h-[450px]"
           >
-            <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: `url(${heroImage})` }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-            
-            <div className="relative h-full flex flex-col p-6">
-              {/* Category Badge - Top Left */}
-              <span className="inline-flex items-center gap-1 w-fit px-3 py-1 mb-auto text-xs font-semibold bg-primary text-primary-foreground rounded-full">
-                <Play className="w-3 h-3" />
-                {featuredArticle.category}
-              </span>
-              
-              {/* Content at bottom */}
-              <div className="mt-auto">
-                {/* Popular News Label */}
-                <span className="text-primary font-bold text-sm uppercase tracking-wider mb-2 block">
-                  {language === 'id' ? 'BERITA POPULER' : 'POPULAR NEWS'}
-                </span>
+            {isLoadingArticle ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <>
+                <div
+                  className="absolute inset-0 bg-cover bg-center"
+                  style={{ backgroundImage: `url(${articleImage})` }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
                 
-                {/* Headline - 50% larger */}
-                <h2 className="text-[26px] md:text-[34px] lg:text-[42px] font-bold text-white mb-3 leading-tight max-w-2xl">
-                  {featuredArticle.title[language]}
-                </h2>
-              </div>
-              
-              {/* Meta */}
-              <div className="flex items-center gap-4 text-sm text-white/70">
-                <span>{featuredArticle.author}</span>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  <span>{featuredArticle.timestamp}</span>
+                <div className="relative h-full flex flex-col p-6">
+                  {/* Category Badge - Top Left */}
+                  <span className="inline-flex items-center gap-1 w-fit px-3 py-1 mb-auto text-xs font-semibold bg-primary text-primary-foreground rounded-full">
+                    <Play className="w-3 h-3" />
+                    {articleCategory}
+                  </span>
+                  
+                  {/* Content at bottom */}
+                  <div className="mt-auto">
+                    {/* Popular News Label */}
+                    <span className="text-primary font-bold text-sm uppercase tracking-wider mb-2 block">
+                      {language === 'id' ? 'BERITA POPULER' : 'POPULAR NEWS'}
+                    </span>
+                    
+                    {/* Headline - 50% larger */}
+                    <h2 className="text-[26px] md:text-[34px] lg:text-[42px] font-bold text-white mb-3 leading-tight max-w-2xl">
+                      {articleTitle}
+                    </h2>
+                  </div>
+                  
+                  {/* Meta */}
+                  <div className="flex items-center gap-4 text-sm text-white/70">
+                    <span>{articleAuthor}</span>
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      <span>{articleDate}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
           </Link>
 
           {/* Card 2: Live Score Widget (Right - 4 cols) */}
@@ -99,11 +155,11 @@ const HeroDashboard: React.FC = () => {
             
             {/* Match Rows - Scrollable only when overflow */}
             <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-border">
-              {isLoading ? (
+              {isLoadingScores ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
-              ) : error ? (
+              ) : scoresError ? (
                 <div className="flex items-center justify-center py-8 text-xs text-muted-foreground">
                   {language === 'id' ? 'Gagal memuat data' : 'Failed to load data'}
                 </div>

@@ -1,12 +1,14 @@
 import React from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { articles, featuredArticle } from '@/data/dummyData';
+import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MoreNewsGrid from '@/components/MoreNewsGrid';
 import { motion } from 'framer-motion';
-import { ChevronRight, Facebook, Twitter } from 'lucide-react';
+import { ChevronRight, Facebook, Twitter, Clock, Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,19 +22,54 @@ const NewsDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { language, t } = useLanguage();
   
-  // Find article by slug
-  const allArticles = [featuredArticle, ...articles];
-  const article = allArticles.find(a => a.slug === slug);
-  
+  // Fetch article from database
+  const { data: article, isLoading, error } = useQuery({
+    queryKey: ['article', slug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('slug', slug)
+        .eq('status', 'published')
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!slug,
+  });
+
+  // Note: View count tracking can be added via database trigger if needed
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   // Redirect to 404 if article not found
-  if (!article) {
+  if (error || !article) {
     return <Navigate to="/not-found" replace />;
   }
 
-  // Get first paragraph as lead/excerpt
-  const paragraphs = article.content[language].split('\n\n');
-  const leadParagraph = paragraphs[0];
-  const bodyParagraphs = paragraphs.slice(1);
+  const title = language === 'id' ? article.title_id : article.title_en;
+  const excerpt = language === 'id' ? article.excerpt_id : article.excerpt_en;
+  const content = language === 'id' ? article.content_id : article.content_en;
+  const authorName = article.author_name || 'BOLAKAMI';
+  const publishedDate = article.published_at 
+    ? format(new Date(article.published_at), 'dd MMMM yyyy')
+    : format(new Date(article.created_at || new Date()), 'dd MMMM yyyy');
+
+  const getCategoryLabel = (category: string) => {
+    const labels: Record<string, string> = {
+      trending: '🔥 Trending',
+      daily: '📰 Update Harian',
+      analisa: '📊 Analisa',
+    };
+    return labels[category] || category;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -56,7 +93,7 @@ const NewsDetail: React.FC = () => {
               </BreadcrumbSeparator>
               <BreadcrumbItem>
                 <BreadcrumbLink className="text-muted-foreground hover:text-primary cursor-pointer">
-                  {article.category}
+                  {getCategoryLabel(article.category)}
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator>
@@ -64,7 +101,7 @@ const NewsDetail: React.FC = () => {
               </BreadcrumbSeparator>
               <BreadcrumbItem>
                 <BreadcrumbPage className="text-foreground line-clamp-1 max-w-[200px]">
-                  {article.title[language]}
+                  {title}
                 </BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
@@ -77,36 +114,31 @@ const NewsDetail: React.FC = () => {
           >
             {/* Category Badge - Border style like NatGeo */}
             <span className="inline-block px-4 py-1.5 text-xs font-semibold uppercase tracking-widest border border-primary text-primary rounded-full mb-6">
-              {article.category}
+              {getCategoryLabel(article.category)}
             </span>
             
             {/* Title */}
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-6">
-              {article.title[language]}
+              {title}
             </h1>
             
-            {/* Lead Paragraph - Not italic */}
-            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-6">
-              {article.excerpt[language]}
-            </p>
+            {/* Lead Paragraph - Excerpt */}
+            {excerpt && (
+              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-6">
+                {excerpt}
+              </p>
+            )}
             
             {/* Author & Date with Share buttons - same line */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
               {/* Left: Publisher Info */}
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                {/* Publisher Icon */}
-                {article.publisher.icon.startsWith('http') ? (
-                  <img 
-                    src={article.publisher.icon} 
-                    alt={article.publisher.name}
-                    className="w-6 h-6 rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="text-lg">{article.publisher.icon}</span>
-                )}
-                <span className="font-medium text-foreground">{t('news.by')} {article.author}</span>
+                <span className="font-medium text-foreground">{t('news.by')} {authorName}</span>
                 <span>•</span>
-                <span>{article.date}</span>
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  <span>{publishedDate}</span>
+                </div>
               </div>
               
               {/* Right: Share buttons - Footer style (no colors) */}
@@ -127,37 +159,32 @@ const NewsDetail: React.FC = () => {
             </div>
             
             {/* Featured Image - Full width */}
-            <div className="relative w-full aspect-[16/9] overflow-hidden mb-2">
-              <img
-                src={article.image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&h=675&fit=crop'}
-                alt={article.title[language]}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            
-            {/* Image Caption - Not italic, centered */}
-            <p className="text-sm text-muted-foreground mb-10 text-center">
-              {article.publisher.name} / {article.author}
-            </p>
-            
-            {/* Article Body */}
-            <div className="space-y-6">
-              {/* First paragraph with drop cap effect */}
-              <p className="text-foreground text-lg leading-relaxed first-letter:text-5xl first-letter:font-bold first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-primary">
-                {leadParagraph}
-              </p>
-              
-              {/* Remaining paragraphs */}
-              {bodyParagraphs.map((paragraph, index) => (
-                <p key={index} className="text-foreground text-lg leading-relaxed">
-                  {paragraph}
+            {article.featured_image && (
+              <>
+                <div className="relative w-full aspect-[16/9] overflow-hidden mb-2">
+                  <img
+                    src={article.featured_image}
+                    alt={title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                
+                {/* Image Caption - Not italic, centered */}
+                <p className="text-sm text-muted-foreground mb-10 text-center">
+                  {article.publisher_name || 'BOLAKAMI'} / {authorName}
                 </p>
-              ))}
-            </div>
+              </>
+            )}
+            
+            {/* Article Body - HTML Content */}
+            <div 
+              className="article-content"
+              dangerouslySetInnerHTML={{ __html: content }}
+            />
             
             {/* Tags Section */}
             {article.tags && article.tags.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 mt-8 pt-8 border-t border-white/10">
+              <div className="flex flex-wrap items-center gap-2 mt-8 pt-8 border-t border-border">
                 <span className="text-sm text-muted-foreground mr-2">Tags:</span>
                 {article.tags.map((tag, index) => (
                   <Link

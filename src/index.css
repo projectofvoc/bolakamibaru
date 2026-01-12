@@ -136,3 +136,142 @@
     background: var(--gradient-hero);
   }
 }
+
+/* Article Content Styling - Rich Text Editor Output */
+.article-content {
+  @apply text-foreground leading-relaxed;
+}
+
+.article-content h1 {
+  @apply text-3xl md:text-4xl font-bold mb-6 mt-10 text-foreground leading-tight;
+}
+
+.article-content h2 {
+  @apply text-2xl md:text-3xl font-bold mb-4 mt-8 text-foreground leading-tight;
+}
+
+.article-content h3 {
+  @apply text-xl md:text-2xl font-semibold mb-3 mt-6 text-foreground leading-snug;
+}
+
+.article-content p {
+  @apply text-lg leading-relaxed mb-5 text-foreground/90;
+}
+
+.article-content ul {
+  @apply list-disc pl-6 mb-5 space-y-2;
+}
+
+.article-content ol {
+  @apply list-decimal pl-6 mb-5 space-y-2;
+}
+
+.article-content li {
+  @apply text-lg leading-relaxed text-foreground/90;
+}
+
+.article-content blockquote {
+  @apply border-l-4 border-primary pl-6 py-2 my-6 italic text-muted-foreground bg-muted/30 rounded-r-lg;
+}
+
+.article-content img {
+  @apply rounded-lg my-6 max-w-full mx-auto;
+}
+
+.article-content a {
+  @apply text-primary hover:underline font-medium;
+}
+
+.article-content code {
+  @apply bg-muted px-2 py-1 rounded text-sm font-mono text-primary;
+}
+
+.article-content pre {
+  @apply bg-muted p-4 rounded-lg overflow-x-auto mb-5;
+}
+
+.article-content pre code {
+  @apply bg-transparent p-0;
+}
+
+.article-content hr {
+  @apply border-border my-8;
+}
+
+.article-content strong {
+  @apply font-bold text-foreground;
+}
+
+.article-content em {
+  @apply italic;
+}
+
+.article-content u {
+  @apply underline;
+}
+
+.article-content s {
+  @apply line-through;
+}
+
+/* TipTap Editor Placeholder */
+.tiptap p.is-editor-empty:first-child::before {
+  @apply text-muted-foreground;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* TipTap Editor Styling */
+.tiptap {
+  @apply outline-none;
+}
+
+.tiptap h1 {
+  @apply text-2xl font-bold mb-4 mt-6 text-foreground;
+}
+
+.tiptap h2 {
+  @apply text-xl font-bold mb-3 mt-5 text-foreground;
+}
+
+.tiptap h3 {
+  @apply text-lg font-semibold mb-2 mt-4 text-foreground;
+}
+
+.tiptap p {
+  @apply mb-3 text-foreground;
+}
+
+.tiptap ul {
+  @apply list-disc pl-6 mb-3;
+}
+
+.tiptap ol {
+  @apply list-decimal pl-6 mb-3;
+}
+
+.tiptap blockquote {
+  @apply border-l-4 border-primary pl-4 italic text-muted-foreground my-4;
+}
+
+.tiptap code {
+  @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+.tiptap pre {
+  @apply bg-muted p-3 rounded-lg overflow-x-auto mb-3;
+}
+
+.tiptap img {
+  @apply rounded-lg max-w-full my-4;
+}
+
+.tiptap a {
+  @apply text-primary underline;
+}
+
+.tiptap hr {
+  @apply border-border my-4;
+}
