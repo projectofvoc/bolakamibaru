@@ -14,6 +14,96 @@ export type Database = {
   }
   public: {
     Tables: {
+      articles: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          badge_expires_at: string | null
+          badges: string[] | null
+          category: string
+          club: string | null
+          content_en: string
+          content_id: string
+          created_at: string | null
+          excerpt_en: string | null
+          excerpt_id: string | null
+          featured_image: string | null
+          id: string
+          is_featured: boolean | null
+          league: string | null
+          published_at: string | null
+          publisher_icon: string | null
+          publisher_name: string | null
+          publisher_verified: boolean | null
+          slug: string
+          sort_order: number | null
+          status: string | null
+          tags: string[] | null
+          title_en: string
+          title_id: string
+          updated_at: string | null
+          views: number | null
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          badge_expires_at?: string | null
+          badges?: string[] | null
+          category?: string
+          club?: string | null
+          content_en: string
+          content_id: string
+          created_at?: string | null
+          excerpt_en?: string | null
+          excerpt_id?: string | null
+          featured_image?: string | null
+          id?: string
+          is_featured?: boolean | null
+          league?: string | null
+          published_at?: string | null
+          publisher_icon?: string | null
+          publisher_name?: string | null
+          publisher_verified?: boolean | null
+          slug: string
+          sort_order?: number | null
+          status?: string | null
+          tags?: string[] | null
+          title_en: string
+          title_id: string
+          updated_at?: string | null
+          views?: number | null
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          badge_expires_at?: string | null
+          badges?: string[] | null
+          category?: string
+          club?: string | null
+          content_en?: string
+          content_id?: string
+          created_at?: string | null
+          excerpt_en?: string | null
+          excerpt_id?: string | null
+          featured_image?: string | null
+          id?: string
+          is_featured?: boolean | null
+          league?: string | null
+          published_at?: string | null
+          publisher_icon?: string | null
+          publisher_name?: string | null
+          publisher_verified?: boolean | null
+          slug?: string
+          sort_order?: number | null
+          status?: string | null
+          tags?: string[] | null
+          title_en?: string
+          title_id?: string
+          updated_at?: string | null
+          views?: number | null
+        }
+        Relationships: []
+      }
       best_moments: {
         Row: {
           created_at: string | null
@@ -50,15 +140,131 @@ export type Database = {
         }
         Relationships: []
       }
+      leagues: {
+        Row: {
+          country: string | null
+          created_at: string | null
+          icon_url: string | null
+          id: string
+          is_active: boolean | null
+          is_international: boolean | null
+          name: string
+          name_en: string | null
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_international?: boolean | null
+          name: string
+          name_en?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_international?: boolean | null
+          name?: string
+          name_en?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      nav_items: {
+        Row: {
+          created_at: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          is_external: boolean | null
+          label_en: string
+          label_id: string
+          parent_id: string | null
+          path: string
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_external?: boolean | null
+          label_en: string
+          label_id: string
+          parent_id?: string | null
+          path: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_external?: boolean | null
+          label_en?: string
+          label_id?: string
+          parent_id?: string | null
+          path?: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nav_items_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "nav_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "author" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -185,6 +391,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "author", "user"],
+    },
   },
 } as const
