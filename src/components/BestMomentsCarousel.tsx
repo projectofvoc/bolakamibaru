@@ -1,15 +1,19 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { bestMoments } from '@/data/dummyData';
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Heart, Send, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Heart, Send, X, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface MomentType {
   id: string;
-  title: { id: string; en: string };
-  thumbnail: string;
-  videoUrl?: string;
+  title_id: string;
+  title_en: string;
+  thumbnail_url: string;
+  video_url: string | null;
+  is_active: boolean;
+  sort_order: number;
 }
 
 const BestMomentsCarousel: React.FC = () => {
@@ -17,6 +21,21 @@ const BestMomentsCarousel: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
+
+  // Fetch moments from database
+  const { data: moments = [], isLoading } = useQuery({
+    queryKey: ['best-moments'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('best_moments')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+      
+      if (error) throw error;
+      return data as MomentType[];
+    },
+  });
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -33,10 +52,10 @@ const BestMomentsCarousel: React.FC = () => {
     
     if (direction === 'prev' && selectedIndex > 0) {
       setSelectedIndex(selectedIndex - 1);
-    } else if (direction === 'next' && selectedIndex < bestMoments.length - 1) {
+    } else if (direction === 'next' && selectedIndex < moments.length - 1) {
       setSelectedIndex(selectedIndex + 1);
     }
-  }, [selectedIndex]);
+  }, [selectedIndex, moments.length]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -80,7 +99,25 @@ const BestMomentsCarousel: React.FC = () => {
     setTouchStart(null);
   };
 
-  const selectedMoment = selectedIndex !== null ? bestMoments[selectedIndex] : null;
+  const selectedMoment = selectedIndex !== null ? moments[selectedIndex] : null;
+
+  if (isLoading) {
+    return (
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          <div className="flex gap-3 overflow-hidden">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex-shrink-0 w-40 md:w-44 aspect-[3/4] bg-muted rounded-xl animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (moments.length === 0) {
+    return null;
+  }
 
   return (
     <>
@@ -118,7 +155,7 @@ const BestMomentsCarousel: React.FC = () => {
             className="flex gap-3 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {bestMoments.map((moment, index) => (
+            {moments.map((moment, index) => (
               <motion.div
                 key={moment.id}
                 initial={{ opacity: 0, x: 20 }}
@@ -129,10 +166,18 @@ const BestMomentsCarousel: React.FC = () => {
               >
                 <div className="relative rounded-xl overflow-hidden bg-card aspect-[3/4]">
                   <img
-                    src={moment.thumbnail}
-                    alt={moment.title[language]}
+                    src={moment.thumbnail_url}
+                    alt={language === 'id' ? moment.title_id : moment.title_en}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
+                  {/* Video indicator */}
+                  {moment.video_url && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center">
+                        <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
+                      </div>
+                    </div>
+                  )}
                   {/* New Badge */}
                   <div className="absolute top-2 left-2">
                     <span className="px-2 py-0.5 text-[10px] font-bold bg-primary text-primary-foreground rounded-full">
@@ -143,7 +188,7 @@ const BestMomentsCarousel: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <h3 className="mt-2 text-xs md:text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                  {moment.title[language]}
+                  {language === 'id' ? moment.title_id : moment.title_en}
                 </h3>
               </motion.div>
             ))}
@@ -170,17 +215,19 @@ const BestMomentsCarousel: React.FC = () => {
                   onTouchStart={handleTouchStart}
                   onTouchEnd={handleTouchEnd}
                 >
-                  {selectedMoment.videoUrl ? (
-                    <iframe
-                      src={`https://www.tiktok.com/embed/v2/${selectedMoment.videoUrl.split('/video/')[1]}`}
-                      className="w-full h-full"
-                      allowFullScreen
-                      allow="encrypted-media"
+                  {selectedMoment.video_url ? (
+                    <video
+                      src={selectedMoment.video_url}
+                      className="w-full h-full object-cover"
+                      controls
+                      autoPlay
+                      loop
+                      playsInline
                     />
                   ) : (
                     <img
-                      src={selectedMoment.thumbnail}
-                      alt={selectedMoment.title[language]}
+                      src={selectedMoment.thumbnail_url}
+                      alt={language === 'id' ? selectedMoment.title_id : selectedMoment.title_en}
                       className="w-full h-full object-cover"
                     />
                   )}
@@ -188,7 +235,7 @@ const BestMomentsCarousel: React.FC = () => {
                   {/* Close Button */}
                   <button 
                     onClick={() => setSelectedIndex(null)}
-                    className="absolute top-4 right-4 w-8 h-8 rounded-full bg-background/50 flex items-center justify-center hover:bg-background/70 transition-colors"
+                    className="absolute top-4 right-4 w-8 h-8 rounded-full bg-background/50 flex items-center justify-center hover:bg-background/70 transition-colors z-10"
                   >
                     <X className="w-4 h-4 text-foreground" />
                   </button>
@@ -198,29 +245,33 @@ const BestMomentsCarousel: React.FC = () => {
                     <span className="text-lg">⚽</span>
                   </div>
 
-                  {/* Bottom Content */}
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background/80 to-transparent">
-                    {/* Title */}
-                    <p className="text-sm text-foreground font-medium mb-3">
-                      {selectedMoment.title[language]}
-                    </p>
-                    
-                    {/* Progress Bar */}
-                    <div className="w-full h-0.5 bg-muted rounded-full mb-4">
-                      <div className="w-1/3 h-full bg-foreground rounded-full" />
+                  {/* Bottom Content - Only show for images */}
+                  {!selectedMoment.video_url && (
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background/80 to-transparent">
+                      {/* Title */}
+                      <p className="text-sm text-foreground font-medium mb-3">
+                        {language === 'id' ? selectedMoment.title_id : selectedMoment.title_en}
+                      </p>
+                      
+                      {/* Progress Bar */}
+                      <div className="w-full h-0.5 bg-muted rounded-full mb-4">
+                        <div className="w-1/3 h-full bg-foreground rounded-full" />
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Right Side Actions */}
-                  <div className="absolute right-4 bottom-24 flex flex-col items-center gap-4">
-                    <button className="flex flex-col items-center gap-1">
-                      <Heart className="w-6 h-6 text-foreground" />
-                      <span className="text-xs text-foreground">1.1K</span>
-                    </button>
-                    <button className="flex flex-col items-center gap-1">
-                      <Send className="w-6 h-6 text-foreground" />
-                    </button>
-                  </div>
+                  {/* Right Side Actions - Only show for images */}
+                  {!selectedMoment.video_url && (
+                    <div className="absolute right-4 bottom-24 flex flex-col items-center gap-4">
+                      <button className="flex flex-col items-center gap-1">
+                        <Heart className="w-6 h-6 text-foreground" />
+                        <span className="text-xs text-foreground">1.1K</span>
+                      </button>
+                      <button className="flex flex-col items-center gap-1">
+                        <Send className="w-6 h-6 text-foreground" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -238,7 +289,7 @@ const BestMomentsCarousel: React.FC = () => {
               </button>
               <button
                 onClick={() => navigateMoment('next')}
-                disabled={selectedIndex === bestMoments.length - 1}
+                disabled={selectedIndex === moments.length - 1}
                 className="w-10 h-10 rounded-full bg-background/70 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-background/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronDown className="w-5 h-5" />

@@ -15,6 +15,7 @@ import PrediksiAI from "./pages/PrediksiAI";
 import Liga from "./pages/Liga";
 import Berita from "./pages/Berita";
 import BeritaTag from "./pages/BeritaTag";
+import BolakamaCMS from "./pages/BolakamaCMS";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/liga/:league" element={<Liga />} />
             <Route path="/berita/:filter" element={<Berita />} />
             <Route path="/berita" element={<BeritaTag />} />
+            <Route path="/bolakamicms" element={<BolakamaCMS />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 import logoBolakami from '@/assets/logo-bolakami.png';
 
 const Auth = () => {
@@ -17,9 +18,21 @@ const Auth = () => {
   const [whatsapp, setWhatsapp] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
+
+  // Check if already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate('/');
+      }
+    };
+    checkSession();
+  }, [navigate]);
 
   const handleClose = () => {
     setIsOpen(false);
@@ -32,22 +45,61 @@ const Auth = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    if (isLogin) {
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: t('auth.loginSuccess'),
+          description: t('auth.welcomeBack'),
+        });
+        navigate('/');
+      } else {
+        if (!agreeTerms) {
+          toast({
+            title: 'Error',
+            description: 'Anda harus menyetujui syarat dan ketentuan',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              whatsapp: whatsapp ? `+62${whatsapp}` : null,
+            },
+          },
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: t('auth.registerSuccess'),
+          description: t('auth.accountCreated'),
+        });
+        navigate('/');
+      }
+    } catch (error: any) {
       toast({
-        title: t('auth.loginSuccess'),
-        description: t('auth.welcomeBack'),
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
       });
-    } else {
-      toast({
-        title: t('auth.registerSuccess'),
-        description: t('auth.accountCreated'),
-      });
+    } finally {
+      setIsLoading(false);
     }
-    
-    navigate('/');
   };
 
   const handleWhatsappChange = (value: string) => {
@@ -132,6 +184,7 @@ const Auth = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="pl-10 bg-muted border-border h-12 rounded-xl"
+                      required
                     />
                   </div>
                 </div>
@@ -147,6 +200,8 @@ const Auth = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="pl-10 pr-10 bg-muted border-border h-12 rounded-xl"
+                      required
+                      minLength={6}
                     />
                     <button
                       type="button"
@@ -224,8 +279,9 @@ const Auth = () => {
                 <Button
                   type="submit"
                   className="w-full h-12 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base"
+                  disabled={isLoading}
                 >
-                  {isLogin ? t('auth.loginButton') : t('auth.registerButton')}
+                  {isLoading ? 'Loading...' : isLogin ? t('auth.loginButton') : t('auth.registerButton')}
                 </Button>
               </form>
 
@@ -242,9 +298,16 @@ const Auth = () => {
                   type="button"
                   variant="outline"
                   className="w-full h-12 rounded-full border-border bg-muted hover:bg-muted/80 text-foreground hover:text-foreground"
-                  onClick={() => {
-                    toast({ title: isLogin ? t('auth.loginSuccess') : t('auth.registerSuccess') });
-                    navigate('/');
+                  onClick={async () => {
+                    const { error } = await supabase.auth.signInWithOAuth({
+                      provider: 'google',
+                      options: {
+                        redirectTo: window.location.origin,
+                      },
+                    });
+                    if (error) {
+                      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+                    }
                   }}
                 >
                   <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
