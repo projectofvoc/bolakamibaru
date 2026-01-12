@@ -61,6 +61,25 @@ const generateSlug = (title: string) => {
     .trim();
 };
 
+// Helper function to ensure content has proper HTML structure
+const ensureHtmlContent = (content: string): string => {
+  if (!content) return '';
+  
+  // If content already has HTML tags, return as-is
+  if (content.includes('<p>') || content.includes('<h1>') || content.includes('<h2>') || 
+      content.includes('<h3>') || content.includes('<ul>') || content.includes('<ol>') ||
+      content.includes('<blockquote>')) {
+    return content;
+  }
+  
+  // Wrap plain text in paragraphs, split by double newlines
+  return content
+    .split(/\n\n+/)
+    .filter(p => p.trim())
+    .map(p => `<p>${p.trim().replace(/\n/g, '<br>')}</p>`)
+    .join('');
+};
+
 const CMSArticleEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -138,8 +157,8 @@ const CMSArticleEditor = () => {
         title_en: article.title_en || '',
         excerpt_id: article.excerpt_id || '',
         excerpt_en: article.excerpt_en || '',
-        content_id: article.content_id || '',
-        content_en: article.content_en || '',
+        content_id: ensureHtmlContent(article.content_id || ''),
+        content_en: ensureHtmlContent(article.content_en || ''),
         featured_image: article.featured_image || '',
         category: article.category || 'daily',
         league: article.league || '',
