@@ -15,7 +15,16 @@ import PrediksiAI from "./pages/PrediksiAI";
 import Liga from "./pages/Liga";
 import Berita from "./pages/Berita";
 import BeritaTag from "./pages/BeritaTag";
-import BolakamaCMS from "./pages/BolakamaCMS";
+import {
+  CMSLayout,
+  CMSDashboard,
+  CMSArticles,
+  CMSArticleEditor,
+  CMSMoments,
+  CMSLeagues,
+  CMSNavigation,
+  CMSUsers,
+} from "./pages/cms";
 
 const queryClient = new QueryClient();
 
@@ -38,7 +47,24 @@ const App = () => (
             <Route path="/liga/:league" element={<Liga />} />
             <Route path="/berita/:filter" element={<Berita />} />
             <Route path="/berita" element={<BeritaTag />} />
-            <Route path="/bolakamicms" element={<BolakamaCMS />} />
+            
+            {/* CMS Routes */}
+            <Route path="/cms" element={<CMSLayout />}>
+              <Route index element={<CMSDashboard />} />
+              <Route path="articles" element={<CMSArticles />} />
+              <Route path="articles/new" element={<CMSArticleEditor />} />
+              <Route path="articles/:id" element={<CMSArticleEditor />} />
+              <Route path="moments" element={<CMSMoments />} />
+              <Route path="leagues" element={<CMSLeagues />} />
+              <Route path="navigation" element={<CMSNavigation />} />
+              <Route path="users" element={<CMSUsers />} />
+            </Route>
+            
+            {/* Legacy route redirect */}
+            <Route path="/bolakamicms" element={<CMSLayout />}>
+              <Route index element={<CMSDashboard />} />
+            </Route>
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
