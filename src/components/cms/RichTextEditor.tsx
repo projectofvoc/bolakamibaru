@@ -92,6 +92,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
         openOnClick: false,
         HTMLAttributes: {
           class: 'text-primary underline',
+          target: '_blank',
+          rel: 'noopener noreferrer',
         },
       }),
       Image.configure({
@@ -133,7 +135,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
 
   const addLink = useCallback(() => {
     const previousUrl = editor?.getAttributes('link').href;
-    const url = window.prompt('URL link:', previousUrl);
+    let url = window.prompt('URL link:', previousUrl);
     
     if (url === null) return;
     
@@ -142,7 +144,15 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
       return;
     }
 
-    editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    // Auto-add https:// if no protocol specified
+    if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('mailto:') && !url.startsWith('tel:')) {
+      url = 'https://' + url;
+    }
+
+    editor?.chain().focus().extendMarkRange('link').setLink({ 
+      href: url,
+      target: '_blank',
+    }).run();
   }, [editor]);
 
   const addYoutube = useCallback(() => {
