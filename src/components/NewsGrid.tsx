@@ -1,17 +1,56 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { articles } from '@/data/dummyData';
 import { motion } from 'framer-motion';
 import { CheckCircle, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const NewsGrid: React.FC = () => {
   const { language, t } = useLanguage();
   const [visibleCount, setVisibleCount] = useState(8);
 
-  const visibleArticles = articles.slice(0, visibleCount);
-  const hasMore = visibleCount < articles.length;
+  const { data: articles, isLoading } = useQuery({
+    queryKey: ['news-grid-articles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .range(0, 19); // Get first 20 articles for this section
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const visibleArticles = articles?.slice(0, visibleCount) || [];
+  const hasMore = visibleCount < (articles?.length || 0);
+
+  if (isLoading) {
+    return (
+      <section className="py-12 bg-card/50">
+        <div className="container mx-auto px-4">
+          <div className="mb-8">
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="space-y-4">
+                <Skeleton className="aspect-[4/3] rounded-lg" />
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-12 bg-card/50">
@@ -39,8 +78,8 @@ const NewsGrid: React.FC = () => {
               >
               <div className="relative rounded-lg overflow-hidden bg-card aspect-[4/3]">
                 <img
-                  src={article.image}
-                  alt={article.title[language]}
+                  src={article.featured_image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=250&fit=crop'}
+                  alt={language === 'id' ? article.title_id : article.title_en}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 {/* Category Badge */}
@@ -61,7 +100,7 @@ const NewsGrid: React.FC = () => {
               
               <div className="mt-4">
                 <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                  {article.title[language]}
+                  {language === 'id' ? article.title_id : article.title_en}
                 </h3>
                 
                 {/* Publisher Metadata Footer */}
@@ -69,16 +108,16 @@ const NewsGrid: React.FC = () => {
                   <div className="flex items-center gap-1.5 min-w-0">
                     {/* Publisher Icon */}
                     <span className="w-5 h-5 flex-shrink-0 flex items-center justify-center bg-muted rounded-full text-xs">
-                      {article.publisher.icon}
+                      {article.publisher_icon || '📰'}
                     </span>
                     
                     {/* Publisher Name */}
                     <span className="text-sm text-muted-foreground truncate max-w-[80px]">
-                      {article.publisher.name}
+                      {article.publisher_name || 'Bolakama'}
                     </span>
                     
                     {/* Verified Badge */}
-                    {article.publisher.verified && (
+                    {article.publisher_verified && (
                       <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 text-primary fill-primary/20" />
                     )}
                     
@@ -87,7 +126,9 @@ const NewsGrid: React.FC = () => {
                     
                     {/* Timestamp */}
                     <span className="text-sm text-muted-foreground truncate">
-                      {article.timestamp}
+                      {article.published_at 
+                        ? new Date(article.published_at).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' })
+                        : ''}
                     </span>
                   </div>
                   

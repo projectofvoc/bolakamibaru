@@ -1,16 +1,58 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { articles, featuredArticle } from '@/data/dummyData';
 import { CheckCircle, Bookmark } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const PopularNewsSidebar: React.FC = () => {
   const { language, t } = useLanguage();
   
-  // Combine featured and regular articles for popular news
-  const allArticles = [featuredArticle, ...articles];
-  const thumbnailArticles = allArticles.slice(0, 3);
-  const textOnlyArticles = allArticles.slice(3, 11);
+  const { data: articles, isLoading } = useQuery({
+    queryKey: ['popular-news-sidebar'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('status', 'published')
+        .order('views', { ascending: false })
+        .limit(11);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const thumbnailArticles = articles?.slice(0, 3) || [];
+  const textOnlyArticles = articles?.slice(3, 11) || [];
+
+  if (isLoading) {
+    return (
+      <div className="bg-card rounded-xl border border-border p-5">
+        <Skeleton className="h-6 w-32 mb-5" />
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i}>
+              <Skeleton className="aspect-[16/9] rounded-lg mb-3" />
+              <Skeleton className="h-5 w-full mb-2" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          ))}
+        </div>
+        <div className="border-t border-border my-5" />
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!articles || articles.length === 0) {
+    return null;
+  }
 
   return (
     <div className="bg-card rounded-xl border border-border p-5">
@@ -29,8 +71,8 @@ const PopularNewsSidebar: React.FC = () => {
             {/* Thumbnail with badges - 16:9 aspect ratio */}
             <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden mb-3">
               <img
-                src={article.image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=225&fit=crop'}
-                alt={article.title[language]}
+                src={article.featured_image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=225&fit=crop'}
+                alt={language === 'id' ? article.title_id : article.title_en}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
               
@@ -49,7 +91,7 @@ const PopularNewsSidebar: React.FC = () => {
             
             {/* Title - consistent with NewsGrid */}
             <h4 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-2">
-              {article.title[language]}
+              {language === 'id' ? article.title_id : article.title_en}
             </h4>
             
             {/* Publisher metadata row */}
@@ -57,14 +99,14 @@ const PopularNewsSidebar: React.FC = () => {
               <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
                 {/* Publisher icon */}
                 <span className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[10px]">
-                  {article.publisher.icon}
+                  {article.publisher_icon || '📰'}
                 </span>
                 
                 {/* Publisher name */}
-                <span>{article.publisher.name}</span>
+                <span>{article.publisher_name || 'Bolakama'}</span>
                 
                 {/* Verified badge */}
-                {article.publisher.verified && (
+                {article.publisher_verified && (
                   <CheckCircle className="w-3 h-3 text-primary fill-primary" />
                 )}
                 
@@ -72,7 +114,11 @@ const PopularNewsSidebar: React.FC = () => {
                 <span>·</span>
                 
                 {/* Timestamp */}
-                <span>{article.timestamp}</span>
+                <span>
+                  {article.published_at 
+                    ? new Date(article.published_at).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' })
+                    : ''}
+                </span>
               </div>
               
               {/* Bookmark button */}
@@ -88,7 +134,7 @@ const PopularNewsSidebar: React.FC = () => {
       </div>
 
       {/* Divider */}
-      <div className="border-t border-border my-5" />
+      {textOnlyArticles.length > 0 && <div className="border-t border-border my-5" />}
 
       {/* Bottom 8 Articles - Text Only List */}
       <div className="space-y-0">
@@ -105,7 +151,7 @@ const PopularNewsSidebar: React.FC = () => {
             
             {/* Title */}
             <h4 className="text-base text-foreground group-hover:text-primary transition-colors line-clamp-2">
-              {article.title[language]}
+              {language === 'id' ? article.title_id : article.title_en}
             </h4>
           </Link>
         ))}
