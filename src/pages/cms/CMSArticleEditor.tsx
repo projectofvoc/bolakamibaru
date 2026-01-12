@@ -21,13 +21,14 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   Save, 
   ArrowLeft, 
-  Upload, 
   X, 
   Image as ImageIcon,
   Eye,
   Send,
   Sparkles
 } from 'lucide-react';
+import RichTextEditor from '@/components/cms/RichTextEditor';
+import ArticlePreview from '@/components/cms/ArticlePreview';
 
 interface ArticleForm {
   slug: string;
@@ -93,6 +94,7 @@ const CMSArticleEditor = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   // Fetch article if editing
   const { data: article, isLoading } = useQuery({
@@ -319,6 +321,13 @@ const CMSArticleEditor = () => {
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
+            onClick={() => setShowPreview(true)}
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            Preview
+          </Button>
+          <Button 
+            variant="outline" 
             onClick={() => handleSubmit('draft')}
             disabled={isUploading || saveMutation.isPending}
           >
@@ -371,18 +380,12 @@ const CMSArticleEditor = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="content_id">Konten *</Label>
-                    <Textarea
-                      id="content_id"
-                      value={form.content_id}
-                      onChange={(e) => setForm(prev => ({ ...prev, content_id: e.target.value }))}
-                      placeholder="Tulis konten berita lengkap di sini... (Markdown didukung)"
-                      rows={12}
-                      className="font-mono text-sm"
+                    <Label>Konten *</Label>
+                    <RichTextEditor
+                      content={form.content_id}
+                      onChange={(content) => setForm(prev => ({ ...prev, content_id: content }))}
+                      placeholder="Tulis konten berita dalam Bahasa Indonesia..."
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Mendukung Markdown: **bold**, *italic*, [link](url), ![image](url)
-                    </p>
                   </div>
                 </TabsContent>
 
@@ -407,18 +410,12 @@ const CMSArticleEditor = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="content_en">Content *</Label>
-                    <Textarea
-                      id="content_en"
-                      value={form.content_en}
-                      onChange={(e) => setForm(prev => ({ ...prev, content_en: e.target.value }))}
-                      placeholder="Write full news content here... (Markdown supported)"
-                      rows={12}
-                      className="font-mono text-sm"
+                    <Label>Content *</Label>
+                    <RichTextEditor
+                      content={form.content_en}
+                      onChange={(content) => setForm(prev => ({ ...prev, content_en: content }))}
+                      placeholder="Write full news content in English..."
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Supports Markdown: **bold**, *italic*, [link](url), ![image](url)
-                    </p>
                   </div>
                 </TabsContent>
               </Tabs>
@@ -645,6 +642,25 @@ const CMSArticleEditor = () => {
           </Card>
         </div>
       </div>
+
+      {/* Article Preview Modal */}
+      <ArticlePreview
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        article={{
+          title_id: form.title_id,
+          title_en: form.title_en,
+          excerpt_id: form.excerpt_id,
+          excerpt_en: form.excerpt_en,
+          content_id: form.content_id,
+          content_en: form.content_en,
+          featured_image: imagePreview || form.featured_image,
+          category: form.category,
+          author_name: form.author_name,
+          tags: form.tags,
+          badges: form.badges,
+        }}
+      />
     </div>
   );
 };
