@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, MapPin, ChevronDown, Search, User, Radio, Brain, Trophy, Newspaper } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, MapPin, ChevronDown, Search, User, Radio, Brain, Trophy, Newspaper, Settings, LogOut } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import logoBolakami from '@/assets/logo-bolakami.png';
 import SearchModal from './SearchModal';
+import { supabase } from '@/integrations/supabase/client';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 const Header: React.FC = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -12,7 +14,24 @@ const Header: React.FC = () => {
   const [ligaDropdownOpen, setLigaDropdownOpen] = useState(false);
   const [beritaDropdownOpen, setBeritaDropdownOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Auth state listener
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Global keyboard shortcut for search (Cmd/Ctrl + K)
   useEffect(() => {
@@ -26,6 +45,12 @@ const Header: React.FC = () => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    navigate('/');
+  };
 
   const navItems = [
     { key: 'nav.live', path: 'https://stream.bolakami.com/', icon: Radio, priority: 'high', isExternal: true },
@@ -185,13 +210,32 @@ const Header: React.FC = () => {
               </button>
 
               {/* User */}
-              <Link
-                to="/auth"
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-primary/10 hover:bg-primary/20 rounded-full transition-colors"
-              >
-                <User className="w-4 h-4" />
-                <span>Masuk</span>
-              </Link>
+              {user ? (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/bolakamicms"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-secondary/80 rounded-full transition-colors"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>CMS</span>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-destructive/10 hover:bg-destructive/20 rounded-full transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Keluar</span>
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-primary/10 hover:bg-primary/20 rounded-full transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  <span>Masuk</span>
+                </Link>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -287,14 +331,36 @@ const Header: React.FC = () => {
                   <span className="text-muted-foreground/40">/</span>
                   <span className={language === 'en' ? 'text-primary font-bold' : 'text-muted-foreground'}>EN</span>
                 </button>
-                <Link
-                  to="/auth"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-primary/10 hover:bg-primary/20 rounded-full transition-colors"
-                >
-                  <User className="w-4 h-4" />
-                  <span>Masuk</span>
-                </Link>
+                {user ? (
+                  <div className="flex items-center gap-2">
+                    <Link
+                      to="/bolakamicms"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-secondary/80 rounded-full transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      <span>CMS</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground bg-destructive/10 hover:bg-destructive/20 rounded-full transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    to="/auth"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-primary/10 hover:bg-primary/20 rounded-full transition-colors"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Masuk</span>
+                  </Link>
+                )}
               </div>
             </nav>
           </motion.div>
