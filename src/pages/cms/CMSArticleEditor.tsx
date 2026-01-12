@@ -511,14 +511,14 @@ const CMSArticleEditor = () => {
               <div className="space-y-2">
                 <Label>Liga</Label>
                 <Select 
-                  value={form.league} 
-                  onValueChange={(v) => setForm(prev => ({ ...prev, league: v }))}
+                  value={form.league || 'none'} 
+                  onValueChange={(v) => setForm(prev => ({ ...prev, league: v === 'none' ? '' : v }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih liga" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tidak ada</SelectItem>
+                    <SelectItem value="none">Tidak ada</SelectItem>
                     {leagues.map((league) => (
                       <SelectItem key={league.id} value={league.name}>
                         {league.name}
