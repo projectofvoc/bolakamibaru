@@ -1,5 +1,5 @@
 import React from 'react';
-import { Match } from '@/data/dummyData';
+import { Match } from '@/types/matches';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

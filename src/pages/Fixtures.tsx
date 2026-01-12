@@ -3,7 +3,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MatchCard from '@/components/MatchCard';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { matches, leagues } from '@/data/dummyData';
+import { matches, leagues } from '@/data/matchData';
+import { Match } from '@/types/matches';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -38,7 +39,7 @@ const Fixtures: React.FC = () => {
     }
     acc[match.league].push(match);
     return acc;
-  }, {} as Record<string, typeof matches>);
+  }, {} as Record<string, Match[]>);
 
   const formatDate = (date: Date) => {
     const day = date.getDate().toString().padStart(2, '0');

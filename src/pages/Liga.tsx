@@ -5,8 +5,10 @@ import { Trophy, ChevronRight, CheckCircle, Bookmark, Clock } from 'lucide-react
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { articles, upcomingMatches } from '@/data/dummyData';
+import { upcomingMatches } from '@/data/matchData';
 import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LeagueInfo {
   id: string;
@@ -40,23 +42,29 @@ const Liga: React.FC = () => {
   const [visibleCount, setVisibleCount] = useState(8);
 
   const currentLeague = league ? leaguesData.find(l => l.id === league) : null;
-  
-  // Filter articles by league/category
-  const filteredArticles = league 
-    ? articles.filter(a => {
-        const category = a.category.toLowerCase();
-        if (league === 'liga-1') return category.includes('liga 1') || category.includes('liga1');
-        if (league === 'premier-league') return category.includes('premier') || category.includes('epl');
-        if (league === 'la-liga') return category.includes('la liga') || category.includes('laliga');
-        if (league === 'serie-a') return category.includes('serie a') || category.includes('seriea');
-        if (league === 'bundesliga') return category.includes('bundesliga');
-        if (league === 'champions-league') return category.includes('champions') || category.includes('ucl');
-        return true;
-      })
-    : articles;
 
-  const visibleArticles = filteredArticles.slice(0, visibleCount);
-  const hasMore = visibleCount < filteredArticles.length;
+  // Fetch articles from Supabase
+  const { data: articles = [] } = useQuery({
+    queryKey: ['liga-articles', league],
+    queryFn: async () => {
+      let query = supabase
+        .from('articles')
+        .select('*')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false });
+      
+      if (league) {
+        query = query.ilike('league', `%${league.replace('-', ' ')}%`);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const visibleArticles = articles.slice(0, visibleCount);
+  const hasMore = visibleCount < articles.length;
 
   // Filter upcoming matches by league
   const filteredMatches = league 
@@ -242,8 +250,8 @@ const Liga: React.FC = () => {
                       >
                         <div className="relative rounded-lg overflow-hidden bg-card aspect-[4/3]">
                           <img
-                            src={article.image}
-                            alt={article.title[language]}
+                            src={article.featured_image || '/placeholder.svg'}
+                            alt={language === 'id' ? article.title_id : article.title_en}
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                           />
                           <div className="absolute top-3 left-3">
@@ -255,24 +263,20 @@ const Liga: React.FC = () => {
                         
                         <div className="mt-4">
                           <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                            {article.title[language]}
+                            {language === 'id' ? article.title_id : article.title_en}
                           </h3>
                           
                           <div className="mt-3 flex items-center justify-between">
                             <div className="flex items-center gap-1.5 min-w-0">
                               <span className="w-5 h-5 flex-shrink-0 flex items-center justify-center bg-muted rounded-full text-xs">
-                                {article.publisher.icon}
+                                {article.publisher_icon || '📰'}
                               </span>
                               <span className="text-sm text-muted-foreground truncate max-w-[80px]">
-                                {article.publisher.name}
+                                {article.publisher_name || 'BolaKami'}
                               </span>
-                              {article.publisher.verified && (
+                              {article.publisher_verified && (
                                 <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 text-primary fill-primary/20" />
                               )}
-                              <span className="text-muted-foreground/50 flex-shrink-0">·</span>
-                              <span className="text-sm text-muted-foreground truncate">
-                                {article.timestamp}
-                              </span>
                             </div>
                             <button className="p-1.5 hover:bg-muted rounded-md transition-colors flex-shrink-0">
                               <Bookmark className="w-4 h-4 text-muted-foreground" />
