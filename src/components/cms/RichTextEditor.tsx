@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
@@ -80,6 +80,8 @@ const MenuButton = ({
 );
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, placeholder }) => {
+  const isInternalUpdate = useRef(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -117,6 +119,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
     ],
     content,
     onUpdate: ({ editor }) => {
+      isInternalUpdate.current = true;
       onChange(editor.getHTML());
     },
     editorProps: {
@@ -125,6 +128,23 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
       },
     },
   });
+
+  // Sync content prop with editor when it changes externally (e.g., when loading article data)
+  useEffect(() => {
+    if (editor && content !== undefined) {
+      // Skip if this is an internal update from onUpdate callback
+      if (isInternalUpdate.current) {
+        isInternalUpdate.current = false;
+        return;
+      }
+      
+      // Only update if content is different from current editor content
+      const currentContent = editor.getHTML();
+      if (content !== currentContent) {
+        editor.commands.setContent(content, false);
+      }
+    }
+  }, [editor, content]);
 
   const addImage = useCallback(() => {
     const url = window.prompt('URL gambar:');
