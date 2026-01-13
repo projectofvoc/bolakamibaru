@@ -262,9 +262,7 @@ const BestMomentsCarousel: React.FC = () => {
                   
 
                   {/* League Logo Placeholder */}
-                  <div className="absolute top-20 right-4 w-10 h-10 rounded-full bg-background/20 flex items-center justify-center">
-                    <span className="text-lg">⚽</span>
-                  </div>
+                  
 
                   {/* Share Button - Bottom Right */}
                   <button onClick={() => setShowShareSheet(true)} className="absolute right-4 bottom-20 w-11 h-11 rounded-full bg-background/50 backdrop-blur-sm flex items-center justify-center hover:bg-background/70 transition-colors z-10">
