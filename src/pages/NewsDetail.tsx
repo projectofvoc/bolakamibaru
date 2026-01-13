@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -39,7 +39,12 @@ const NewsDetail: React.FC = () => {
     enabled: !!slug,
   });
 
-  // Note: View count tracking can be added via database trigger if needed
+  // Increment view count when article is loaded
+  useEffect(() => {
+    if (article?.id) {
+      supabase.rpc('increment_article_views', { article_id: article.id });
+    }
+  }, [article?.id]);
 
   if (isLoading) {
     return (

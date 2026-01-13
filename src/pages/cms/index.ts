@@ -6,3 +6,4 @@ export { default as CMSMoments } from './CMSMoments';
 export { default as CMSLeagues } from './CMSLeagues';
 export { default as CMSNavigation } from './CMSNavigation';
 export { default as CMSUsers } from './CMSUsers';
+export { default as CMSAnalytics } from './CMSAnalytics';
