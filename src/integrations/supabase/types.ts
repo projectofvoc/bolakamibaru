@@ -125,6 +125,83 @@ export type Database = {
         }
         Relationships: []
       }
+      api_configurations: {
+        Row: {
+          api_key: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          display_name: string
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      api_configurations_history: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          config_id: string | null
+          id: string
+          new_api_key: string | null
+          old_api_key: string | null
+          reason: string | null
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          config_id?: string | null
+          id?: string
+          new_api_key?: string | null
+          old_api_key?: string | null
+          reason?: string | null
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          config_id?: string | null
+          id?: string
+          new_api_key?: string | null
+          old_api_key?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_configurations_history_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "api_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       articles: {
         Row: {
           author_id: string | null
