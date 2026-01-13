@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
@@ -9,6 +9,8 @@ import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { 
   Bold, 
   Italic, 
@@ -30,7 +32,9 @@ import {
   AlignRight,
   Undo,
   Redo,
-  Pilcrow
+  Pilcrow,
+  Upload,
+  Loader2
 } from 'lucide-react';
 import {
   Tooltip,
@@ -38,6 +42,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface RichTextEditorProps {
   content: string;
@@ -81,6 +94,17 @@ const MenuButton = ({
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, placeholder }) => {
   const isInternalUpdate = useRef(false);
+  const { toast } = useToast();
+  
+  // Image upload state
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  
+  // Video modal state
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     extensions: [
@@ -146,12 +170,65 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
     }
   }, [editor, content]);
 
+  // Image upload handler - triggered by file input
   const addImage = useCallback(() => {
-    const url = window.prompt('URL gambar:');
-    if (url && editor) {
-      editor.chain().focus().setImage({ src: url }).run();
+    imageInputRef.current?.click();
+  }, []);
+
+  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editor) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({ 
+        title: 'Error', 
+        description: 'File harus berupa gambar', 
+        variant: 'destructive' 
+      });
+      return;
     }
-  }, [editor]);
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ 
+        title: 'Error', 
+        description: 'Ukuran gambar maksimal 10MB', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `content/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      const { error } = await supabase.storage
+        .from('articles-media')
+        .upload(fileName, file);
+      
+      if (error) throw error;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('articles-media')
+        .getPublicUrl(fileName);
+      
+      editor.chain().focus().setImage({ src: publicUrl }).run();
+      toast({ title: 'Gambar berhasil diupload!' });
+    } catch (error) {
+      console.error('Image upload error:', error);
+      toast({ 
+        title: 'Error', 
+        description: 'Gagal upload gambar', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setIsUploadingImage(false);
+      // Reset input
+      if (imageInputRef.current) imageInputRef.current.value = '';
+    }
+  }, [editor, toast]);
 
   const addLink = useCallback(() => {
     const previousUrl = editor?.getAttributes('link').href;
@@ -175,17 +252,97 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
     }).run();
   }, [editor]);
 
+  // Open video modal
   const addYoutube = useCallback(() => {
-    const url = window.prompt('URL YouTube:');
-    if (url && editor) {
-      editor.chain().focus().setYoutubeVideo({ src: url }).run();
+    setShowVideoModal(true);
+    setVideoUrl('');
+  }, []);
+
+  // Handle YouTube embed
+  const handleVideoEmbed = useCallback(() => {
+    if (videoUrl && editor) {
+      editor.chain().focus().setYoutubeVideo({ src: videoUrl }).run();
+      setShowVideoModal(false);
+      setVideoUrl('');
+      toast({ title: 'Video YouTube berhasil ditambahkan!' });
     }
-  }, [editor]);
+  }, [editor, videoUrl, toast]);
+
+  // Handle video file upload
+  const handleVideoUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editor) return;
+
+    // Validate file type
+    if (!file.type.startsWith('video/')) {
+      toast({ 
+        title: 'Error', 
+        description: 'File harus berupa video', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
+    // Validate file size (max 100MB)
+    if (file.size > 100 * 1024 * 1024) {
+      toast({ 
+        title: 'Error', 
+        description: 'Ukuran video maksimal 100MB', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
+    setIsUploadingVideo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `videos/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      const { error } = await supabase.storage
+        .from('articles-media')
+        .upload(fileName, file);
+      
+      if (error) throw error;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('articles-media')
+        .getPublicUrl(fileName);
+      
+      // Insert video as HTML5 video element
+      const videoHtml = `<video controls class="rounded-lg my-4 w-full max-w-2xl mx-auto">
+        <source src="${publicUrl}" type="${file.type}">
+        Browser Anda tidak mendukung video.
+      </video>`;
+      
+      editor.chain().focus().insertContent(videoHtml).run();
+      toast({ title: 'Video berhasil diupload!' });
+      setShowVideoModal(false);
+    } catch (error) {
+      console.error('Video upload error:', error);
+      toast({ 
+        title: 'Error', 
+        description: 'Gagal upload video', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setIsUploadingVideo(false);
+      if (videoInputRef.current) videoInputRef.current.value = '';
+    }
+  }, [editor, toast]);
 
   if (!editor) return null;
 
   return (
     <div className="border border-border rounded-lg overflow-hidden bg-input">
+      {/* Hidden file inputs */}
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        className="hidden"
+      />
+      
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-0.5 p-2 border-b border-border bg-muted/50">
         {/* Undo/Redo */}
@@ -347,13 +504,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
         </MenuButton>
         <MenuButton 
           onClick={addImage}
-          tooltip="Insert Image"
+          disabled={isUploadingImage}
+          tooltip="Upload Image"
         >
-          <ImageIcon className="w-4 h-4" />
+          {isUploadingImage ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <ImageIcon className="w-4 h-4" />
+          )}
         </MenuButton>
         <MenuButton 
           onClick={addYoutube}
-          tooltip="Embed YouTube"
+          tooltip="Tambah Video"
         >
           <YoutubeIcon className="w-4 h-4" />
         </MenuButton>
@@ -361,6 +523,76 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
       
       {/* Editor Content */}
       <EditorContent editor={editor} />
+
+      {/* Video Modal */}
+      <Dialog open={showVideoModal} onOpenChange={setShowVideoModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tambah Video</DialogTitle>
+            <DialogDescription>
+              Embed link YouTube atau upload video langsung
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Embed Link Option */}
+            <div className="space-y-2">
+              <Label>Embed Link YouTube</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && videoUrl) {
+                      handleVideoEmbed();
+                    }
+                  }}
+                />
+                <Button 
+                  onClick={handleVideoEmbed} 
+                  disabled={!videoUrl}
+                >
+                  Embed
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Mendukung format: youtube.com/watch?v=..., youtu.be/..., youtube.com/embed/...
+              </p>
+            </div>
+            
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">atau</span>
+              </div>
+            </div>
+            
+            {/* Upload Video Option */}
+            <div className="space-y-2">
+              <Label>Upload Video (Maks 100MB)</Label>
+              <div className="flex gap-2">
+                <Input
+                  ref={videoInputRef}
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideoUpload}
+                  disabled={isUploadingVideo}
+                  className="cursor-pointer"
+                />
+              </div>
+              {isUploadingVideo && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Mengupload video...</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
