@@ -202,6 +202,35 @@ export type Database = {
           },
         ]
       }
+      article_views: {
+        Row: {
+          article_id: string
+          id: string
+          session_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          article_id: string
+          id?: string
+          session_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          article_id?: string
+          id?: string
+          session_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_views_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       articles: {
         Row: {
           author_id: string | null
@@ -545,6 +574,10 @@ export type Database = {
       increment_article_views: {
         Args: { article_id: string }
         Returns: undefined
+      }
+      increment_article_views_with_session: {
+        Args: { p_article_id: string; p_session_id: string }
+        Returns: boolean
       }
     }
     Enums: {
