@@ -1,13 +1,18 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Radio, Clock } from 'lucide-react';
+import { Radio, Loader2, RefreshCw } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { matches } from '@/data/matchData';
+import { useLiveScores } from '@/hooks/useLiveScores';
+import { matches as staticMatches } from '@/data/matchData';
 
 const Live: React.FC = () => {
   const { t, language } = useLanguage();
+  const { matches: apiMatches, isLoading, error, refetch } = useLiveScores();
+  
+  // Use API data if available, fallback to static
+  const matches = apiMatches.length > 0 ? apiMatches : staticMatches;
   
   // Filter live matches
   const liveMatches = matches.filter(m => m.status === 'live');
@@ -45,14 +50,44 @@ const Live: React.FC = () => {
         {/* Live Matches Section */}
         <section className="py-12">
           <div className="container mx-auto px-4">
-            <div className="flex items-center gap-2 mb-6">
-              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-              <h2 className="text-xl font-bold text-foreground">
-                {language === 'id' ? 'Sedang Berlangsung' : 'In Progress'}
-              </h2>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                <h2 className="text-xl font-bold text-foreground">
+                  {language === 'id' ? 'Sedang Berlangsung' : 'In Progress'}
+                </h2>
+              </div>
+              <button 
+                onClick={refetch}
+                disabled={isLoading}
+                className="flex items-center gap-1 text-sm text-primary hover:underline disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                {language === 'id' ? 'Refresh' : 'Refresh'}
+              </button>
             </div>
 
-            {liveMatches.length > 0 ? (
+            {isLoading ? (
+              <div className="text-center py-16 bg-card rounded-xl">
+                <Loader2 className="w-8 h-8 mx-auto text-primary animate-spin mb-4" />
+                <p className="text-muted-foreground">
+                  {language === 'id' ? 'Memuat data...' : 'Loading data...'}
+                </p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-16 bg-card rounded-xl border border-destructive/30">
+                <p className="text-destructive font-medium mb-2">
+                  {language === 'id' ? 'Gagal memuat data' : 'Failed to load data'}
+                </p>
+                <p className="text-xs text-muted-foreground mb-4">{error.slice(0, 100)}</p>
+                <button 
+                  onClick={refetch}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm"
+                >
+                  {language === 'id' ? 'Coba Lagi' : 'Try Again'}
+                </button>
+              </div>
+            ) : liveMatches.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {liveMatches.map((match, index) => (
                   <motion.div
