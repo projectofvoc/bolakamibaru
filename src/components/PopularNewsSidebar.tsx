@@ -103,7 +103,7 @@ const PopularNewsSidebar: React.FC = () => {
                 </span>
                 
                 {/* Publisher name */}
-                <span>{article.publisher_name || 'Bolakama'}</span>
+                <span>{article.publisher_name || 'Bolakami'}</span>
                 
                 {/* Verified badge */}
                 {article.publisher_verified && (

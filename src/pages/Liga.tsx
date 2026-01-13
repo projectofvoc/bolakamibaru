@@ -324,7 +324,7 @@ const Liga: React.FC = () => {
                                 {article.publisher_icon || '📰'}
                               </span>
                               <span className="text-sm text-muted-foreground truncate max-w-[80px]">
-                                {article.publisher_name || 'BolaKami'}
+                                {article.publisher_name || 'Bolakami'}
                               </span>
                               {article.publisher_verified && (
                                 <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 text-primary fill-primary/20" />

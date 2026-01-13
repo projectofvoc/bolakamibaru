@@ -113,7 +113,7 @@ const NewsGrid: React.FC = () => {
                     
                     {/* Publisher Name */}
                     <span className="text-sm text-muted-foreground truncate max-w-[80px]">
-                      {article.publisher_name || 'Bolakama'}
+                      {article.publisher_name || 'Bolakami'}
                     </span>
                     
                     {/* Verified Badge */}

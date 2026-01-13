@@ -101,7 +101,7 @@ const HeroSection: React.FC = () => {
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4" />
-                <span>{featuredArticle.author_name || 'Bolakama'}</span>
+                <span>{featuredArticle.author_name || 'Bolakami'}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
