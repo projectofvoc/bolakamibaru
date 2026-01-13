@@ -66,7 +66,7 @@ const AdvertisementPopup: React.FC = () => {
 
   return (
     <Dialog open={isVisible} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-lg p-0 overflow-hidden border-0 bg-transparent shadow-2xl">
+      <DialogContent className="max-w-lg p-0 overflow-hidden border-0 bg-transparent shadow-2xl [&>button]:hidden">
         {/* Close button */}
         <button
           onClick={handleClose}
@@ -76,16 +76,16 @@ const AdvertisementPopup: React.FC = () => {
           <X className="w-5 h-5 text-white" />
         </button>
 
-        {/* Media content */}
+        {/* Media content - locked to 1:1 aspect ratio */}
         <div 
-          className={`relative rounded-lg overflow-hidden ${ad.link_url ? 'cursor-pointer' : ''}`}
+          className={`relative rounded-lg overflow-hidden aspect-square ${ad.link_url ? 'cursor-pointer' : ''}`}
           onClick={handleMediaClick}
         >
           {ad.media_type === 'image' ? (
             <img
               src={ad.media_url}
               alt={ad.title}
-              className="w-full h-auto max-h-[80vh] object-contain"
+              className="w-full h-full object-cover"
             />
           ) : (
             <video
@@ -94,7 +94,7 @@ const AdvertisementPopup: React.FC = () => {
               muted
               controls
               playsInline
-              className="w-full h-auto max-h-[80vh]"
+              className="w-full h-full object-cover"
             />
           )}
         </div>
