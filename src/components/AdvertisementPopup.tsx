@@ -66,37 +66,40 @@ const AdvertisementPopup: React.FC = () => {
 
   return (
     <Dialog open={isVisible} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-lg p-0 overflow-hidden border-0 bg-transparent shadow-2xl [&>button]:hidden">
-        {/* Close button - positioned outside with white circle frame */}
-        <button
-          onClick={handleClose}
-          className="absolute -top-3 -right-3 z-50 bg-white hover:bg-gray-100 rounded-full p-1.5 shadow-lg border-2 border-gray-200 transition-colors"
-          aria-label="Tutup iklan"
-        >
-          <X className="w-5 h-5 text-gray-800" />
-        </button>
+      <DialogContent className="max-w-lg p-0 border-0 bg-transparent shadow-2xl [&>button]:hidden">
+        {/* Container untuk button dan media */}
+        <div className="relative">
+          {/* Close button - positioned outside with white circle frame */}
+          <button
+            onClick={handleClose}
+            className="absolute -top-3 -right-3 z-50 bg-white hover:bg-gray-100 rounded-full p-1.5 shadow-lg border-2 border-gray-200 transition-colors"
+            aria-label="Tutup iklan"
+          >
+            <X className="w-5 h-5 text-gray-800" />
+          </button>
 
-        {/* Media content - locked to 1:1 aspect ratio */}
-        <div 
-          className={`relative rounded-lg overflow-hidden aspect-square ${ad.link_url ? 'cursor-pointer' : ''}`}
-          onClick={handleMediaClick}
-        >
-          {ad.media_type === 'image' ? (
-            <img
-              src={ad.media_url}
-              alt={ad.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <video
-              src={ad.media_url}
-              autoPlay
-              muted
-              controls
-              playsInline
-              className="w-full h-full object-cover"
-            />
-          )}
+          {/* Media content - locked to 1:1 aspect ratio */}
+          <div 
+            className={`relative rounded-lg overflow-hidden aspect-square ${ad.link_url ? 'cursor-pointer' : ''}`}
+            onClick={handleMediaClick}
+          >
+            {ad.media_type === 'image' ? (
+              <img
+                src={ad.media_url}
+                alt={ad.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <video
+                src={ad.media_url}
+                autoPlay
+                muted
+                controls
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
