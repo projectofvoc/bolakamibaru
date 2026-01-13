@@ -53,7 +53,12 @@ const AdvertisementPopup: React.FC = () => {
 
   const handleMediaClick = () => {
     if (ad?.link_url) {
-      window.open(ad.link_url, '_blank');
+      let url = ad.link_url;
+      // Ensure URL has a protocol (https:// or http://)
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+      window.open(url, '_blank');
     }
   };
 
