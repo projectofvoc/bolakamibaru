@@ -10,21 +10,29 @@ import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+// Import league logos
+import liga1Logo from '@/assets/leagues/liga-1.png';
+import premierLeagueLogo from '@/assets/leagues/premier-league.png';
+import laLigaLogo from '@/assets/leagues/la-liga.png';
+import serieALogo from '@/assets/leagues/serie-a.png';
+import bundesligaLogo from '@/assets/leagues/bundesliga.png';
+import championsLeagueLogo from '@/assets/leagues/champions-league.png';
+
 interface LeagueInfo {
   id: string;
   name: { id: string; en: string };
   country: string;
-  flag: string;
+  logo: string;
   color: string;
 }
 
 const leaguesData: LeagueInfo[] = [
-  { id: 'liga-1', name: { id: 'Liga 1 Indonesia', en: 'Liga 1 Indonesia' }, country: 'Indonesia', flag: '🇮🇩', color: 'bg-green-500' },
-  { id: 'premier-league', name: { id: 'Premier League', en: 'Premier League' }, country: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', color: 'bg-purple-500' },
-  { id: 'la-liga', name: { id: 'La Liga', en: 'La Liga' }, country: 'Spain', flag: '🇪🇸', color: 'bg-orange-500' },
-  { id: 'serie-a', name: { id: 'Serie A', en: 'Serie A' }, country: 'Italy', flag: '🇮🇹', color: 'bg-blue-500' },
-  { id: 'bundesliga', name: { id: 'Bundesliga', en: 'Bundesliga' }, country: 'Germany', flag: '🇩🇪', color: 'bg-red-500' },
-  { id: 'champions-league', name: { id: 'Liga Champions', en: 'Champions League' }, country: 'Europe', flag: '🏆', color: 'bg-blue-600' },
+  { id: 'liga-1', name: { id: 'Liga 1 Indonesia', en: 'Liga 1 Indonesia' }, country: 'Indonesia', logo: liga1Logo, color: 'bg-red-600' },
+  { id: 'premier-league', name: { id: 'Premier League', en: 'Premier League' }, country: 'England', logo: premierLeagueLogo, color: 'bg-purple-700' },
+  { id: 'la-liga', name: { id: 'La Liga', en: 'La Liga' }, country: 'Spain', logo: laLigaLogo, color: 'bg-orange-500' },
+  { id: 'serie-a', name: { id: 'Serie A', en: 'Serie A' }, country: 'Italy', logo: serieALogo, color: 'bg-blue-800' },
+  { id: 'bundesliga', name: { id: 'Bundesliga', en: 'Bundesliga' }, country: 'Germany', logo: bundesligaLogo, color: 'bg-red-500' },
+  { id: 'champions-league', name: { id: 'Liga Champions', en: 'Champions League' }, country: 'Europe', logo: championsLeagueLogo, color: 'bg-blue-950' },
 ];
 
 const leagueColorClasses: Record<string, string> = {
@@ -99,7 +107,15 @@ const Liga: React.FC = () => {
                   ? currentLeague.name[language] 
                   : (language === 'id' ? 'Semua Liga' : 'All Leagues')}
               </h1>
-              {currentLeague && <span className="text-2xl">{currentLeague.flag}</span>}
+              {currentLeague && (
+                <div className={`w-10 h-10 rounded-lg ${currentLeague.color} flex items-center justify-center`}>
+                  <img 
+                    src={currentLeague.logo} 
+                    alt={currentLeague.name[language]} 
+                    className="w-6 h-6 object-contain brightness-0 invert"
+                  />
+                </div>
+              )}
             </motion.div>
             <p className="text-muted-foreground">
               {language === 'id' 
@@ -120,11 +136,17 @@ const Liga: React.FC = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
-                      className="bg-card rounded-xl p-4 text-center hover:border-primary border border-transparent transition-colors cursor-pointer"
+                      className="bg-card rounded-xl p-5 text-center hover:border-primary border border-transparent transition-all hover:shadow-lg cursor-pointer group"
                     >
-                      <span className="text-3xl block mb-2">{l.flag}</span>
-                      <p className="text-sm font-medium text-foreground">{l.name[language]}</p>
-                      <p className="text-xs text-muted-foreground">{l.country}</p>
+                      <div className={`w-14 h-14 rounded-xl ${l.color} flex items-center justify-center mx-auto mb-3 transition-transform group-hover:scale-110`}>
+                        <img 
+                          src={l.logo} 
+                          alt={l.name[language]} 
+                          className="w-8 h-8 object-contain brightness-0 invert"
+                        />
+                      </div>
+                      <p className="text-sm font-semibold text-foreground">{l.name[language]}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{l.country}</p>
                     </motion.div>
                   </Link>
                 ))}
@@ -148,9 +170,16 @@ const Liga: React.FC = () => {
                     <Button 
                       variant={l.id === league ? 'default' : 'ghost'} 
                       size="sm" 
-                      className="rounded-full whitespace-nowrap"
+                      className="rounded-full whitespace-nowrap gap-2"
                     >
-                      {l.flag} {l.name[language]}
+                      <div className={`w-5 h-5 rounded ${l.color} flex items-center justify-center`}>
+                        <img 
+                          src={l.logo} 
+                          alt={l.name[language]} 
+                          className="w-3 h-3 object-contain brightness-0 invert"
+                        />
+                      </div>
+                      {l.name[language]}
                     </Button>
                   </Link>
                 ))}
