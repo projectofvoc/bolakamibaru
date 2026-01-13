@@ -67,13 +67,13 @@ const AdvertisementPopup: React.FC = () => {
   return (
     <Dialog open={isVisible} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-lg p-0 overflow-hidden border-0 bg-transparent shadow-2xl [&>button]:hidden">
-        {/* Close button */}
+        {/* Close button - positioned outside with white circle frame */}
         <button
           onClick={handleClose}
-          className="absolute top-3 right-3 z-50 bg-black/60 hover:bg-black/80 rounded-full p-2 transition-colors"
+          className="absolute -top-3 -right-3 z-50 bg-white hover:bg-gray-100 rounded-full p-1.5 shadow-lg border-2 border-gray-200 transition-colors"
           aria-label="Tutup iklan"
         >
-          <X className="w-5 h-5 text-white" />
+          <X className="w-5 h-5 text-gray-800" />
         </button>
 
         {/* Media content - locked to 1:1 aspect ratio */}
