@@ -28,7 +28,8 @@ import {
   Settings,
   LogOut,
   Menu,
-  ChevronLeft
+  ChevronLeft,
+  BarChart3
 } from 'lucide-react';
 import logoBolakami from '@/assets/logo-bolakami.png';
 
@@ -62,6 +63,7 @@ const CMSSidebar = () => {
 
   const menuItems = [
     { title: 'Dashboard', url: '/cms', icon: LayoutDashboard },
+    { title: 'Analytics', url: '/cms/analytics', icon: BarChart3 },
     { title: 'Semua Berita', url: '/cms/articles', icon: FileText },
     { title: 'Tambah Berita', url: '/cms/articles/new', icon: Plus },
     { title: 'Momen Terbaik', url: '/cms/moments', icon: Video },

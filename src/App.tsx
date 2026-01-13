@@ -24,6 +24,7 @@ import {
   CMSLeagues,
   CMSNavigation,
   CMSUsers,
+  CMSAnalytics,
 } from "./pages/cms";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
             {/* CMS Routes */}
             <Route path="/cms" element={<CMSLayout />}>
               <Route index element={<CMSDashboard />} />
+              <Route path="analytics" element={<CMSAnalytics />} />
               <Route path="articles" element={<CMSArticles />} />
               <Route path="articles/new" element={<CMSArticleEditor />} />
               <Route path="articles/:id" element={<CMSArticleEditor />} />
