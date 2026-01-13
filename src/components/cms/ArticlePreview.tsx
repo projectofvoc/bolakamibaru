@@ -3,9 +3,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { X, Monitor, Smartphone, Facebook, Twitter, Clock, ChevronRight } from 'lucide-react';
+import { Monitor, Smartphone, Facebook, Twitter, Clock, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+
 interface ArticlePreviewProps {
   isOpen: boolean;
   onClose: () => void;
@@ -23,34 +30,35 @@ interface ArticlePreviewProps {
     badges: string[];
   };
 }
-const ArticlePreview: React.FC<ArticlePreviewProps> = ({
-  isOpen,
-  onClose,
-  article
-}) => {
+
+const ArticlePreview: React.FC<ArticlePreviewProps> = ({ isOpen, onClose, article }) => {
   const [language, setLanguage] = useState<'id' | 'en'>('id');
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
+
   const title = language === 'id' ? article.title_id : article.title_en;
   const excerpt = language === 'id' ? article.excerpt_id : article.excerpt_en;
   const content = language === 'id' ? article.content_id : article.content_en;
   const currentDate = format(new Date(), 'dd MMMM yyyy');
+
   const getCategoryLabel = (category: string) => {
     const labels: Record<string, string> = {
       trending: '🔥 Trending',
       daily: '📰 Update Harian',
-      analisa: '📊 Analisa'
+      analisa: '📊 Analisa',
     };
     return labels[category] || category;
   };
-  return <Dialog open={isOpen} onOpenChange={onClose}>
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl h-[90vh] p-0 gap-0 overflow-hidden">
         {/* Preview Header */}
         <DialogHeader className="p-4 border-b border-border bg-muted/50">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-lg font-semibold">Preview Artikel</DialogTitle>
-            <div className="flex items-center gap-4 px-[41px]">
+            <div className="flex items-center gap-4">
               {/* Language Toggle */}
-              <Tabs value={language} onValueChange={v => setLanguage(v as 'id' | 'en')}>
+              <Tabs value={language} onValueChange={(v) => setLanguage(v as 'id' | 'en')}>
                 <TabsList className="h-8">
                   <TabsTrigger value="id" className="text-xs px-3 h-6">🇮🇩 ID</TabsTrigger>
                   <TabsTrigger value="en" className="text-xs px-3 h-6">🇬🇧 EN</TabsTrigger>
@@ -58,7 +66,7 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({
               </Tabs>
               
               {/* Device Toggle */}
-              <Tabs value={device} onValueChange={v => setDevice(v as 'desktop' | 'mobile')}>
+              <Tabs value={device} onValueChange={(v) => setDevice(v as 'desktop' | 'mobile')}>
                 <TabsList className="h-8">
                   <TabsTrigger value="desktop" className="text-xs px-3 h-6">
                     <Monitor className="w-3 h-3 mr-1" />
@@ -70,10 +78,6 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
-
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                <X className="w-4 h-4" />
-              </Button>
             </div>
           </div>
         </DialogHeader>
@@ -126,14 +130,18 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({
               </span>
 
               {/* Badges */}
-              {article.badges.length > 0 && <div className="flex flex-wrap gap-2 mb-4">
-                  {article.badges.map(badge => <Badge key={badge} variant="secondary" className="text-xs">
+              {article.badges.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {article.badges.map((badge) => (
+                    <Badge key={badge} variant="secondary" className="text-xs">
                       {badge === 'new' && '🆕 NEW'}
                       {badge === 'viral' && '🔥 VIRAL'}
                       {badge === 'popular' && '⭐ POPULAR'}
                       {badge === 'trending' && '📈 TRENDING'}
-                    </Badge>)}
-                </div>}
+                    </Badge>
+                  ))}
+                </div>
+              )}
 
               {/* Title */}
               <h1 className={`font-bold text-foreground leading-tight mb-6 ${device === 'mobile' ? 'text-2xl' : 'text-3xl md:text-4xl lg:text-5xl'}`}>
@@ -141,9 +149,11 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({
               </h1>
 
               {/* Excerpt */}
-              {excerpt && <p className={`text-muted-foreground leading-relaxed mb-6 ${device === 'mobile' ? 'text-base' : 'text-lg md:text-xl'}`}>
+              {excerpt && (
+                <p className={`text-muted-foreground leading-relaxed mb-6 ${device === 'mobile' ? 'text-base' : 'text-lg md:text-xl'}`}>
                   {excerpt}
-                </p>}
+                </p>
+              )}
 
               {/* Author & Date */}
               <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
@@ -169,31 +179,47 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({
               </div>
 
               {/* Featured Image */}
-              {article.featured_image && <>
+              {article.featured_image && (
+                <>
                   <div className="relative w-full aspect-[16/9] overflow-hidden mb-2">
-                    <img src={article.featured_image} alt={title} className="w-full h-full object-cover" />
+                    <img
+                      src={article.featured_image}
+                      alt={title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <p className="text-sm text-muted-foreground mb-10 text-center">
                     {article.author_name || 'BOLAKAMI'} / Gambar Utama
                   </p>
-                </>}
+                </>
+              )}
 
               {/* Article Content */}
-              <div className="article-content" dangerouslySetInnerHTML={{
-              __html: content || '<p>Konten artikel akan muncul di sini...</p>'
-            }} />
+              <div 
+                className="article-content"
+                dangerouslySetInnerHTML={{ __html: content || '<p>Konten artikel akan muncul di sini...</p>' }}
+              />
 
               {/* Tags */}
-              {article.tags.length > 0 && <div className="flex flex-wrap items-center gap-2 mt-8 pt-8 border-t border-border">
+              {article.tags.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 mt-8 pt-8 border-t border-border">
                   <span className="text-sm text-muted-foreground mr-2">Tags:</span>
-                  {article.tags.map(tag => <span key={tag} className="px-3 py-1.5 bg-secondary text-sm text-muted-foreground rounded-full">
+                  {article.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-3 py-1.5 bg-secondary text-sm text-muted-foreground rounded-full"
+                    >
                       {tag}
-                    </span>)}
-                </div>}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };
+
 export default ArticlePreview;
