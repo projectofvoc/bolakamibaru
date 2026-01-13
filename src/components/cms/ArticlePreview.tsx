@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { X, Monitor, Smartphone, Facebook, Twitter, Clock, ChevronRight } from 'lucide-react';
+import { Monitor, Smartphone, Facebook, Twitter, Clock, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Breadcrumb,
@@ -78,10 +78,6 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ isOpen, onClose, articl
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
-
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                <X className="w-4 h-4" />
-              </Button>
             </div>
           </div>
         </DialogHeader>
