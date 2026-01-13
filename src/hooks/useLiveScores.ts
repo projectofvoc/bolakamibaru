@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+
+// External Supabase configuration for centralized API management
+const EXTERNAL_SUPABASE_URL = import.meta.env.VITE_EXTERNAL_SUPABASE_URL;
+const EXTERNAL_SUPABASE_ANON_KEY = import.meta.env.VITE_EXTERNAL_SUPABASE_ANON_KEY;
 
 export interface LiveMatch {
   id: number;
@@ -31,12 +34,34 @@ export function useLiveScores(): UseLiveScoresResult {
       setIsLoading(true);
       setError(null);
 
-      const { data, error: fnError } = await supabase.functions.invoke('sportmonks-livescore');
-
-      if (fnError) {
-        console.error('Edge function error:', fnError);
-        throw new Error(fnError.message);
+      // Check if external Supabase is configured
+      if (!EXTERNAL_SUPABASE_URL || !EXTERNAL_SUPABASE_ANON_KEY) {
+        console.warn('External Supabase not configured, skipping live scores fetch');
+        setError('External API not configured');
+        setIsLoading(false);
+        return;
       }
+
+      const response = await fetch(
+        `${EXTERNAL_SUPABASE_URL}/functions/v1/sportmonks-api`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${EXTERNAL_SUPABASE_ANON_KEY}`,
+            'apikey': EXTERNAL_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ endpoint: 'livescores' }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('External API error:', response.status, errorText);
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
 
       if (data?.matches) {
         setMatches(data.matches);
