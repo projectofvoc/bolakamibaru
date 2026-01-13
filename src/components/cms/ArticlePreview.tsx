@@ -56,7 +56,7 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ isOpen, onClose, articl
         <DialogHeader className="p-4 border-b border-border bg-muted/50">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-lg font-semibold">Preview Artikel</DialogTitle>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 mr-8">
               {/* Language Toggle */}
               <Tabs value={language} onValueChange={(v) => setLanguage(v as 'id' | 'en')}>
                 <TabsList className="h-8">
