@@ -210,8 +210,20 @@ const HeroDashboard: React.FC = () => {
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
               ) : scoresError ? (
-                <div className="flex items-center justify-center py-8 text-xs text-muted-foreground">
-                  {language === 'id' ? 'Gagal memuat data' : 'Failed to load data'}
+                <div className="flex flex-col items-center justify-center py-6 px-4 text-center gap-2">
+                  <p className="text-xs text-destructive font-medium">
+                    {scoresError.includes('ENV_NOT_CONFIGURED') 
+                      ? (language === 'id' ? 'API belum dikonfigurasi' : 'API not configured')
+                      : scoresError.includes('API_ERROR_404')
+                      ? (language === 'id' ? 'Edge function tidak ditemukan' : 'Edge function not found')
+                      : scoresError.includes('API_ERROR_401') || scoresError.includes('API_ERROR_403')
+                      ? (language === 'id' ? 'Akses ditolak (auth)' : 'Access denied (auth)')
+                      : (language === 'id' ? 'Gagal memuat data' : 'Failed to load data')
+                    }
+                  </p>
+                  <p className="text-[10px] text-muted-foreground break-all max-w-full">
+                    {scoresError.slice(0, 80)}
+                  </p>
                 </div>
               ) : displayMatches.length === 0 ? (
                 <div className="flex items-center justify-center py-8 text-xs text-muted-foreground">
