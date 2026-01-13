@@ -12,9 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Key, Plus, Pencil, History, Eye, EyeOff, Trash2, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Key, Plus, Pencil, History, Eye, EyeOff, Trash2, CheckCircle, XCircle, AlertCircle, Wifi, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface ApiConfig {
   id: string;
@@ -38,6 +39,14 @@ interface ApiHistory {
   reason: string | null;
 }
 
+interface TestResult {
+  status: 'idle' | 'testing' | 'success' | 'error';
+  code?: number;
+  message?: string;
+  latency?: number;
+  details?: Record<string, unknown>;
+}
+
 const categoryLabels: Record<string, string> = {
   livescore: "Live Score",
   prediction: "Prediksi AI",
@@ -59,6 +68,8 @@ export default function CMSApi() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedConfig, setSelectedConfig] = useState<ApiConfig | null>(null);
   const [showApiKey, setShowApiKey] = useState<Record<string, boolean>>({});
+  const [testResult, setTestResult] = useState<TestResult>({ status: 'idle' });
+  const [cardTestResults, setCardTestResults] = useState<Record<string, TestResult>>({});
   
   // Form states
   const [editForm, setEditForm] = useState({
@@ -106,6 +117,70 @@ export default function CMSApi() {
     enabled: !!selectedConfig && historyDialogOpen,
   });
 
+  // Test connection mutation
+  const testConnectionMutation = useMutation({
+    mutationFn: async ({ apiName, apiKey }: { apiName: string; apiKey: string }) => {
+      const { data, error } = await supabase.functions.invoke('test-api-connection', {
+        body: { apiName, apiKey }
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      setTestResult({
+        status: data.success ? 'success' : 'error',
+        code: data.status,
+        message: data.message,
+        latency: data.latency,
+        details: data.details,
+      });
+    },
+    onError: (error) => {
+      setTestResult({
+        status: 'error',
+        message: error.message,
+      });
+    }
+  });
+
+  // Test existing API card mutation
+  const testCardConnectionMutation = useMutation({
+    mutationFn: async ({ configId, apiName, apiKey }: { configId: string; apiName: string; apiKey: string }) => {
+      const { data, error } = await supabase.functions.invoke('test-api-connection', {
+        body: { apiName, apiKey }
+      });
+      if (error) throw error;
+      return { configId, ...data };
+    },
+    onSuccess: (data) => {
+      setCardTestResults(prev => ({
+        ...prev,
+        [data.configId]: {
+          status: data.success ? 'success' : 'error',
+          code: data.status,
+          message: data.message,
+          latency: data.latency,
+        }
+      }));
+      
+      if (data.success) {
+        toast.success(`Koneksi berhasil (${data.latency}ms)`);
+      } else {
+        toast.error(`Koneksi gagal: ${data.message}`);
+      }
+    },
+    onError: (error, variables) => {
+      setCardTestResults(prev => ({
+        ...prev,
+        [variables.configId]: {
+          status: 'error',
+          message: error.message,
+        }
+      }));
+      toast.error(`Error: ${error.message}`);
+    }
+  });
+
   // Update API key mutation
   const updateMutation = useMutation({
     mutationFn: async ({ id, api_key, reason }: { id: string; api_key: string; reason: string }) => {
@@ -143,6 +218,7 @@ export default function CMSApi() {
       toast.success("API key berhasil diupdate");
       setEditDialogOpen(false);
       setEditForm({ api_key: "", reason: "" });
+      setTestResult({ status: 'idle' });
     },
     onError: (error) => {
       toast.error("Gagal mengupdate API key: " + error.message);
@@ -213,6 +289,7 @@ export default function CMSApi() {
   const handleEditClick = (config: ApiConfig) => {
     setSelectedConfig(config);
     setEditForm({ api_key: "", reason: "" });
+    setTestResult({ status: 'idle' });
     setEditDialogOpen(true);
   };
 
@@ -224,6 +301,31 @@ export default function CMSApi() {
   const handleDeleteClick = (config: ApiConfig) => {
     setSelectedConfig(config);
     setDeleteDialogOpen(true);
+  };
+
+  const handleTestConnection = () => {
+    if (!selectedConfig || !editForm.api_key) return;
+    setTestResult({ status: 'testing' });
+    testConnectionMutation.mutate({
+      apiName: selectedConfig.name,
+      apiKey: editForm.api_key,
+    });
+  };
+
+  const handleTestExistingApi = (config: ApiConfig) => {
+    if (!config.api_key) {
+      toast.error("API key belum dikonfigurasi");
+      return;
+    }
+    setCardTestResults(prev => ({
+      ...prev,
+      [config.id]: { status: 'testing' }
+    }));
+    testCardConnectionMutation.mutate({
+      configId: config.id,
+      apiName: config.name,
+      apiKey: config.api_key,
+    });
   };
 
   const toggleShowKey = (id: string) => {
@@ -343,6 +445,21 @@ export default function CMSApi() {
                         )}
                       </div>
                       <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleTestExistingApi(config)}
+                          disabled={!config.api_key || cardTestResults[config.id]?.status === 'testing'}
+                        >
+                          {cardTestResults[config.id]?.status === 'testing' ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Wifi className="h-4 w-4 mr-1" />
+                              Test
+                            </>
+                          )}
+                        </Button>
                         <Button variant="outline" size="sm" onClick={() => handleHistoryClick(config)}>
                           <History className="h-4 w-4 mr-1" />
                           History
@@ -356,6 +473,33 @@ export default function CMSApi() {
                         </Button>
                       </div>
                     </div>
+                    
+                    {/* Card Test Result */}
+                    {cardTestResults[config.id] && cardTestResults[config.id].status !== 'idle' && (
+                      <div className={cn(
+                        "mt-3 p-2 rounded-md text-sm flex items-center gap-2",
+                        cardTestResults[config.id].status === 'success' && "bg-green-500/10 text-green-600",
+                        cardTestResults[config.id].status === 'error' && "bg-red-500/10 text-red-600",
+                        cardTestResults[config.id].status === 'testing' && "bg-blue-500/10 text-blue-600"
+                      )}>
+                        {cardTestResults[config.id].status === 'success' && (
+                          <>
+                            <CheckCircle className="h-4 w-4" />
+                            <span>Connected</span>
+                            <Badge variant="outline" className="ml-auto text-green-600 border-green-600/30">
+                              {cardTestResults[config.id].latency}ms
+                            </Badge>
+                          </>
+                        )}
+                        {cardTestResults[config.id].status === 'error' && (
+                          <>
+                            <XCircle className="h-4 w-4" />
+                            <span className="truncate">{cardTestResults[config.id].message}</span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                    
                     {config.updated_at && (
                       <p className="text-xs text-muted-foreground mt-3">
                         Terakhir diupdate: {format(new Date(config.updated_at), "d MMM yyyy, HH:mm", { locale: localeId })}
@@ -370,7 +514,10 @@ export default function CMSApi() {
       )}
 
       {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      <Dialog open={editDialogOpen} onOpenChange={(open) => {
+        setEditDialogOpen(open);
+        if (!open) setTestResult({ status: 'idle' });
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Update API Key</DialogTitle>
@@ -386,9 +533,88 @@ export default function CMSApi() {
                 type="password"
                 placeholder="Masukkan API key baru"
                 value={editForm.api_key}
-                onChange={(e) => setEditForm(prev => ({ ...prev, api_key: e.target.value }))}
+                onChange={(e) => {
+                  setEditForm(prev => ({ ...prev, api_key: e.target.value }));
+                  setTestResult({ status: 'idle' });
+                }}
               />
             </div>
+            
+            {/* Test Connection Section */}
+            <div className="space-y-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleTestConnection}
+                disabled={!editForm.api_key || testConnectionMutation.isPending}
+                className="w-full"
+              >
+                {testConnectionMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Testing...
+                  </>
+                ) : (
+                  <>
+                    <Wifi className="h-4 w-4 mr-2" />
+                    Test Connection
+                  </>
+                )}
+              </Button>
+              
+              {/* Display Test Result */}
+              {testResult.status !== 'idle' && (
+                <div className={cn(
+                  "p-3 rounded-lg text-sm",
+                  testResult.status === 'success' && "bg-green-500/10 text-green-600 border border-green-500/30",
+                  testResult.status === 'error' && "bg-red-500/10 text-red-600 border border-red-500/30",
+                  testResult.status === 'testing' && "bg-blue-500/10 text-blue-600 border border-blue-500/30"
+                )}>
+                  {testResult.status === 'success' && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                        <span className="flex-1">{testResult.message}</span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="outline" className="text-green-600 border-green-600/30">
+                          {testResult.latency}ms
+                        </Badge>
+                        <Badge variant="outline" className="text-green-600 border-green-600/30">
+                          HTTP {testResult.code}
+                        </Badge>
+                        {testResult.details?.rate_limit_remaining && (
+                          <Badge variant="outline" className="text-green-600 border-green-600/30">
+                            Rate Limit: {String(testResult.details.rate_limit_remaining)}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {testResult.status === 'error' && (
+                    <div className="flex items-start gap-2">
+                      <XCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <span>{testResult.message}</span>
+                        {testResult.code && (
+                          <Badge variant="destructive" className="ml-2">
+                            HTTP {testResult.code}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {testResult.status === 'testing' && (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Testing connection...</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
             <div className="space-y-2">
               <Label htmlFor="reason">Alasan Perubahan (opsional)</Label>
               <Textarea
