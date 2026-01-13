@@ -4,6 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 const EXTERNAL_SUPABASE_URL = import.meta.env.VITE_EXTERNAL_SUPABASE_URL;
 const EXTERNAL_SUPABASE_ANON_KEY = import.meta.env.VITE_EXTERNAL_SUPABASE_ANON_KEY;
 
+// Debug logging for environment variables
+console.log('[Live Scores] External Supabase URL:', EXTERNAL_SUPABASE_URL || 'NOT SET');
+console.log('[Live Scores] External Supabase Key configured:', !!EXTERNAL_SUPABASE_ANON_KEY);
+
 export interface LiveMatch {
   id: number;
   homeTeam: string;
