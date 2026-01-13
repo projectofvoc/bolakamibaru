@@ -175,6 +175,68 @@ const CMSAdvertise = () => {
     },
   });
 
+  // Fungsi kompresi gambar
+  const compressImage = async (file: File, maxSizeMB: number = 1): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      // Jika sudah di bawah maxSize, langsung return
+      if (file.size <= maxSizeMB * 1024 * 1024) {
+        resolve(file);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Resize jika dimensi terlalu besar
+          const maxDimension = 1200;
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = (height * maxDimension) / width;
+              width = maxDimension;
+            } else {
+              width = (width * maxDimension) / height;
+              height = maxDimension;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          // Kompres dengan kualitas yang menurun sampai < 1MB
+          let quality = 0.8;
+          const compress = () => {
+            canvas.toBlob(
+              (blob) => {
+                if (blob && blob.size <= maxSizeMB * 1024 * 1024) {
+                  resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                } else if (quality > 0.1) {
+                  quality -= 0.1;
+                  compress();
+                } else {
+                  resolve(new File([blob!], file.name, { type: 'image/jpeg' }));
+                }
+              },
+              'image/jpeg',
+              quality
+            );
+          };
+          compress();
+        };
+        img.onerror = reject;
+      };
+      reader.onerror = reject;
+    });
+  };
+
   const resetForm = () => {
     setShowForm(false);
     setEditingAd(null);
@@ -185,7 +247,7 @@ const CMSAdvertise = () => {
     setMediaPreview('');
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -203,8 +265,27 @@ const CMSAdvertise = () => {
     }
 
     setMediaType(isVideo ? 'video' : 'image');
-    setMediaFile(file);
-    setMediaPreview(URL.createObjectURL(file));
+
+    // Kompres gambar jika > 1MB
+    if (isImage && file.size > 1 * 1024 * 1024) {
+      toast({ title: 'Mengompres gambar...', description: 'Mohon tunggu sebentar' });
+      try {
+        const compressedFile = await compressImage(file, 1);
+        setMediaFile(compressedFile);
+        setMediaPreview(URL.createObjectURL(compressedFile));
+        toast({ 
+          title: 'Berhasil', 
+          description: `Gambar dikompres dari ${(file.size / 1024 / 1024).toFixed(2)}MB ke ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB` 
+        });
+      } catch (error) {
+        console.error('Compression error:', error);
+        setMediaFile(file);
+        setMediaPreview(URL.createObjectURL(file));
+      }
+    } else {
+      setMediaFile(file);
+      setMediaPreview(URL.createObjectURL(file));
+    }
   };
 
   const uploadFile = async (file: File): Promise<string> => {
