@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { getOrCreateSessionId } from '@/lib/analytics';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MoreNewsGrid from '@/components/MoreNewsGrid';
@@ -39,11 +40,36 @@ const NewsDetail: React.FC = () => {
     enabled: !!slug,
   });
 
-  // Increment view count when article is loaded
+  // Track if we've already attempted to count this view
+  const viewTrackedRef = useRef(false);
+
+  // Increment view count with session-based tracking
   useEffect(() => {
-    if (article?.id) {
-      supabase.rpc('increment_article_views', { article_id: article.id });
-    }
+    const trackView = async () => {
+      if (!article?.id || viewTrackedRef.current) return;
+      
+      viewTrackedRef.current = true;
+      const sessionId = getOrCreateSessionId();
+      
+      try {
+        const { data, error } = await supabase.rpc('increment_article_views_with_session', {
+          p_article_id: article.id,
+          p_session_id: sessionId
+        });
+        
+        if (error) {
+          console.error('Failed to track view:', error);
+        } else if (data) {
+          console.log('View counted for article:', article.id);
+        } else {
+          console.log('View already counted for this session');
+        }
+      } catch (err) {
+        console.error('Error tracking view:', err);
+      }
+    };
+    
+    trackView();
   }, [article?.id]);
 
   if (isLoading) {
