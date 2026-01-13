@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,6 +52,29 @@ interface TransformedMatch {
   time: string;
 }
 
+// Function to get API key from database with fallback to env
+async function getApiKey(supabase: any, apiName: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('api_configurations')
+      .select('api_key')
+      .eq('name', apiName)
+      .eq('is_active', true)
+      .single();
+    
+    if (data?.api_key) {
+      console.log(`Using API key from database for: ${apiName}`);
+      return data.api_key;
+    }
+  } catch (e) {
+    console.log(`Failed to get API key from database: ${e}`);
+  }
+  
+  // Fallback to environment variable
+  console.log(`Falling back to env variable for: ${apiName}`);
+  return Deno.env.get('SPORTMONKS_API_KEY') || null;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -58,10 +82,16 @@ serve(async (req) => {
   }
 
   try {
-    const apiKey = Deno.env.get('SPORTMONKS_API_KEY');
+    // Create Supabase client with service role for reading api_configurations
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get API key from database or fallback to env
+    const apiKey = await getApiKey(supabase, 'sportmonks');
     
     if (!apiKey) {
-      throw new Error('SPORTMONKS_API_KEY not configured');
+      throw new Error('SPORTMONKS_API_KEY not configured in database or environment');
     }
 
     // Get today's date in YYYY-MM-DD format

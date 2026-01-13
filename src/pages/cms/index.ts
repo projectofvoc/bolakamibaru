@@ -7,3 +7,4 @@ export { default as CMSLeagues } from './CMSLeagues';
 export { default as CMSNavigation } from './CMSNavigation';
 export { default as CMSUsers } from './CMSUsers';
 export { default as CMSAnalytics } from './CMSAnalytics';
+export { default as CMSApi } from './CMSApi';

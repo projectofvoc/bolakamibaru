@@ -29,7 +29,8 @@ import {
   LogOut,
   Menu,
   ChevronLeft,
-  BarChart3
+  BarChart3,
+  Key
 } from 'lucide-react';
 import logoBolakami from '@/assets/logo-bolakami.png';
 
@@ -72,6 +73,7 @@ const CMSSidebar = () => {
   const adminItems = [
     { title: 'Liga', url: '/cms/leagues', icon: Trophy },
     { title: 'Navigation', url: '/cms/navigation', icon: Link2 },
+    { title: 'API', url: '/cms/api', icon: Key },
     { title: 'Users', url: '/cms/users', icon: Users },
   ];
 
