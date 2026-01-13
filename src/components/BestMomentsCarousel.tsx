@@ -35,6 +35,7 @@ const BestMomentsCarousel: React.FC = () => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [showShareSheet, setShowShareSheet] = useState(false);
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
 
   // Fetch moments from database
   const {
@@ -256,7 +257,27 @@ const BestMomentsCarousel: React.FC = () => {
           }} className="relative">
                 {/* Video/Image Area - Portrait */}
                 <div className="relative aspect-[9/16] bg-card" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-                  {selectedMoment.video_url ? <video src={selectedMoment.video_url} className="w-full h-full object-cover" controls autoPlay loop playsInline /> : <img src={selectedMoment.thumbnail_url} alt={language === 'id' ? selectedMoment.title_id : selectedMoment.title_en} className="w-full h-full object-cover" />}
+                  {/* Green Loading Spinner */}
+                  {isVideoLoading && selectedMoment.video_url && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
+                      <div className="w-12 h-12 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
+                    </div>
+                  )}
+                  {selectedMoment.video_url ? (
+                    <video 
+                      src={selectedMoment.video_url} 
+                      className="w-full h-full object-cover" 
+                      autoPlay 
+                      loop 
+                      muted
+                      playsInline
+                      onLoadedData={() => setIsVideoLoading(false)}
+                      onWaiting={() => setIsVideoLoading(true)}
+                      onPlaying={() => setIsVideoLoading(false)}
+                    />
+                  ) : (
+                    <img src={selectedMoment.thumbnail_url} alt={language === 'id' ? selectedMoment.title_id : selectedMoment.title_en} className="w-full h-full object-cover" />
+                  )}
                   
                   {/* Close Button */}
                   
