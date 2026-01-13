@@ -5,12 +5,12 @@ import { Trophy, ChevronRight, CheckCircle, Bookmark, Clock } from 'lucide-react
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { upcomingMatches } from '@/data/matchData';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLeaguesLogo } from '@/hooks/useLeaguesLogo';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useUpcomingFixtures, UpcomingFixture } from '@/hooks/useUpcomingFixtures';
 
 interface LeagueInfo {
   id: string;
@@ -35,6 +35,44 @@ const leagueColorClasses: Record<string, string> = {
   red: 'bg-red-500',
   yellow: 'bg-yellow-500',
   purple: 'bg-purple-500'
+};
+
+// Team Logo component for Liga page
+interface TeamLogoProps {
+  team: UpcomingFixture['homeTeam'];
+  size?: 'sm' | 'md';
+}
+
+const TeamLogo: React.FC<TeamLogoProps> = ({ team, size = 'md' }) => {
+  const sizeClasses = size === 'sm' ? 'w-8 h-8' : 'w-10 h-10';
+  const textSize = size === 'sm' ? 'text-xs' : 'text-sm';
+
+  if (team.logo) {
+    return (
+      <div className={`${sizeClasses} rounded-full bg-muted/50 flex items-center justify-center overflow-hidden`}>
+        <img 
+          src={team.logo} 
+          alt={team.name}
+          className="w-full h-full object-contain p-1"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+          }}
+        />
+        <span className={`${textSize} font-bold text-muted-foreground hidden`}>
+          {team.name.charAt(0)}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${sizeClasses} rounded-full bg-muted/50 flex items-center justify-center`}>
+      <span className={`${textSize} font-bold text-muted-foreground`}>
+        {team.name.charAt(0)}
+      </span>
+    </div>
+  );
 };
 
 const Liga: React.FC = () => {
@@ -79,19 +117,8 @@ const Liga: React.FC = () => {
   const visibleArticles = articles.slice(0, visibleCount);
   const hasMore = visibleCount < articles.length;
 
-  // Filter upcoming matches by league
-  const filteredMatches = league 
-    ? upcomingMatches.filter(m => {
-        const matchLeague = m.league.toLowerCase();
-        if (league === 'liga-1') return matchLeague.includes('liga 1');
-        if (league === 'premier-league') return matchLeague.includes('epl') || matchLeague.includes('premier');
-        if (league === 'la-liga') return matchLeague.includes('la liga');
-        if (league === 'serie-a') return matchLeague.includes('serie a');
-        if (league === 'bundesliga') return matchLeague.includes('bundesliga');
-        if (league === 'champions-league') return matchLeague.includes('champions');
-        return true;
-      })
-    : upcomingMatches;
+  // Fetch upcoming fixtures from Sportmonks API
+  const { data: fixtures = [], isLoading: isLoadingFixtures } = useUpcomingFixtures(league);
 
   // Render league logo with loading state
   const renderLeagueLogo = (l: typeof leaguesWithLogos[0], size: 'sm' | 'md' | 'lg' = 'md') => {
@@ -212,53 +239,102 @@ const Liga: React.FC = () => {
         )}
 
         {/* Upcoming Matches */}
-        {filteredMatches.length > 0 && (
-          <section className="py-8">
-            <div className="container mx-auto px-4">
-              <div className="mb-6">
-                <h2 className="text-xl md:text-2xl font-bold text-foreground">
-                  {language === 'id' ? 'Jadwal Mendatang' : 'Upcoming Fixtures'}
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {currentLeague 
-                    ? (language === 'id' 
-                        ? `Pertandingan ${currentLeague.name[language]} yang akan datang` 
-                        : `Upcoming ${currentLeague.name[language]} fixtures`)
-                    : (language === 'id' 
-                        ? 'Pertandingan yang akan datang minggu ini' 
-                        : 'Matches coming up this week')}
-                </p>
-              </div>
+        <section className="py-8">
+          <div className="container mx-auto px-4">
+            <div className="mb-6">
+              <h2 className="text-xl md:text-2xl font-bold text-foreground">
+                {language === 'id' ? 'Jadwal Mendatang' : 'Upcoming Fixtures'}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {currentLeague 
+                  ? (language === 'id' 
+                      ? `Pertandingan ${currentLeague.name[language]} yang akan datang` 
+                      : `Upcoming ${currentLeague.name[language]} fixtures`)
+                  : (language === 'id' 
+                      ? 'Pertandingan yang akan datang minggu ini' 
+                      : 'Matches coming up this week')}
+              </p>
+            </div>
+            
+            {/* Loading State */}
+            {isLoadingFixtures && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {filteredMatches.slice(0, 4).map((match, idx) => (
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="bg-card rounded-xl p-4 md:p-5">
+                    <div className="flex flex-col gap-2 mb-4">
+                      <Skeleton className="w-16 h-5 rounded-full" />
+                      <Skeleton className="w-24 h-4" />
+                    </div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="w-10 h-10 rounded-full" />
+                        <Skeleton className="w-16 h-4" />
+                      </div>
+                      <Skeleton className="w-6 h-4" />
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="w-16 h-4" />
+                        <Skeleton className="w-10 h-10 rounded-full" />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="w-20 h-4" />
+                      <Skeleton className="w-7 h-7 rounded-full" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Fixtures Grid */}
+            {!isLoadingFixtures && fixtures.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {fixtures.slice(0, 4).map((fixture, idx) => (
                   <motion.div
-                    key={match.id}
+                    key={fixture.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
                     className="bg-card rounded-xl p-4 md:p-5 hover:bg-card/80 transition-colors cursor-pointer"
                   >
-                    {/* Top Row: League Badge */}
-                    <div className="flex flex-col gap-2 mb-3">
-                      <span className={`px-2 py-0.5 text-[10px] md:text-xs font-bold rounded-full text-white w-fit ${leagueColorClasses[match.leagueColor]}`}>
-                        {match.league}
+                    {/* Top Row: League Badge & Time */}
+                    <div className="flex flex-col gap-2 mb-4">
+                      <span className={`px-2 py-0.5 text-[10px] md:text-xs font-bold rounded-full text-white w-fit ${leagueColorClasses[fixture.league.color] || 'bg-blue-500'}`}>
+                        {fixture.league.shortCode || fixture.league.name}
                       </span>
                       
-                      {/* Time with Clock Icon */}
                       <div className="flex items-center gap-1.5 text-muted-foreground text-xs md:text-sm">
                         <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                        <span>{match.dateLabel[language]}, {match.time}</span>
+                        <span>{fixture.dateLabel[language]}, {fixture.time}</span>
                       </div>
                     </div>
                     
-                    {/* Team Names */}
-                    <h3 className="text-foreground font-semibold text-sm md:text-base mb-3">
-                      {match.homeTeam} vs {match.awayTeam}
-                    </h3>
+                    {/* Teams with Logos */}
+                    <div className="flex items-center justify-between mb-4">
+                      {/* Home Team */}
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <TeamLogo team={fixture.homeTeam} />
+                        <span className="text-foreground font-medium text-xs md:text-sm truncate">
+                          {fixture.homeTeam.shortCode || fixture.homeTeam.name}
+                        </span>
+                      </div>
+                      
+                      {/* VS */}
+                      <span className="text-muted-foreground text-xs font-bold px-2">VS</span>
+                      
+                      {/* Away Team */}
+                      <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                        <span className="text-foreground font-medium text-xs md:text-sm truncate text-right">
+                          {fixture.awayTeam.shortCode || fixture.awayTeam.name}
+                        </span>
+                        <TeamLogo team={fixture.awayTeam} />
+                      </div>
+                    </div>
                     
                     {/* Action Button */}
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground text-xs md:text-sm">{language === 'id' ? 'Analisa Cepat' : 'Quick Analysis'}</span>
+                      <span className="text-muted-foreground text-xs md:text-sm">
+                        {language === 'id' ? 'Analisa Cepat' : 'Quick Analysis'}
+                      </span>
                       <button className="w-7 h-7 md:w-8 md:h-8 rounded-full border border-muted-foreground/30 flex items-center justify-center hover:border-primary hover:text-primary transition-colors">
                         <ChevronRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       </button>
@@ -266,9 +342,20 @@ const Liga: React.FC = () => {
                   </motion.div>
                 ))}
               </div>
-            </div>
-          </section>
-        )}
+            )}
+
+            {/* Empty State */}
+            {!isLoadingFixtures && fixtures.length === 0 && (
+              <div className="text-center py-12 bg-card rounded-xl">
+                <p className="text-muted-foreground">
+                  {language === 'id' 
+                    ? 'Tidak ada pertandingan dalam 7 hari ke depan.' 
+                    : 'No matches in the next 7 days.'}
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
 
         {/* News Articles */}
         <section className="py-12 bg-card/50">

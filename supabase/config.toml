@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.sportmonks-leagues]
 verify_jwt = false
 
+[functions.sportmonks-fixtures]
+verify_jwt = false
+
 [functions.translate-article]
 verify_jwt = false
 
