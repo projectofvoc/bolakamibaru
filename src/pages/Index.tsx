@@ -7,10 +7,12 @@ import NewsGrid from '@/components/NewsGrid';
 import UpcomingMatches from '@/components/UpcomingMatches';
 import AICompanion from '@/components/AICompanion';
 import MoreNewsGrid from '@/components/MoreNewsGrid';
+import AdvertisementPopup from '@/components/AdvertisementPopup';
 
 const Index: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
+      <AdvertisementPopup />
       <Header />
       <main>
         <HeroDashboard />
