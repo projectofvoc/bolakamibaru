@@ -16,6 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Save, 
@@ -23,9 +29,9 @@ import {
   X, 
   Image as ImageIcon,
   Eye,
-  Send,
   Sparkles,
-  Languages
+  Languages,
+  Plus
 } from 'lucide-react';
 import RichTextEditor from '@/components/cms/RichTextEditor';
 import ArticlePreview from '@/components/cms/ArticlePreview';
@@ -96,7 +102,7 @@ const CMSArticleEditor = () => {
     content_id: '',
     content_en: '',
     featured_image: '',
-    category: 'daily',
+    category: 'Trending',
     league: '',
     club: '',
     author_name: '',
@@ -116,6 +122,18 @@ const CMSArticleEditor = () => {
   const [isTranslating, setIsTranslating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
+  // Modal states
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [showAddLeague, setShowAddLeague] = useState(false);
+  const [showAddClub, setShowAddClub] = useState(false);
+  const [showAddBadge, setShowAddBadge] = useState(false);
+
+  // New item states
+  const [newCategory, setNewCategory] = useState({ name: '', icon: '' });
+  const [newLeague, setNewLeague] = useState({ name: '', country: '' });
+  const [newClub, setNewClub] = useState({ name: '', league_id: '' });
+  const [newBadge, setNewBadge] = useState({ name: '', icon: '' });
+
   // Fetch article if editing
   const { data: article, isLoading } = useQuery({
     queryKey: ['cms-article', id],
@@ -134,6 +152,21 @@ const CMSArticleEditor = () => {
     enabled: isEditing,
   });
 
+  // Fetch categories
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Fetch leagues
   const { data: leagues = [] } = useQuery({
     queryKey: ['leagues'],
@@ -149,6 +182,111 @@ const CMSArticleEditor = () => {
     },
   });
 
+  // Fetch clubs
+  const { data: clubs = [] } = useQuery({
+    queryKey: ['clubs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clubs')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch badges
+  const { data: badgesList = [] } = useQuery({
+    queryKey: ['badges'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('badges')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Add category mutation
+  const addCategoryMutation = useMutation({
+    mutationFn: async (data: { name: string; icon: string }) => {
+      const { error } = await supabase.from('categories').insert(data);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      setShowAddCategory(false);
+      setNewCategory({ name: '', icon: '' });
+      toast({ title: 'Kategori berhasil ditambahkan!' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  // Add league mutation
+  const addLeagueMutation = useMutation({
+    mutationFn: async (data: { name: string; country: string }) => {
+      const { error } = await supabase.from('leagues').insert({
+        name: data.name,
+        name_en: data.name,
+        country: data.country || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leagues'] });
+      setShowAddLeague(false);
+      setNewLeague({ name: '', country: '' });
+      toast({ title: 'Liga berhasil ditambahkan!' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  // Add club mutation
+  const addClubMutation = useMutation({
+    mutationFn: async (data: { name: string; league_id: string }) => {
+      const { error } = await supabase.from('clubs').insert({
+        name: data.name,
+        league_id: data.league_id || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clubs'] });
+      setShowAddClub(false);
+      setNewClub({ name: '', league_id: '' });
+      toast({ title: 'Klub berhasil ditambahkan!' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  // Add badge mutation
+  const addBadgeMutation = useMutation({
+    mutationFn: async (data: { name: string; icon: string }) => {
+      const { error } = await supabase.from('badges').insert(data);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['badges'] });
+      setShowAddBadge(false);
+      setNewBadge({ name: '', icon: '' });
+      toast({ title: 'Badge berhasil ditambahkan!' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
   // Populate form when article is loaded
   useEffect(() => {
     if (article) {
@@ -161,7 +299,7 @@ const CMSArticleEditor = () => {
         content_id: ensureHtmlContent(article.content_id || ''),
         content_en: ensureHtmlContent(article.content_en || ''),
         featured_image: article.featured_image || '',
-        category: article.category || 'daily',
+        category: article.category || 'Trending',
         league: article.league || '',
         club: article.club || '',
         author_name: article.author_name || '',
@@ -555,51 +693,96 @@ const CMSArticleEditor = () => {
               <CardTitle className="text-base">Kategori & Meta</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Category */}
               <div className="space-y-2">
                 <Label>Kategori *</Label>
-                <Select 
-                  value={form.category} 
-                  onValueChange={(v) => setForm(prev => ({ ...prev, category: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="trending">🔥 Trending</SelectItem>
-                    <SelectItem value="daily">📰 Update Harian</SelectItem>
-                    <SelectItem value="analisa">📊 Analisa</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select 
+                    value={form.category} 
+                    onValueChange={(v) => setForm(prev => ({ ...prev, category: v }))}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.name}>
+                          {cat.icon} {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => setShowAddCategory(true)}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
 
+              {/* League */}
               <div className="space-y-2">
                 <Label>Liga</Label>
-                <Select 
-                  value={form.league || 'none'} 
-                  onValueChange={(v) => setForm(prev => ({ ...prev, league: v === 'none' ? '' : v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih liga" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Tidak ada</SelectItem>
-                    {leagues.map((league) => (
-                      <SelectItem key={league.id} value={league.name}>
-                        {league.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select 
+                    value={form.league || 'none'} 
+                    onValueChange={(v) => setForm(prev => ({ ...prev, league: v === 'none' ? '' : v }))}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Pilih liga" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Tidak ada</SelectItem>
+                      {leagues.map((league) => (
+                        <SelectItem key={league.id} value={league.name}>
+                          {league.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => setShowAddLeague(true)}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
 
+              {/* Club */}
               <div className="space-y-2">
-                <Label htmlFor="club">Klub</Label>
-                <Input
-                  id="club"
-                  value={form.club}
-                  onChange={(e) => setForm(prev => ({ ...prev, club: e.target.value }))}
-                  placeholder="Nama klub terkait"
-                />
+                <Label>Klub</Label>
+                <div className="flex gap-2">
+                  <Select 
+                    value={form.club || 'none'} 
+                    onValueChange={(v) => setForm(prev => ({ ...prev, club: v === 'none' ? '' : v }))}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Pilih klub" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Tidak ada</SelectItem>
+                      {clubs.map((club) => (
+                        <SelectItem key={club.id} value={club.name}>
+                          {club.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => setShowAddClub(true)}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -645,27 +828,32 @@ const CMSArticleEditor = () => {
           {/* Badges */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" />
-                Badges
+              <CardTitle className="text-base flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  Badges
+                </span>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setShowAddBadge(true)}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
-                {['new', 'viral', 'popular', 'trending'].map((badge) => (
+                {badgesList.map((badge) => (
                   <Button
-                    key={badge}
+                    key={badge.id}
                     type="button"
-                    variant={form.badges.includes(badge) ? 'default' : 'outline'}
+                    variant={form.badges.includes(badge.name) ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => toggleBadge(badge)}
-                    className="capitalize"
+                    onClick={() => toggleBadge(badge.name)}
                   >
-                    {badge === 'new' && '🆕'}
-                    {badge === 'viral' && '🔥'}
-                    {badge === 'popular' && '⭐'}
-                    {badge === 'trending' && '📈'}
-                    {' '}{badge}
+                    {badge.icon} {badge.name}
                   </Button>
                 ))}
               </div>
@@ -728,6 +916,169 @@ const CMSArticleEditor = () => {
           badges: form.badges,
         }}
       />
+
+      {/* Add Category Dialog */}
+      <Dialog open={showAddCategory} onOpenChange={setShowAddCategory}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tambah Kategori Baru</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nama Kategori</Label>
+              <Input
+                value={newCategory.name}
+                onChange={(e) => setNewCategory(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Contoh: Transfer Market"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Icon (Emoji)</Label>
+              <Input
+                value={newCategory.icon}
+                onChange={(e) => setNewCategory(prev => ({ ...prev, icon: e.target.value }))}
+                placeholder="Contoh: 💰"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowAddCategory(false)}>
+                Batal
+              </Button>
+              <Button 
+                onClick={() => addCategoryMutation.mutate(newCategory)}
+                disabled={!newCategory.name || addCategoryMutation.isPending}
+              >
+                {addCategoryMutation.isPending ? 'Menyimpan...' : 'Tambah'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add League Dialog */}
+      <Dialog open={showAddLeague} onOpenChange={setShowAddLeague}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tambah Liga Baru</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nama Liga</Label>
+              <Input
+                value={newLeague.name}
+                onChange={(e) => setNewLeague(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Contoh: Eredivisie"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Negara</Label>
+              <Input
+                value={newLeague.country}
+                onChange={(e) => setNewLeague(prev => ({ ...prev, country: e.target.value }))}
+                placeholder="Contoh: Belanda"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowAddLeague(false)}>
+                Batal
+              </Button>
+              <Button 
+                onClick={() => addLeagueMutation.mutate(newLeague)}
+                disabled={!newLeague.name || addLeagueMutation.isPending}
+              >
+                {addLeagueMutation.isPending ? 'Menyimpan...' : 'Tambah'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Club Dialog */}
+      <Dialog open={showAddClub} onOpenChange={setShowAddClub}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tambah Klub Baru</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nama Klub</Label>
+              <Input
+                value={newClub.name}
+                onChange={(e) => setNewClub(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Contoh: Manchester United"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Liga (Opsional)</Label>
+              <Select 
+                value={newClub.league_id || 'none'} 
+                onValueChange={(v) => setNewClub(prev => ({ ...prev, league_id: v === 'none' ? '' : v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih liga" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Tidak ada</SelectItem>
+                  {leagues.map((league) => (
+                    <SelectItem key={league.id} value={league.id}>
+                      {league.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowAddClub(false)}>
+                Batal
+              </Button>
+              <Button 
+                onClick={() => addClubMutation.mutate(newClub)}
+                disabled={!newClub.name || addClubMutation.isPending}
+              >
+                {addClubMutation.isPending ? 'Menyimpan...' : 'Tambah'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Badge Dialog */}
+      <Dialog open={showAddBadge} onOpenChange={setShowAddBadge}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tambah Badge Baru</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nama Badge</Label>
+              <Input
+                value={newBadge.name}
+                onChange={(e) => setNewBadge(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Contoh: Breaking"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Icon (Emoji)</Label>
+              <Input
+                value={newBadge.icon}
+                onChange={(e) => setNewBadge(prev => ({ ...prev, icon: e.target.value }))}
+                placeholder="Contoh: 🚨"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowAddBadge(false)}>
+                Batal
+              </Button>
+              <Button 
+                onClick={() => addBadgeMutation.mutate(newBadge)}
+                disabled={!newBadge.name || addBadgeMutation.isPending}
+              >
+                {addBadgeMutation.isPending ? 'Menyimpan...' : 'Tambah'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
