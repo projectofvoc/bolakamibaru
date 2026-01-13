@@ -206,8 +206,8 @@ serve(async (req) => {
       );
     }
 
-    // Fetch fixtures from Sportmonks
-    const url = `https://api.sportmonks.com/v3/football/fixtures/between/${startDate}/${endDate}?api_token=${apiKey}&include=participants;league;venue&filters=fixtureLeagues:${leagueIds.join(',')}`;
+    // Fetch fixtures from Sportmonks (removed venue include - not available in current plan)
+    const url = `https://api.sportmonks.com/v3/football/fixtures/between/${startDate}/${endDate}?api_token=${apiKey}&include=participants;league&filters=fixtureLeagues:${leagueIds.join(',')}`;
     
     console.log(`Fetching fixtures from ${startDate} to ${endDate} for leagues: ${leagueIds.join(',')}`);
     
