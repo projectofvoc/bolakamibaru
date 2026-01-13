@@ -1,1 +1,4 @@
 project_id = "wqrvguxkanjuorntlmmx"
+
+[functions.sportmonks-livescore]
+verify_jwt = false
