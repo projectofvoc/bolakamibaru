@@ -72,10 +72,10 @@ const AdvertisementPopup: React.FC = () => {
           {/* Close button - positioned outside with white circle frame */}
           <button
             onClick={handleClose}
-            className="absolute -top-3 -right-3 z-50 bg-white hover:bg-gray-100 rounded-full p-1.5 shadow-lg border-2 border-gray-200 transition-colors"
+            className="absolute -top-3 -right-3 z-50 bg-primary hover:bg-primary/90 rounded-full p-1.5 shadow-lg border-2 border-primary/50 transition-colors"
             aria-label="Tutup iklan"
           >
-            <X className="w-5 h-5 text-gray-800" />
+            <X className="w-5 h-5 text-primary-foreground" />
           </button>
 
           {/* Media content - locked to 1:1 aspect ratio */}
@@ -90,14 +90,14 @@ const AdvertisementPopup: React.FC = () => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <video
-                src={ad.media_url}
-                autoPlay
-                muted
-                controls
-                playsInline
-                className="w-full h-full object-cover"
-              />
+            <video
+              src={ad.media_url}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+            />
             )}
           </div>
         </div>
