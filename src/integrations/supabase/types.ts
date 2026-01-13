@@ -14,6 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          browser: string | null
+          country: string | null
+          created_at: string | null
+          device_type: string | null
+          event_type: string
+          id: string
+          os: string | null
+          page_path: string
+          page_title: string | null
+          referrer: string | null
+          session_id: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          browser?: string | null
+          country?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          event_type?: string
+          id?: string
+          os?: string | null
+          page_path: string
+          page_title?: string | null
+          referrer?: string | null
+          session_id: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          browser?: string | null
+          country?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          event_type?: string
+          id?: string
+          os?: string | null
+          page_path?: string
+          page_title?: string | null
+          referrer?: string | null
+          session_id?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      analytics_sessions: {
+        Row: {
+          browser: string | null
+          country: string | null
+          device_type: string | null
+          duration_seconds: number | null
+          ended_at: string | null
+          entry_page: string | null
+          exit_page: string | null
+          id: string
+          is_bounced: boolean | null
+          last_activity_at: string | null
+          os: string | null
+          pageviews: number | null
+          referrer: string | null
+          referrer_source: string | null
+          session_id: string
+          started_at: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          browser?: string | null
+          country?: string | null
+          device_type?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          entry_page?: string | null
+          exit_page?: string | null
+          id?: string
+          is_bounced?: boolean | null
+          last_activity_at?: string | null
+          os?: string | null
+          pageviews?: number | null
+          referrer?: string | null
+          referrer_source?: string | null
+          session_id: string
+          started_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          browser?: string | null
+          country?: string | null
+          device_type?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          entry_page?: string | null
+          exit_page?: string | null
+          id?: string
+          is_bounced?: boolean | null
+          last_activity_at?: string | null
+          os?: string | null
+          pageviews?: number | null
+          referrer?: string | null
+          referrer_source?: string | null
+          session_id?: string
+          started_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       articles: {
         Row: {
           author_id: string | null
