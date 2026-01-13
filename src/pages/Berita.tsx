@@ -197,7 +197,7 @@ const Berita: React.FC = () => {
                       
                       {/* Meta */}
                       <div className="flex items-center gap-4 text-sm text-white/70">
-                        <span>{regionFeatured.author_name || 'Bolakama'}</span>
+                        <span>{regionFeatured.author_name || 'Bolakami'}</span>
                         <div className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           <span>

@@ -16,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Save, 
@@ -25,7 +24,8 @@ import {
   Image as ImageIcon,
   Eye,
   Send,
-  Sparkles
+  Sparkles,
+  Languages
 } from 'lucide-react';
 import RichTextEditor from '@/components/cms/RichTextEditor';
 import ArticlePreview from '@/components/cms/ArticlePreview';
@@ -113,6 +113,7 @@ const CMSArticleEditor = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
   // Fetch article if editing
@@ -265,9 +266,34 @@ const CMSArticleEditor = () => {
     return publicUrl;
   };
 
+  const translateArticle = async (): Promise<{ title_en: string; excerpt_en: string; content_en: string }> => {
+    const { data, error } = await supabase.functions.invoke('translate-article', {
+      body: {
+        title_id: form.title_id,
+        excerpt_id: form.excerpt_id || null,
+        content_id: form.content_id,
+      }
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Gagal menerjemahkan artikel');
+    }
+
+    if (data?.error) {
+      throw new Error(data.error);
+    }
+
+    return {
+      title_en: data.title_en || form.title_id,
+      excerpt_en: data.excerpt_en || form.excerpt_id || '',
+      content_en: data.content_en || form.content_id,
+    };
+  };
+
   const handleSubmit = async (status?: string) => {
-    if (!form.title_id || !form.title_en || !form.content_id || !form.content_en) {
-      toast({ title: 'Error', description: 'Judul dan konten wajib diisi (Indonesia & English)', variant: 'destructive' });
+    // Only validate Indonesian fields now
+    if (!form.title_id || !form.content_id) {
+      toast({ title: 'Error', description: 'Judul dan konten wajib diisi', variant: 'destructive' });
       return;
     }
 
@@ -275,13 +301,57 @@ const CMSArticleEditor = () => {
 
     try {
       let imageUrl = form.featured_image;
+      let finalForm = { ...form };
       
+      // Upload image if new
       if (imageFile) {
         imageUrl = await uploadImage();
       }
 
+      // Auto-translate if publishing
+      if (status === 'published') {
+        setIsTranslating(true);
+        toast({ title: 'Menerjemahkan...', description: 'AI sedang menerjemahkan artikel ke Bahasa Inggris' });
+        
+        try {
+          const translated = await translateArticle();
+          finalForm = {
+            ...finalForm,
+            title_en: translated.title_en,
+            excerpt_en: translated.excerpt_en,
+            content_en: translated.content_en,
+          };
+          
+          // Update local form state too
+          setForm(prev => ({
+            ...prev,
+            title_en: translated.title_en,
+            excerpt_en: translated.excerpt_en,
+            content_en: translated.content_en,
+          }));
+        } catch (translateError: any) {
+          setIsTranslating(false);
+          toast({ 
+            title: 'Gagal menerjemahkan', 
+            description: translateError.message || 'Silakan coba lagi', 
+            variant: 'destructive' 
+          });
+          setIsUploading(false);
+          return;
+        }
+        setIsTranslating(false);
+      } else {
+        // For drafts, use title_id as fallback for title_en if empty
+        if (!finalForm.title_en) {
+          finalForm.title_en = finalForm.title_id;
+        }
+        if (!finalForm.content_en) {
+          finalForm.content_en = finalForm.content_id;
+        }
+      }
+
       await saveMutation.mutateAsync({
-        ...form,
+        ...finalForm,
         featured_image: imageUrl,
         status: status || form.status,
       });
@@ -289,6 +359,7 @@ const CMSArticleEditor = () => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
       setIsUploading(false);
+      setIsTranslating(false);
     }
   };
 
@@ -348,17 +419,27 @@ const CMSArticleEditor = () => {
           <Button 
             variant="outline" 
             onClick={() => handleSubmit('draft')}
-            disabled={isUploading || saveMutation.isPending}
+            disabled={isUploading || isTranslating || saveMutation.isPending}
           >
             <Save className="w-4 h-4 mr-2" />
             Simpan Draft
           </Button>
           <Button 
             onClick={() => handleSubmit('published')}
-            disabled={isUploading || saveMutation.isPending}
+            disabled={isUploading || isTranslating || saveMutation.isPending}
+            className="gap-2"
           >
-            <Send className="w-4 h-4 mr-2" />
-            Publish
+            {isTranslating ? (
+              <>
+                <Languages className="w-4 h-4 animate-pulse" />
+                Menerjemahkan...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                Publish
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -366,78 +447,45 @@ const CMSArticleEditor = () => {
       <div className="grid lg:grid-cols-[1fr_380px] gap-6">
         {/* Main Content - Konten Artikel */}
         <div className="space-y-6">
-          {/* Bilingual Content */}
+          {/* Indonesian Content Only */}
           <Card>
             <CardHeader>
-              <CardTitle>Konten Artikel</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                🇮🇩 Konten Artikel
+              </CardTitle>
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                Tulis dalam Bahasa Indonesia. Konten akan otomatis diterjemahkan ke Bahasa Inggris saat di-publish.
+              </p>
             </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="id" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-4">
-                  <TabsTrigger value="id">🇮🇩 Indonesia</TabsTrigger>
-                  <TabsTrigger value="en">🇬🇧 English</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="id" className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title_id">Judul *</Label>
-                    <Input
-                      id="title_id"
-                      value={form.title_id}
-                      onChange={(e) => setForm(prev => ({ ...prev, title_id: e.target.value }))}
-                      placeholder="Masukkan judul berita"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="excerpt_id">Ringkasan</Label>
-                    <Textarea
-                      id="excerpt_id"
-                      value={form.excerpt_id}
-                      onChange={(e) => setForm(prev => ({ ...prev, excerpt_id: e.target.value }))}
-                      placeholder="Ringkasan singkat berita..."
-                      rows={2}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Konten *</Label>
-                    <RichTextEditor
-                      content={form.content_id}
-                      onChange={(content) => setForm(prev => ({ ...prev, content_id: content }))}
-                      placeholder="Tulis konten berita dalam Bahasa Indonesia..."
-                    />
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="en" className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title_en">Title *</Label>
-                    <Input
-                      id="title_en"
-                      value={form.title_en}
-                      onChange={(e) => setForm(prev => ({ ...prev, title_en: e.target.value }))}
-                      placeholder="Enter news title"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="excerpt_en">Excerpt</Label>
-                    <Textarea
-                      id="excerpt_en"
-                      value={form.excerpt_en}
-                      onChange={(e) => setForm(prev => ({ ...prev, excerpt_en: e.target.value }))}
-                      placeholder="Brief summary of the news..."
-                      rows={2}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Content *</Label>
-                    <RichTextEditor
-                      content={form.content_en}
-                      onChange={(content) => setForm(prev => ({ ...prev, content_en: content }))}
-                      placeholder="Write full news content in English..."
-                    />
-                  </div>
-                </TabsContent>
-              </Tabs>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title_id">Judul *</Label>
+                <Input
+                  id="title_id"
+                  value={form.title_id}
+                  onChange={(e) => setForm(prev => ({ ...prev, title_id: e.target.value }))}
+                  placeholder="Masukkan judul berita"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="excerpt_id">Ringkasan</Label>
+                <Textarea
+                  id="excerpt_id"
+                  value={form.excerpt_id}
+                  onChange={(e) => setForm(prev => ({ ...prev, excerpt_id: e.target.value }))}
+                  placeholder="Ringkasan singkat berita..."
+                  rows={2}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Konten *</Label>
+                <RichTextEditor
+                  content={form.content_id}
+                  onChange={(content) => setForm(prev => ({ ...prev, content_id: content }))}
+                  placeholder="Tulis konten berita dalam Bahasa Indonesia..."
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -668,11 +716,11 @@ const CMSArticleEditor = () => {
         onClose={() => setShowPreview(false)}
         article={{
           title_id: form.title_id,
-          title_en: form.title_en,
+          title_en: form.title_en || form.title_id,
           excerpt_id: form.excerpt_id,
-          excerpt_en: form.excerpt_en,
+          excerpt_en: form.excerpt_en || form.excerpt_id,
           content_id: form.content_id,
-          content_en: form.content_en,
+          content_en: form.content_en || form.content_id,
           featured_image: imagePreview || form.featured_image,
           category: form.category,
           author_name: form.author_name,
