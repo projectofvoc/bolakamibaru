@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, Play, Share2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, Play, Share2, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { toast } from 'sonner';
@@ -36,6 +36,7 @@ const BestMomentsCarousel: React.FC = () => {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
 
   // Fetch moments from database
   const {
@@ -269,7 +270,7 @@ const BestMomentsCarousel: React.FC = () => {
                       className="w-full h-full object-cover" 
                       autoPlay 
                       loop 
-                      muted
+                      muted={isMuted}
                       playsInline
                       onLoadedData={() => setIsVideoLoading(false)}
                       onWaiting={() => setIsVideoLoading(true)}
@@ -279,11 +280,19 @@ const BestMomentsCarousel: React.FC = () => {
                     <img src={selectedMoment.thumbnail_url} alt={language === 'id' ? selectedMoment.title_id : selectedMoment.title_en} className="w-full h-full object-cover" />
                   )}
                   
-                  {/* Close Button */}
-                  
-
-                  {/* League Logo Placeholder */}
-                  
+                  {/* Mute/Unmute Button - Bottom Right above Share */}
+                  {selectedMoment.video_url && (
+                    <button 
+                      onClick={() => setIsMuted(!isMuted)} 
+                      className="absolute right-4 bottom-36 w-11 h-11 rounded-full bg-background/50 backdrop-blur-sm flex items-center justify-center hover:bg-background/70 transition-colors z-10"
+                    >
+                      {isMuted ? (
+                        <VolumeX className="w-5 h-5 text-foreground" />
+                      ) : (
+                        <Volume2 className="w-5 h-5 text-foreground" />
+                      )}
+                    </button>
+                  )}
 
                   {/* Share Button - Bottom Right */}
                   <button onClick={() => setShowShareSheet(true)} className="absolute right-4 bottom-20 w-11 h-11 rounded-full bg-background/50 backdrop-blur-sm flex items-center justify-center hover:bg-background/70 transition-colors z-10">
