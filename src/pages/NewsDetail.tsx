@@ -158,28 +158,28 @@ const NewsDetail: React.FC = () => {
     return labels[category] || category;
   };
 
-  // Share handlers - use Edge Function URL for proper OG meta tags
-  const ogMetadataUrl = `https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=${article.slug}`;
+  // Share handlers - use custom domain with /share/ path for clean URLs
+  // Requires Cloudflare Worker proxy setup to handle OG metadata for crawlers
+  const shareUrl = `https://bolakamibaru.lovable.app/share/${article.slug}`;
   const shareTitle = title;
 
   const handleShareFacebook = () => {
-    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(ogMetadataUrl)}`;
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
     window.open(url, '_blank', 'width=600,height=400');
   };
 
   const handleShareTwitter = () => {
-    const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(ogMetadataUrl)}&text=${encodeURIComponent(shareTitle)}`;
+    const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`;
     window.open(url, '_blank', 'width=600,height=400');
   };
 
   const handleShareWhatsApp = () => {
-    const url = `https://wa.me/?text=${encodeURIComponent(`${shareTitle} ${ogMetadataUrl}`)}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(`${shareTitle} ${shareUrl}`)}`;
     window.open(url, '_blank');
   };
 
   const handleShareTelegram = () => {
-    // https://t.me/share/url supports deep linking to native apps on Android/iOS/Desktop
-    const url = `https://t.me/share/url?url=${encodeURIComponent(ogMetadataUrl)}&text=${encodeURIComponent(shareTitle)}`;
+    const url = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`;
     window.open(url, '_blank');
   };
 
