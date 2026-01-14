@@ -273,13 +273,15 @@ const Header: React.FC = () => {
               {/* User */}
               {user ? (
                 <div className="flex items-center gap-2">
-                  <Link
-                    to="/bolakamicms"
+                  <a
+                    href="/bolakamicms"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-secondary/80 rounded-full transition-colors"
                   >
                     <Settings className="w-4 h-4" />
                     <span>CMS</span>
-                  </Link>
+                  </a>
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-destructive/10 hover:bg-destructive/20 rounded-full transition-colors"
@@ -397,14 +399,16 @@ const Header: React.FC = () => {
                 </button>
                 {user ? (
                   <div className="flex items-center gap-2">
-                    <Link
-                      to="/bolakamicms"
+                    <a
+                      href="/bolakamicms"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-secondary/80 rounded-full transition-colors"
                     >
                       <Settings className="w-4 h-4" />
                       <span>CMS</span>
-                    </Link>
+                    </a>
                     <button
                       onClick={() => {
                         handleLogout();
