@@ -19,6 +19,50 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 
+// Helper to update meta tags for SEO (client-side)
+const updateMetaTags = (article: { title_id: string; title_en: string; excerpt_id?: string | null; excerpt_en?: string | null; featured_image?: string | null; slug: string }, language: string) => {
+  const title = language === 'id' ? article.title_id : article.title_en;
+  const description = (language === 'id' ? article.excerpt_id : article.excerpt_en) || 'Baca berita terbaru di BOLAKAMI';
+  const ogImage = article.featured_image || 'https://bolakamibaru.lovable.app/og-default.png';
+  const articleUrl = `https://bolakamibaru.lovable.app/berita/${article.slug}`;
+
+  // Update document title
+  document.title = `${title} | BOLAKAMI`;
+
+  // Helper to set or create meta tag
+  const setMetaTag = (property: string, content: string, isName = false) => {
+    const selector = isName ? `meta[name="${property}"]` : `meta[property="${property}"]`;
+    let meta = document.querySelector(selector) as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement('meta');
+      if (isName) {
+        meta.setAttribute('name', property);
+      } else {
+        meta.setAttribute('property', property);
+      }
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', content);
+  };
+
+  // Update Open Graph meta tags
+  setMetaTag('og:title', title);
+  setMetaTag('og:description', description);
+  setMetaTag('og:image', ogImage);
+  setMetaTag('og:url', articleUrl);
+  setMetaTag('og:type', 'article');
+  setMetaTag('og:site_name', 'BOLAKAMI');
+
+  // Update Twitter Card meta tags
+  setMetaTag('twitter:card', 'summary_large_image', true);
+  setMetaTag('twitter:title', title, true);
+  setMetaTag('twitter:description', description, true);
+  setMetaTag('twitter:image', ogImage, true);
+
+  // Update description meta tag
+  setMetaTag('description', description, true);
+};
+
 const NewsDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { language, t } = useLanguage();
@@ -71,6 +115,18 @@ const NewsDetail: React.FC = () => {
     
     trackView();
   }, [article?.id]);
+
+  // Update meta tags when article loads
+  useEffect(() => {
+    if (article) {
+      updateMetaTags(article, language);
+    }
+    
+    return () => {
+      // Reset to default on unmount
+      document.title = 'BOLAKAMI - Portal Berita Sepak Bola Indonesia';
+    };
+  }, [article, language]);
 
   if (isLoading) {
     return (

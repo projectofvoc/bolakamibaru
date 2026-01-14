@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.test-api-connection]
 verify_jwt = false
+
+[functions.og-metadata]
+verify_jwt = false
