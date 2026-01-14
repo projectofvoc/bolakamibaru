@@ -158,22 +158,22 @@ const NewsDetail: React.FC = () => {
     return labels[category] || category;
   };
 
-  // Share handlers
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+  // Share handlers - use Edge Function URL for proper OG meta tags
+  const ogMetadataUrl = `https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=${article.slug}`;
   const shareTitle = title;
 
   const handleShareFacebook = () => {
-    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}`;
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(ogMetadataUrl)}`;
     window.open(url, '_blank', 'width=600,height=400');
   };
 
   const handleShareTwitter = () => {
-    const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(shareTitle)}`;
+    const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(ogMetadataUrl)}&text=${encodeURIComponent(shareTitle)}`;
     window.open(url, '_blank', 'width=600,height=400');
   };
 
   const handleShareWhatsApp = () => {
-    const url = `https://wa.me/?text=${encodeURIComponent(`${shareTitle} ${currentUrl}`)}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(`${shareTitle} ${ogMetadataUrl}`)}`;
     window.open(url, '_blank');
   };
 
