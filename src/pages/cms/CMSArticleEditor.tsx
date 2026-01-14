@@ -385,23 +385,85 @@ const CMSArticleEditor = () => {
     }
   };
 
+  // Convert image to JPEG for better social media compatibility (Telegram, Facebook, etc.)
+  const convertToJpeg = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Could not get canvas context'));
+          return;
+        }
+        
+        // Fill with white background (for images with transparency)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const jpegFile = new File([blob], file.name.replace(/\.\w+$/, '.jpg'), {
+                type: 'image/jpeg',
+              });
+              resolve(jpegFile);
+            } else {
+              reject(new Error('Could not convert to JPEG'));
+            }
+          },
+          'image/jpeg',
+          0.9 // Quality 90%
+        );
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const uploadImage = async (): Promise<string> => {
     if (!imageFile) return form.featured_image;
 
-    const fileExt = imageFile.name.split('.').pop();
-    const fileName = `articles/${Date.now()}.${fileExt}`;
-    
-    const { error } = await supabase.storage
-      .from('articles-media')
-      .upload(fileName, imageFile);
-    
-    if (error) throw error;
-    
-    const { data: { publicUrl } } = supabase.storage
-      .from('articles-media')
-      .getPublicUrl(fileName);
-    
-    return publicUrl;
+    try {
+      // Convert to JPEG for social media compatibility
+      const jpegFile = await convertToJpeg(imageFile);
+      const fileName = `articles/${Date.now()}.jpg`;
+      
+      const { error } = await supabase.storage
+        .from('articles-media')
+        .upload(fileName, jpegFile, {
+          contentType: 'image/jpeg'
+        });
+      
+      if (error) throw error;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('articles-media')
+        .getPublicUrl(fileName);
+      
+      return publicUrl;
+    } catch (conversionError) {
+      // Fallback: upload original file if conversion fails
+      console.warn('JPEG conversion failed, uploading original:', conversionError);
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `articles/${Date.now()}.${fileExt}`;
+      
+      const { error } = await supabase.storage
+        .from('articles-media')
+        .upload(fileName, imageFile);
+      
+      if (error) throw error;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('articles-media')
+        .getPublicUrl(fileName);
+      
+      return publicUrl;
+    }
   };
 
   const translateArticle = async (): Promise<{ title_en: string; excerpt_en: string; content_en: string }> => {
