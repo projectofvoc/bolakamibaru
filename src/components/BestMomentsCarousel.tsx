@@ -66,6 +66,7 @@ const BestMomentsCarousel: React.FC = () => {
   };
   const navigateMoment = useCallback((direction: 'prev' | 'next') => {
     if (selectedIndex === null) return;
+    setIsVideoLoading(true);
     if (direction === 'prev' && selectedIndex > 0) {
       setSelectedIndex(selectedIndex - 1);
       setShowShareSheet(false);
@@ -211,7 +212,7 @@ const BestMomentsCarousel: React.FC = () => {
             x: 0
           }} transition={{
             delay: index * 0.1
-          }} className="flex-shrink-0 w-40 md:w-44 group cursor-pointer" onClick={() => setSelectedIndex(index)}>
+          }} className="flex-shrink-0 w-40 md:w-44 group cursor-pointer" onClick={() => { setSelectedIndex(index); setIsVideoLoading(true); }}>
                 <div className="relative rounded-xl overflow-hidden bg-card aspect-[3/4]">
                   <img src={moment.thumbnail_url} alt={language === 'id' ? moment.title_id : moment.title_en} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                   {/* Video indicator */}
@@ -267,12 +268,15 @@ const BestMomentsCarousel: React.FC = () => {
                   {selectedMoment.video_url ? (
                     <video 
                       src={selectedMoment.video_url} 
+                      poster={selectedMoment.thumbnail_url}
                       className="w-full h-full object-cover" 
                       autoPlay 
                       loop 
                       muted={isMuted}
                       playsInline
+                      preload="auto"
                       onLoadedData={() => setIsVideoLoading(false)}
+                      onCanPlay={() => setIsVideoLoading(false)}
                       onWaiting={() => setIsVideoLoading(true)}
                       onPlaying={() => setIsVideoLoading(false)}
                     />
