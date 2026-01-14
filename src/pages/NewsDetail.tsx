@@ -158,9 +158,9 @@ const NewsDetail: React.FC = () => {
     return labels[category] || category;
   };
 
-  // Share handlers - use custom domain with /share/ path for clean URLs
-  // Requires Cloudflare Worker proxy setup to handle OG metadata for crawlers
-  const shareUrl = `https://bolakamibaru.lovable.app/share/${article.slug}`;
+  // Share handlers - use Edge Function URL for proper OG metadata
+  // The Edge Function returns HTML with OG tags and auto-redirects to the article
+  const shareUrl = `https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=${article.slug}`;
   const shareTitle = title;
 
   const handleShareFacebook = () => {
