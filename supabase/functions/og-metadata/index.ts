@@ -1,0 +1,174 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// List of known social media crawler user agents
+const CRAWLER_USER_AGENTS = [
+  'facebookexternalhit',
+  'Facebot',
+  'Twitterbot',
+  'WhatsApp',
+  'LinkedInBot',
+  'Pinterest',
+  'Slackbot',
+  'TelegramBot',
+  'Discordbot',
+  'Googlebot',
+]
+
+function isCrawler(userAgent: string | null): boolean {
+  if (!userAgent) return false
+  return CRAWLER_USER_AGENTS.some(bot => 
+    userAgent.toLowerCase().includes(bot.toLowerCase())
+  )
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function generateDefaultOGHtml(siteUrl: string): string {
+  return `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>BOLAKAMI - Portal Berita Sepak Bola Indonesia</title>
+  <meta property="og:title" content="BOLAKAMI - Portal Berita Sepak Bola Indonesia">
+  <meta property="og:description" content="Portal berita sepak bola terlengkap di Indonesia">
+  <meta property="og:image" content="${siteUrl}/og-default.png">
+  <meta property="og:type" content="website">
+</head>
+<body></body>
+</html>`
+}
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
+  try {
+    const url = new URL(req.url)
+    const slug = url.searchParams.get('slug')
+    const userAgent = req.headers.get('user-agent')
+    
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const siteUrl = 'https://bolakamibaru.lovable.app'
+
+    console.log(`OG Metadata request - Slug: ${slug}, User-Agent: ${userAgent?.substring(0, 50)}...`)
+
+    // If not a crawler or no slug, return JSON response
+    if (!isCrawler(userAgent)) {
+      console.log('Not a crawler, returning JSON response')
+      return new Response(JSON.stringify({ crawler: false, message: 'Not a crawler' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    if (!slug) {
+      console.log('No slug provided, returning default OG')
+      return new Response(generateDefaultOGHtml(siteUrl), {
+        headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' }
+      })
+    }
+
+    // For crawlers, fetch article and return OG HTML
+    const supabase = createClient(supabaseUrl, supabaseKey)
+
+    const { data: article, error } = await supabase
+      .from('articles')
+      .select('title_id, title_en, excerpt_id, excerpt_en, featured_image, slug, category')
+      .eq('slug', slug)
+      .eq('status', 'published')
+      .maybeSingle()
+
+    if (error) {
+      console.error('Database error:', error)
+      return new Response(generateDefaultOGHtml(siteUrl), {
+        headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' }
+      })
+    }
+
+    if (!article) {
+      console.log('Article not found for slug:', slug)
+      return new Response(generateDefaultOGHtml(siteUrl), {
+        headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' }
+      })
+    }
+
+    console.log('Article found:', article.title_id)
+
+    const articleUrl = `${siteUrl}/berita/${article.slug}`
+    const ogImage = article.featured_image || `${siteUrl}/og-default.png`
+    const title = article.title_id || article.title_en
+    const description = (article.excerpt_id || article.excerpt_en || 'Baca berita terbaru di BOLAKAMI').substring(0, 200)
+
+    const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(title)} | BOLAKAMI</title>
+  <meta name="description" content="${escapeHtml(description)}">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="${articleUrl}">
+  <meta property="og:title" content="${escapeHtml(title)}">
+  <meta property="og:description" content="${escapeHtml(description)}">
+  <meta property="og:image" content="${ogImage}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="${escapeHtml(title)}">
+  <meta property="og:site_name" content="BOLAKAMI">
+  <meta property="og:locale" content="id_ID">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@BOLAKAMI">
+  <meta name="twitter:creator" content="@BOLAKAMI">
+  <meta name="twitter:title" content="${escapeHtml(title)}">
+  <meta name="twitter:description" content="${escapeHtml(description)}">
+  <meta name="twitter:image" content="${ogImage}">
+  
+  <!-- WhatsApp -->
+  <meta property="og:image:secure_url" content="${ogImage}">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="${articleUrl}">
+  
+  <!-- Redirect for regular browsers that somehow get here -->
+  <meta http-equiv="refresh" content="0; url=${articleUrl}">
+</head>
+<body>
+  <h1>${escapeHtml(title)}</h1>
+  <p>${escapeHtml(description)}</p>
+  <p>Redirecting to <a href="${articleUrl}">${articleUrl}</a></p>
+</body>
+</html>`
+
+    return new Response(html, {
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600'
+      }
+    })
+  } catch (error) {
+    console.error('Error in og-metadata function:', error)
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+  }
+})
