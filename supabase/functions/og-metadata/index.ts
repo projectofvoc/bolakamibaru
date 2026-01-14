@@ -5,27 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// List of known social media crawler user agents
-const CRAWLER_USER_AGENTS = [
-  'facebookexternalhit',
-  'Facebot',
-  'Twitterbot',
-  'WhatsApp',
-  'LinkedInBot',
-  'Pinterest',
-  'Slackbot',
-  'TelegramBot',
-  'Discordbot',
-  'Googlebot',
-]
-
-function isCrawler(userAgent: string | null): boolean {
-  if (!userAgent) return false
-  return CRAWLER_USER_AGENTS.some(bot => 
-    userAgent.toLowerCase().includes(bot.toLowerCase())
-  )
-}
-
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -59,22 +38,14 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url)
     const slug = url.searchParams.get('slug')
-    const userAgent = req.headers.get('user-agent')
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const siteUrl = 'https://bolakamibaru.lovable.app'
 
-    console.log(`OG Metadata request - Slug: ${slug}, User-Agent: ${userAgent?.substring(0, 50)}...`)
+    console.log(`OG Metadata request - Slug: ${slug}`)
 
-    // If not a crawler or no slug, return JSON response
-    if (!isCrawler(userAgent)) {
-      console.log('Not a crawler, returning JSON response')
-      return new Response(JSON.stringify({ crawler: false, message: 'Not a crawler' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
-    }
-
+    // If no slug, return default OG HTML
     if (!slug) {
       console.log('No slug provided, returning default OG')
       return new Response(generateDefaultOGHtml(siteUrl), {
@@ -82,7 +53,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    // For crawlers, fetch article and return OG HTML
+    // Fetch article from database
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     const { data: article, error } = await supabase
@@ -108,11 +79,14 @@ Deno.serve(async (req) => {
 
     console.log('Article found:', article.title_id)
 
-    const articleUrl = `${siteUrl}/berita/${article.slug}`
+    // Use /news/ path to match SPA route
+    const articleUrl = `${siteUrl}/news/${article.slug}`
     const ogImage = article.featured_image || `${siteUrl}/og-default.png`
     const title = article.title_id || article.title_en
     const description = (article.excerpt_id || article.excerpt_en || 'Baca berita terbaru di BOLAKAMI').substring(0, 200)
 
+    // Return HTML with OG meta tags for ALL requests (crawlers and browsers)
+    // Browsers will be redirected via meta refresh
     const html = `<!DOCTYPE html>
 <html lang="id">
 <head>
@@ -147,7 +121,7 @@ Deno.serve(async (req) => {
   <!-- Canonical URL -->
   <link rel="canonical" href="${articleUrl}">
   
-  <!-- Redirect for regular browsers that somehow get here -->
+  <!-- Redirect browsers to SPA -->
   <meta http-equiv="refresh" content="0; url=${articleUrl}">
 </head>
 <body>
