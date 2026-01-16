@@ -186,9 +186,9 @@ Deno.serve(async (req) => {
     const headers = { 'x-apisports-key': apiKey };
     
     // Liga 1 Indonesia = 274, Liga 2 Indonesia = 275
-    const leagueIds = '274';
+    const leagueIds = '274,275';
     const currentSeason = getCurrentSeason();
-    console.log(`Using season: ${currentSeason} for Liga 1 Indonesia (current date: ${new Date().toISOString()})`);
+    console.log(`Using season: ${currentSeason} for Liga Indonesia (current date: ${new Date().toISOString()})`);
 
     // Fetch live matches
     console.log('Fetching live matches for Liga Indonesia...');

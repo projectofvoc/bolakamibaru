@@ -116,6 +116,7 @@ const Header: React.FC = () => {
   const ligaSubmenu = [
     { key: 'liga.all', path: '/liga' },
     { key: 'liga.liga1', path: '/liga/liga-1' },
+    { key: 'liga.liga2', path: '/liga/liga-2' },
     { key: 'liga.premierLeague', path: '/liga/premier-league' },
     { key: 'liga.laLiga', path: '/liga/la-liga' },
     { key: 'liga.serieA', path: '/liga/serie-a' },
