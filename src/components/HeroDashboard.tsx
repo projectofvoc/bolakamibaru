@@ -199,7 +199,9 @@ const HeroDashboard: React.FC = () => {
                 </span>
               </div>
               <a
-                href="/fixtures"
+                href="https://bolakamitv.up.railway.app/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-xs text-primary hover:underline flex items-center gap-1"
               >
                 {t('liveScore.viewAll')}

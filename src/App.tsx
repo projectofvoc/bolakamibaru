@@ -7,14 +7,14 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import Index from "./pages/Index";
-import Fixtures from "./pages/Fixtures";
+
 import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/ForgotPassword";
 import NewsDetail from "./pages/NewsDetail";
 import NotFound from "./pages/NotFound";
 import Live from "./pages/Live";
 
-import PrediksiAI from "./pages/PrediksiAI";
+
 import Liga from "./pages/Liga";
 import Berita from "./pages/Berita";
 import BeritaTag from "./pages/BeritaTag";
@@ -45,12 +45,12 @@ const App = () => (
           <AnalyticsTracker />
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/fixtures" element={<Fixtures />} />
+            
             <Route path="/auth" element={<Auth />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/news/:slug" element={<NewsDetail />} />
             <Route path="/live" element={<Live />} />
-            <Route path="/prediksi-ai" element={<PrediksiAI />} />
+            
             <Route path="/liga" element={<Liga />} />
             <Route path="/liga/:league" element={<Liga />} />
             <Route path="/berita/:filter" element={<Berita />} />
