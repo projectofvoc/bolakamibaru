@@ -40,29 +40,9 @@ interface UserRole {
   role: 'admin' | 'author' | 'user';
 }
 
-const CMSSidebar = () => {
-  const location = useLocation();
+const CMSSidebar = ({ isAdmin }: { isAdmin: boolean }) => {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
-  
-  const { data: userRoles = [] } = useQuery({
-    queryKey: ['user-roles'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
-      
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id);
-      
-      if (error) throw error;
-      return data as UserRole[];
-    },
-  });
-
-  const isAdmin = userRoles.some(r => r.role === 'admin');
-  const isActive = (path: string) => location.pathname === path;
 
   const menuItems = [
     { title: 'Dashboard', url: '/cms', icon: LayoutDashboard },
@@ -83,12 +63,7 @@ const CMSSidebar = () => {
 
   return (
     <Sidebar className="border-r border-border bg-sidebar-background">
-      <div className="p-4 flex items-center gap-3 border-b border-border">
-        <img src={logoBolakami} alt="BOLAKAMI" className="h-8" />
-        {!collapsed && <span className="text-lg font-bold text-primary">CMS</span>}
-      </div>
-
-      <SidebarContent>
+      <SidebarContent className="pt-2">
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 text-xs text-muted-foreground">
             {!collapsed && 'KONTEN'}
@@ -149,6 +124,24 @@ const CMSLayout = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const { data: userRoles = [] } = useQuery({
+    queryKey: ['user-roles'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      return data as UserRole[];
+    },
+  });
+
+  const isAdmin = userRoles.some(r => r.role === 'admin');
+
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -188,26 +181,30 @@ const CMSLayout = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <CMSSidebar />
-        
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
-          <header className="sticky top-0 z-40 h-14 border-b border-border bg-card/95 backdrop-blur flex items-center justify-between px-4">
-            <SidebarTrigger className="p-2 hover:bg-muted rounded-lg">
+      <div className="min-h-screen flex flex-col w-full bg-background">
+        {/* Global Header - Full Width */}
+        <header className="sticky top-0 z-50 h-14 border-b border-border bg-card/95 backdrop-blur flex items-center justify-between px-4">
+          <div className="flex items-center gap-3">
+            <img src={logoBolakami} alt="BOLAKAMI" className="h-8" />
+            <span className="text-lg font-bold text-primary">CMS</span>
+            <SidebarTrigger className="ml-2 p-2 hover:bg-muted rounded-lg">
               <Menu className="w-5 h-5" />
             </SidebarTrigger>
-            
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground hidden sm:inline">{user?.email}</span>
-              <Button variant="outline" size="sm" onClick={handleSignOut}>
-                <LogOut className="w-4 h-4 mr-2" />
-                Keluar
-              </Button>
-            </div>
-          </header>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground hidden sm:inline">{user?.email}</span>
+            <Button variant="outline" size="sm" onClick={handleSignOut}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Keluar
+            </Button>
+          </div>
+        </header>
 
-          {/* Main Content */}
+        {/* Body: Sidebar + Content */}
+        <div className="flex flex-1">
+          <CMSSidebar isAdmin={isAdmin} />
+          
           <main className="flex-1 p-6 overflow-auto">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <Outlet />
