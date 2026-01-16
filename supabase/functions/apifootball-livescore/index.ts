@@ -39,6 +39,7 @@ interface LiveMatch {
   status: 'live' | 'ft' | 'scheduled' | 'postponed';
   minute: number | null;
   league: string;
+  leagueShort: string;
   time: string;
 }
 
@@ -100,6 +101,11 @@ function formatDate(dateString: string): string {
 }
 
 function transformToLiveMatch(fixture: ApiFootballFixture): LiveMatch {
+  const leagueName = fixture.league.name;
+  const leagueShort = leagueName.includes('Liga 1') ? 'Liga 1' 
+                    : leagueName.includes('Liga 2') ? 'Liga 2' 
+                    : leagueName.slice(0, 8);
+  
   return {
     id: fixture.fixture.id,
     homeTeam: fixture.teams.home.name,
@@ -108,7 +114,8 @@ function transformToLiveMatch(fixture: ApiFootballFixture): LiveMatch {
     awayScore: fixture.goals.away,
     status: mapStatus(fixture.fixture.status.short),
     minute: fixture.fixture.status.elapsed,
-    league: fixture.league.name,
+    league: leagueName,
+    leagueShort: leagueShort,
     time: formatTime(fixture.fixture.date),
   };
 }
