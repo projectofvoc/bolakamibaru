@@ -77,12 +77,14 @@ const BestMomentsCarousel: React.FC = () => {
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [videoError, setVideoError] = useState(false);
+  const [isAutoplayBlocked, setIsAutoplayBlocked] = useState(false);
 
   // Reset video states when changing video
   useEffect(() => {
     if (selectedIndex !== null) {
       setVideoError(false);
       setIsVideoLoading(true);
+      setIsAutoplayBlocked(false);
     }
   }, [selectedIndex]);
 
@@ -336,6 +338,27 @@ const BestMomentsCarousel: React.FC = () => {
                     </div>
                   )}
                   
+                  {/* Autoplay Blocked Fallback - Manual Play Button */}
+                  {isAutoplayBlocked && selectedMoment.video_url && !videoError && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 z-10">
+                      <button 
+                        onClick={() => {
+                          videoRef.current?.play().then(() => {
+                            setIsAutoplayBlocked(false);
+                          }).catch(() => {
+                            setVideoError(true);
+                          });
+                        }}
+                        className="w-20 h-20 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center hover:bg-primary transition-colors hover:scale-105 transform duration-200 animate-pulse"
+                      >
+                        <Play className="w-10 h-10 text-primary-foreground ml-1" />
+                      </button>
+                      <p className="text-sm text-foreground mt-4 bg-background/70 px-3 py-1 rounded-full">
+                        Ketuk untuk memutar video
+                      </p>
+                    </div>
+                  )}
+                  
                   {selectedMoment.video_url ? (
                     <video 
                       ref={videoRef}
@@ -353,6 +376,7 @@ const BestMomentsCarousel: React.FC = () => {
                         // Programmatic play fallback for mobile
                         videoRef.current?.play().catch(() => {
                           console.log('Autoplay blocked by browser');
+                          setIsAutoplayBlocked(true);
                         });
                       }}
                       onPlaying={() => setIsVideoLoading(false)}
