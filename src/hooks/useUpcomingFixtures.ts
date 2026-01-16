@@ -138,10 +138,18 @@ export const useUpcomingFixtures = (leagueId?: string) => {
         console.warn('[Fixtures] API-Football error:', apiFootballResult.error);
       }
 
-      // Sort all fixtures by start time
-      allFixtures.sort((a, b) => 
-        new Date(a.startingAt).getTime() - new Date(b.startingAt).getTime()
-      );
+      // Sort all fixtures: Liga 1 Indonesia first, then by start time
+      allFixtures.sort((a, b) => {
+        // Priority: Liga 1/2 Indonesia first
+        const aIsLigaIndonesia = a.league.internalId === 'liga-1' || a.league.internalId === 'liga-2';
+        const bIsLigaIndonesia = b.league.internalId === 'liga-1' || b.league.internalId === 'liga-2';
+        
+        if (aIsLigaIndonesia && !bIsLigaIndonesia) return -1;
+        if (!aIsLigaIndonesia && bIsLigaIndonesia) return 1;
+        
+        // Then sort by start time
+        return new Date(a.startingAt).getTime() - new Date(b.startingAt).getTime();
+      });
 
       console.log('[Fixtures] Total fixtures:', allFixtures.length);
       return allFixtures;
