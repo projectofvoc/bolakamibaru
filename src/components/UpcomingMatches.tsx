@@ -21,7 +21,7 @@ interface TeamLogoProps {
 }
 
 const TeamLogo: React.FC<TeamLogoProps> = ({ team, size = 'md' }) => {
-  const sizeClasses = size === 'sm' ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-10 h-10 sm:w-12 sm:h-12';
+  const sizeClasses = size === 'sm' ? 'w-10 h-10 sm:w-10 sm:h-10' : 'w-12 h-12 sm:w-12 sm:h-12';
   const textSize = size === 'sm' ? 'text-xs' : 'text-sm';
 
   if (team.logo) {
@@ -105,25 +105,25 @@ const FixtureCard: React.FC<FixtureCardProps> = ({ fixture, index }) => {
         </div>
       </div>
       
-      {/* Teams with Logos */}
-      <div className="flex items-center justify-between mb-3 sm:mb-4">
+      {/* Teams with Logos - Vertical stack on mobile */}
+      <div className="flex items-center justify-center gap-3 sm:gap-4 mb-3 sm:mb-4">
         {/* Home Team */}
-        <div className="flex items-center gap-2 flex-1 min-w-0">
+        <div className="flex flex-col items-center gap-1.5 flex-1">
           <TeamLogo team={fixture.homeTeam} />
-          <span className="text-foreground font-medium text-xs md:text-sm truncate">
-            {fixture.homeTeam.shortCode || fixture.homeTeam.name}
+          <span className="text-foreground font-medium text-[10px] sm:text-xs truncate text-center w-full">
+            {fixture.homeTeam.shortCode || fixture.homeTeam.name.slice(0, 12)}
           </span>
         </div>
         
         {/* VS */}
-        <span className="text-muted-foreground text-xs font-bold px-2">VS</span>
+        <span className="text-muted-foreground text-xs font-bold shrink-0">VS</span>
         
         {/* Away Team */}
-        <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-          <span className="text-foreground font-medium text-xs md:text-sm truncate text-right">
-            {fixture.awayTeam.shortCode || fixture.awayTeam.name}
-          </span>
+        <div className="flex flex-col items-center gap-1.5 flex-1">
           <TeamLogo team={fixture.awayTeam} />
+          <span className="text-foreground font-medium text-[10px] sm:text-xs truncate text-center w-full">
+            {fixture.awayTeam.shortCode || fixture.awayTeam.name.slice(0, 12)}
+          </span>
         </div>
       </div>
       
