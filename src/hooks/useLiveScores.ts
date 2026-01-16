@@ -156,25 +156,31 @@ export function useLiveScores(): UseLiveScoresResult {
       const allScheduled = [...apiFootballUpcomingMatches, ...sportmonksMatches.filter(m => m.status === 'scheduled')];
       const allOther = sportmonksMatches.filter(m => m.status !== 'live' && m.status !== 'ft' && m.status !== 'scheduled');
 
-      // Sort live matches: Liga Indonesia first
-      allLive.sort((a, b) => {
-        const aIsLiga = a.leagueShort === 'Liga 1' || a.leagueShort === 'Liga 2';
-        const bIsLiga = b.leagueShort === 'Liga 1' || b.leagueShort === 'Liga 2';
-        if (aIsLiga && !bIsLiga) return -1;
-        if (!aIsLiga && bIsLiga) return 1;
-        return 0;
-      });
+      // Helper: Liga priority (Liga 1 = 0, Liga 2 = 1, others = 2)
+      const getLeaguePriority = (leagueShort: string): number => {
+        if (leagueShort === 'Liga 1') return 0;
+        if (leagueShort === 'Liga 2') return 1;
+        return 2;
+      };
 
-      // Combine: live first, then Liga Indonesia scheduled/recent, then others
-      const ligaScheduled = allScheduled.filter(m => m.leagueShort === 'Liga 1' || m.leagueShort === 'Liga 2');
-      const ligaRecent = allFinished.filter(m => m.leagueShort === 'Liga 1' || m.leagueShort === 'Liga 2');
+      // Sort live matches: Liga 1 first, then Liga 2, then others
+      allLive.sort((a, b) => getLeaguePriority(a.leagueShort) - getLeaguePriority(b.leagueShort));
+
+      // Separate by league priority
+      const liga1Scheduled = allScheduled.filter(m => m.leagueShort === 'Liga 1');
+      const liga2Scheduled = allScheduled.filter(m => m.leagueShort === 'Liga 2');
+      const liga1Recent = allFinished.filter(m => m.leagueShort === 'Liga 1');
+      const liga2Recent = allFinished.filter(m => m.leagueShort === 'Liga 2');
       const otherScheduled = allScheduled.filter(m => m.leagueShort !== 'Liga 1' && m.leagueShort !== 'Liga 2');
       const otherFinished = allFinished.filter(m => m.leagueShort !== 'Liga 1' && m.leagueShort !== 'Liga 2');
 
+      // Combine with priority: Liga 1 > Liga 2 > Others
       const allMatches = [
         ...allLive,
-        ...ligaScheduled.slice(0, 3), // Show up to 3 upcoming Liga 1 matches
-        ...ligaRecent.slice(0, 2),    // Show up to 2 recent Liga 1 matches
+        ...liga1Scheduled.slice(0, 3), // Liga 1 upcoming (max 3)
+        ...liga1Recent.slice(0, 2),    // Liga 1 recent (max 2)
+        ...liga2Scheduled.slice(0, 3), // Liga 2 upcoming (max 3)
+        ...liga2Recent.slice(0, 2),    // Liga 2 recent (max 2)
         ...otherScheduled,
         ...otherFinished,
         ...allOther

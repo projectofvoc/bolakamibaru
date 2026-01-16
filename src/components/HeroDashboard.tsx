@@ -49,10 +49,22 @@ const HeroDashboard: React.FC = () => {
     setCurrentSlide(index);
   }, []);
 
-  // Display live matches first, then finished
-  const displayMatches = liveMatches
-    .filter(m => m.status === 'live')
-    .concat(liveMatches.filter(m => m.status !== 'live'))
+  // Helper: Liga priority (Liga 1 = 0, Liga 2 = 1, others = 2)
+  const getLeaguePriority = (leagueShort: string): number => {
+    if (leagueShort === 'Liga 1') return 0;
+    if (leagueShort === 'Liga 2') return 1;
+    return 2;
+  };
+
+  // Display matches: Live first, then sorted by league priority (Liga 1 > Liga 2 > Others)
+  const displayMatches = [...liveMatches]
+    .sort((a, b) => {
+      // Live matches always on top
+      if (a.status === 'live' && b.status !== 'live') return -1;
+      if (a.status !== 'live' && b.status === 'live') return 1;
+      // If same status, sort by league priority
+      return getLeaguePriority(a.leagueShort) - getLeaguePriority(b.leagueShort);
+    })
     .slice(0, 6);
 
   // Get current article data
