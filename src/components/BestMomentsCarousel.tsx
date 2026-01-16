@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, Play, Share2, Vol
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+
 interface MomentType {
   id: string;
   title_id: string;
@@ -15,6 +16,43 @@ interface MomentType {
   is_active: boolean;
   sort_order: number;
 }
+
+// Lazy loading thumbnail component
+const LazyThumbnail: React.FC<{
+  src: string;
+  alt: string;
+  className?: string;
+}> = ({ src, alt, className }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  return (
+    <div className="relative w-full h-full">
+      {/* Skeleton placeholder while loading */}
+      {!isLoaded && !hasError && (
+        <div className="absolute inset-0 bg-muted animate-pulse rounded-xl" />
+      )}
+      
+      {/* Error fallback */}
+      {hasError && (
+        <div className="absolute inset-0 bg-muted flex items-center justify-center rounded-xl">
+          <Play className="w-8 h-8 text-muted-foreground" />
+        </div>
+      )}
+      
+      <img 
+        src={src} 
+        alt={alt} 
+        loading="lazy"
+        onLoad={() => setIsLoaded(true)}
+        onError={() => setHasError(true)}
+        className={`w-full h-full object-cover transition-all duration-300 ${
+          isLoaded ? 'opacity-100' : 'opacity-0'
+        } ${className || ''}`} 
+      />
+    </div>
+  );
+};
 
 // Custom SVG icons for share platforms
 const TikTokIcon = () => <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
@@ -214,7 +252,11 @@ const BestMomentsCarousel: React.FC = () => {
             delay: index * 0.1
           }} className="flex-shrink-0 w-40 md:w-44 group cursor-pointer" onClick={() => { setSelectedIndex(index); setIsVideoLoading(true); }}>
                 <div className="relative rounded-xl overflow-hidden bg-card aspect-[3/4]">
-                  <img src={moment.thumbnail_url} alt={language === 'id' ? moment.title_id : moment.title_en} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                  <LazyThumbnail 
+                    src={moment.thumbnail_url} 
+                    alt={language === 'id' ? moment.title_id : moment.title_en} 
+                    className="group-hover:scale-105"
+                  />
                   {/* Video indicator */}
                   {moment.video_url && <div className="absolute inset-0 flex items-center justify-center bg-background/30 opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center">
