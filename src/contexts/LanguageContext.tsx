@@ -19,6 +19,7 @@ const translations: Record<string, Record<Language, string>> = {
   // Liga Submenu
   'liga.all': { id: 'Semua Liga', en: 'All Leagues' },
   'liga.liga1': { id: 'Liga 1 Indonesia', en: 'Liga 1 Indonesia' },
+  'liga.liga2': { id: 'Liga 2 Indonesia', en: 'Liga 2 Indonesia' },
   'liga.premierLeague': { id: 'Premier League', en: 'Premier League' },
   'liga.laLiga': { id: 'La Liga', en: 'La Liga' },
   'liga.serieA': { id: 'Serie A', en: 'Serie A' },

@@ -74,6 +74,7 @@ function getDateLabel(dateStr: string): { id: string; en: string } {
 function transformApiFootballToFixture(match: ApiFootballUpcoming): UpcomingFixture {
   const leagueName = match.league.name;
   const isLiga1 = leagueName.includes('Liga 1');
+  const isLiga2 = leagueName.includes('Liga 2');
   
   return {
     id: match.id,
@@ -90,12 +91,12 @@ function transformApiFootballToFixture(match: ApiFootballUpcoming): UpcomingFixt
       logo: match.awayTeam.logo,
     },
     league: {
-      id: isLiga1 ? 274 : 275,
-      internalId: isLiga1 ? 'liga-1' : 'liga-2',
+      id: isLiga1 ? 274 : isLiga2 ? 275 : 0,
+      internalId: isLiga1 ? 'liga-1' : isLiga2 ? 'liga-2' : 'other',
       name: leagueName,
-      shortCode: isLiga1 ? 'Liga 1' : 'Liga 2',
+      shortCode: isLiga1 ? 'Liga 1' : isLiga2 ? 'Liga 2' : leagueName.slice(0, 8),
       logo: match.league.logo,
-      color: 'red',
+      color: isLiga1 ? 'red' : isLiga2 ? 'orange' : 'blue',
     },
     startingAt: match.startingAt,
     time: match.time,

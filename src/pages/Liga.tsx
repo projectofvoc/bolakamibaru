@@ -21,6 +21,7 @@ interface LeagueInfo {
 
 const leaguesData: LeagueInfo[] = [
   { id: 'liga-1', name: { id: 'Liga 1 Indonesia', en: 'Liga 1 Indonesia' }, country: 'Indonesia', color: 'bg-red-600' },
+  { id: 'liga-2', name: { id: 'Liga 2 Indonesia', en: 'Liga 2 Indonesia' }, country: 'Indonesia', color: 'bg-orange-600' },
   { id: 'premier-league', name: { id: 'Premier League', en: 'Premier League' }, country: 'England', color: 'bg-purple-700' },
   { id: 'la-liga', name: { id: 'La Liga', en: 'La Liga' }, country: 'Spain', color: 'bg-orange-500' },
   { id: 'serie-a', name: { id: 'Serie A', en: 'Serie A' }, country: 'Italy', color: 'bg-blue-800' },
