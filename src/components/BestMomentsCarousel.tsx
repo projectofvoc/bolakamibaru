@@ -70,11 +70,21 @@ const BestMomentsCarousel: React.FC = () => {
     t
   } = useLanguage();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
+  const [videoError, setVideoError] = useState(false);
+
+  // Reset video states when changing video
+  useEffect(() => {
+    if (selectedIndex !== null) {
+      setVideoError(false);
+      setIsVideoLoading(true);
+    }
+  }, [selectedIndex]);
 
   // Fetch moments from database
   const {
@@ -302,33 +312,68 @@ const BestMomentsCarousel: React.FC = () => {
                 {/* Video/Image Area - Portrait */}
                 <div className="relative aspect-[9/16] bg-card" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
                   {/* Green Loading Spinner */}
-                  {isVideoLoading && selectedMoment.video_url && (
+                  {isVideoLoading && selectedMoment.video_url && !videoError && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
                       <div className="w-12 h-12 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
                     </div>
                   )}
+                  
+                  {/* Video Error Fallback */}
+                  {videoError && selectedMoment.video_url && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/90 z-10">
+                      <Play className="w-12 h-12 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground mb-3">Video gagal dimuat</p>
+                      <button 
+                        onClick={() => {
+                          setVideoError(false);
+                          setIsVideoLoading(true);
+                          videoRef.current?.load();
+                        }}
+                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors"
+                      >
+                        Coba Lagi
+                      </button>
+                    </div>
+                  )}
+                  
                   {selectedMoment.video_url ? (
                     <video 
+                      ref={videoRef}
                       src={selectedMoment.video_url} 
                       poster={selectedMoment.thumbnail_url}
                       className="w-full h-full object-cover" 
                       autoPlay 
                       loop 
-                      muted={isMuted}
+                      muted
                       playsInline
                       preload="metadata"
                       onLoadedData={() => setIsVideoLoading(false)}
-                      onCanPlay={() => setIsVideoLoading(false)}
+                      onCanPlay={() => {
+                        setIsVideoLoading(false);
+                        // Programmatic play fallback for mobile
+                        videoRef.current?.play().catch(() => {
+                          console.log('Autoplay blocked by browser');
+                        });
+                      }}
                       onPlaying={() => setIsVideoLoading(false)}
+                      onError={() => {
+                        setIsVideoLoading(false);
+                        setVideoError(true);
+                      }}
                     />
                   ) : (
                     <img src={selectedMoment.thumbnail_url} alt={language === 'id' ? selectedMoment.title_id : selectedMoment.title_en} className="w-full h-full object-cover" />
                   )}
                   
                   {/* Mute/Unmute Button - Bottom Right above Share */}
-                  {selectedMoment.video_url && (
+                  {selectedMoment.video_url && !videoError && (
                     <button 
-                      onClick={() => setIsMuted(!isMuted)} 
+                      onClick={() => {
+                        if (videoRef.current) {
+                          videoRef.current.muted = !videoRef.current.muted;
+                          setIsMuted(!isMuted);
+                        }
+                      }} 
                       className="absolute right-4 bottom-36 w-11 h-11 rounded-full bg-background/50 backdrop-blur-sm flex items-center justify-center hover:bg-background/70 transition-colors z-10"
                     >
                       {isMuted ? (
