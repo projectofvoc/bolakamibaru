@@ -248,8 +248,10 @@ export default function CMSApi() {
   const addMutation = useMutation({
     mutationFn: async (form: typeof addForm) => {
       const { data: { user } } = await supabase.auth.getUser();
+      // Auto-generate name from display_name if name is empty
+      const generatedName = form.name || form.display_name.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
       const { error } = await supabase.from("api_configurations").insert({
-        name: form.name.toLowerCase().replace(/\s+/g, "_"),
+        name: generatedName,
         display_name: form.display_name,
         api_key: form.api_key || null,
         description: form.description || null,
