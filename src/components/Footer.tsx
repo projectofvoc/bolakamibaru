@@ -69,10 +69,10 @@ const Footer: React.FC = () => {
   ];
 
   const quickLinks = [
-    { label: { id: 'Berita Terbaru', en: 'Latest News' }, path: '/berita' },
-    { label: { id: 'Jadwal Pertandingan', en: 'Match Schedule' }, path: '/fixtures' },
-    { label: { id: 'Skor Live', en: 'Live Scores' }, path: '/live' },
-    { label: { id: 'Prediksi AI', en: 'AI Predictions' }, path: '/prediksi-ai' },
+    { label: { id: 'Berita Terbaru', en: 'Latest News' }, path: '/berita', isExternal: false },
+    { label: { id: 'Jadwal Pertandingan', en: 'Match Schedule' }, path: 'https://bolakamitv.up.railway.app/', isExternal: true },
+    { label: { id: 'Skor Live', en: 'Live Scores' }, path: 'https://bolakamitv.up.railway.app/', isExternal: true },
+    { label: { id: 'Prediksi AI', en: 'AI Predictions' }, path: 'https://vocparlay.com/', isExternal: true },
   ];
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
@@ -134,14 +134,25 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="font-semibold text-foreground mb-4">{t('footer.quickLinks')}</h4>
             <ul className="space-y-2">
-              {quickLinks.map((link) => (
-                <li key={link.path}>
-                  <Link
-                    to={link.path}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {language === 'id' ? link.label.id : link.label.en}
-                  </Link>
+              {quickLinks.map((link, index) => (
+                <li key={index}>
+                  {link.isExternal ? (
+                    <a
+                      href={link.path}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {language === 'id' ? link.label.id : link.label.en}
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.path}
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {language === 'id' ? link.label.id : link.label.en}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
