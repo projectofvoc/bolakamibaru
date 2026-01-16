@@ -151,8 +151,15 @@ export const useUpcomingFixtures = (leagueId?: string) => {
         return new Date(a.startingAt).getTime() - new Date(b.startingAt).getTime();
       });
 
-      console.log('[Fixtures] Total fixtures:', allFixtures.length);
-      return allFixtures;
+      // Filter by leagueId if provided
+      let filteredFixtures = allFixtures;
+      if (leagueId) {
+        filteredFixtures = allFixtures.filter(f => f.league.internalId === leagueId);
+        console.log(`[Fixtures] Filtered to ${leagueId}:`, filteredFixtures.length);
+      }
+
+      console.log('[Fixtures] Total fixtures:', filteredFixtures.length);
+      return filteredFixtures;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 2,
