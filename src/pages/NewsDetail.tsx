@@ -68,9 +68,6 @@ const NewsDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { language, t } = useLanguage();
   
-  // Copy link state - must be at top level before any returns
-  const [copied, setCopied] = useState(false);
-  
   // Fetch article from database
   const { data: article, isLoading, error } = useQuery({
     queryKey: ['article', slug],
@@ -187,6 +184,8 @@ const NewsDetail: React.FC = () => {
     window.open(url, '_blank');
   };
 
+  // Copy link state
+  const [copied, setCopied] = useState(false);
 
   const handleCopyLink = async () => {
     try {

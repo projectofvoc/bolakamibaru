@@ -22,19 +22,14 @@ function generateDefaultOGHtml(siteUrl: string): string {
   <title>BOLAKAMI - Portal Berita Sepak Bola Indonesia</title>
   <meta property="og:title" content="BOLAKAMI - Portal Berita Sepak Bola Indonesia">
   <meta property="og:description" content="Portal berita sepak bola terlengkap di Indonesia">
-  <meta property="og:image" content="${siteUrl}/og-bolakami.png">
+  <meta property="og:image" content="${siteUrl}/og-default.png">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="BOLAKAMI">
 </head>
-<body>
-  <p>Redirecting...</p>
-</body>
+<body></body>
 </html>`
 }
 
 Deno.serve(async (req) => {
-  console.log('OG Metadata Edge Function v2 - Request received')
-  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -48,7 +43,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const siteUrl = 'https://bolakamibaru.lovable.app'
 
-    console.log(`OG Metadata request - Slug: ${slug || 'none'}`)
+    console.log(`OG Metadata request - Slug: ${slug}`)
 
     // If no slug, return default OG HTML
     if (!slug) {
@@ -61,7 +56,6 @@ Deno.serve(async (req) => {
     // Fetch article from database
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    console.log('Fetching article from database...')
     const { data: article, error } = await supabase
       .from('articles')
       .select('title_id, title_en, excerpt_id, excerpt_en, featured_image, slug, category')
@@ -70,7 +64,7 @@ Deno.serve(async (req) => {
       .maybeSingle()
 
     if (error) {
-      console.error('Database error:', error.message)
+      console.error('Database error:', error)
       return new Response(generateDefaultOGHtml(siteUrl), {
         headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' }
       })
@@ -87,11 +81,9 @@ Deno.serve(async (req) => {
 
     // Use /news/ path to match SPA route
     const articleUrl = `${siteUrl}/news/${article.slug}`
-    const ogImage = article.featured_image || `${siteUrl}/og-bolakami.png`
-    const title = article.title_id || article.title_en || 'BOLAKAMI'
+    const ogImage = article.featured_image || `${siteUrl}/og-default.png`
+    const title = article.title_id || article.title_en
     const description = (article.excerpt_id || article.excerpt_en || 'Baca berita terbaru di BOLAKAMI').substring(0, 200)
-
-    console.log('Generating OG HTML with:', { title, ogImage, articleUrl })
 
     // Return HTML with OG meta tags for ALL requests (crawlers and browsers)
     // Browsers will be redirected via meta refresh
