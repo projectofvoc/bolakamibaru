@@ -59,19 +59,20 @@ const Footer: React.FC = () => {
   };
 
   const leagueLinks = [
-    'Liga 1 Indonesia',
-    'Premier League',
-    'La Liga',
-    'Serie A',
-    'Bundesliga',
-    'Ligue 1',
+    { name: 'Liga 1 Indonesia', path: '/liga/liga-1' },
+    { name: 'Liga 2 Indonesia', path: '/liga/liga-2' },
+    { name: 'Premier League', path: '/liga/premier-league' },
+    { name: 'La Liga', path: '/liga/la-liga' },
+    { name: 'Serie A', path: '/liga/serie-a' },
+    { name: 'Bundesliga', path: '/liga/bundesliga' },
+    { name: 'Liga Champions', path: '/liga/champions-league' },
   ];
 
   const quickLinks = [
-    { label: { id: 'Berita Terbaru', en: 'Latest News' }, path: '/news' },
+    { label: { id: 'Berita Terbaru', en: 'Latest News' }, path: '/berita' },
     { label: { id: 'Jadwal Pertandingan', en: 'Match Schedule' }, path: '/fixtures' },
-    { label: { id: 'Klasemen', en: 'Standings' }, path: '/standings' },
-    { label: { id: 'Transfer', en: 'Transfers' }, path: '/transfers' },
+    { label: { id: 'Skor Live', en: 'Live Scores' }, path: '/live' },
+    { label: { id: 'Prediksi AI', en: 'AI Predictions' }, path: '/prediksi-ai' },
   ];
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
@@ -120,10 +121,10 @@ const Footer: React.FC = () => {
             <h4 className="font-semibold text-foreground mb-4">{t('footer.leagues')}</h4>
             <ul className="space-y-2">
               {leagueLinks.map((league) => (
-                <li key={league}>
-                  <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                    {league}
-                  </a>
+                <li key={league.path}>
+                  <Link to={league.path} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    {league.name}
+                  </Link>
                 </li>
               ))}
             </ul>
