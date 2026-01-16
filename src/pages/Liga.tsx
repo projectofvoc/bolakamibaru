@@ -53,16 +53,17 @@ interface TeamLogoProps {
 }
 
 const TeamLogo: React.FC<TeamLogoProps> = ({ team, size = 'md' }) => {
-  const sizeClasses = size === 'sm' ? 'w-8 h-8' : 'w-10 h-10';
+  // Consistent size: 40px for all
+  const sizeClasses = size === 'sm' ? 'w-10 h-10' : 'w-10 h-10 sm:w-12 sm:h-12';
   const textSize = size === 'sm' ? 'text-xs' : 'text-sm';
 
   if (team.logo) {
     return (
-      <div className={`${sizeClasses} rounded-full bg-muted/50 flex items-center justify-center overflow-hidden`}>
+      <div className={`${sizeClasses} flex items-center justify-center shrink-0`}>
         <img 
           src={team.logo} 
           alt={team.name}
-          className="w-full h-full object-contain p-1"
+          className="w-full h-full object-contain"
           onError={(e) => {
             e.currentTarget.style.display = 'none';
             e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -75,8 +76,9 @@ const TeamLogo: React.FC<TeamLogoProps> = ({ team, size = 'md' }) => {
     );
   }
 
+  // Fallback: show initial letter with circle background only when no logo
   return (
-    <div className={`${sizeClasses} rounded-full bg-muted/50 flex items-center justify-center`}>
+    <div className={`${sizeClasses} rounded-full bg-muted/50 flex items-center justify-center shrink-0`}>
       <span className={`${textSize} font-bold text-muted-foreground`}>
         {team.name.charAt(0)}
       </span>
