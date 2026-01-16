@@ -182,6 +182,17 @@ const CMSMoments = () => {
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validasi ukuran - max 15MB untuk performa loading
+      const maxSize = 15 * 1024 * 1024; // 15MB
+      if (file.size > maxSize) {
+        toast({ 
+          title: 'Video terlalu besar', 
+          description: 'Maksimal ukuran video 15MB. Kompres video sebelum upload.', 
+          variant: 'destructive' 
+        });
+        e.target.value = ''; // Reset input
+        return;
+      }
       setVideoFile(file);
       setVideoPreview(URL.createObjectURL(file));
     }
@@ -355,9 +366,9 @@ const CMSMoments = () => {
                               </button>
                             </div>
                           ) : (
-                            <label className="cursor-pointer">
+                          <label className="cursor-pointer">
                               <Video className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                              <span className="text-sm text-muted-foreground">Klik untuk upload video (max 50MB)</span>
+                              <span className="text-sm text-muted-foreground">Klik untuk upload video (max 15MB, MP4 disarankan)</span>
                               <input
                                 type="file"
                                 accept="video/*"
