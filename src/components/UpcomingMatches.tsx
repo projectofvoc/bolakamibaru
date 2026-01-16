@@ -21,7 +21,7 @@ interface TeamLogoProps {
 }
 
 const TeamLogo: React.FC<TeamLogoProps> = ({ team, size = 'md' }) => {
-  const sizeClasses = size === 'sm' ? 'w-8 h-8' : 'w-10 h-10';
+  const sizeClasses = size === 'sm' ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-10 h-10 sm:w-12 sm:h-12';
   const textSize = size === 'sm' ? 'text-xs' : 'text-sm';
 
   if (team.logo) {
@@ -30,7 +30,7 @@ const TeamLogo: React.FC<TeamLogoProps> = ({ team, size = 'md' }) => {
         <img 
           src={team.logo} 
           alt={team.name}
-          className="w-full h-full object-contain p-1"
+          className="w-full h-full object-contain p-0.5"
           onError={(e) => {
             // Fallback to letter on error
             e.currentTarget.style.display = 'none';
