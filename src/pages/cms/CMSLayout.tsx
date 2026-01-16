@@ -209,7 +209,9 @@ const CMSLayout = () => {
 
           {/* Main Content */}
           <main className="flex-1 p-6 overflow-auto">
-            <Outlet />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>
