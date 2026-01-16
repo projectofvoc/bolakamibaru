@@ -333,11 +333,11 @@ const Berita: React.FC = () => {
         )}
 
         {/* Filter Navigation */}
-        <section className="py-4 border-b border-border">
+        <section className="py-3 sm:py-4 border-b border-border">
           <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-2 sm:gap-4">
               {/* LEFT: Main Filter Tabs */}
-              <div className="flex items-center gap-2 overflow-x-auto">
+              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 pb-1">
                 {filterTypes.map((f, idx) => (
                   <Link key={f.id} to={`/berita/${f.id}`}>
                     <motion.div
@@ -348,9 +348,9 @@ const Berita: React.FC = () => {
                       <Button 
                         variant={f.id === filter ? 'default' : 'ghost'} 
                         size="sm" 
-                        className="rounded-full whitespace-nowrap gap-2"
+                        className="rounded-full whitespace-nowrap gap-1.5 sm:gap-2 text-xs sm:text-sm px-2.5 sm:px-4"
                       >
-                        <f.icon className="w-4 h-4" />
+                        <f.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         {f.name[language]}
                       </Button>
                     </motion.div>
@@ -364,7 +364,7 @@ const Berita: React.FC = () => {
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="flex items-center gap-1 bg-muted/30 p-1 rounded-full flex-shrink-0"
+                  className="hidden sm:flex items-center gap-1 bg-muted/30 p-1 rounded-full flex-shrink-0"
                 >
                   <button
                     onClick={() => {

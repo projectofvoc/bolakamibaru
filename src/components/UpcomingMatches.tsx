@@ -91,10 +91,10 @@ const FixtureCard: React.FC<FixtureCardProps> = ({ fixture, index }) => {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
       viewport={{ once: true }}
-      className="bg-card rounded-xl p-4 md:p-5 hover:bg-card/80 transition-colors cursor-pointer"
+      className="bg-card rounded-xl p-3 sm:p-4 md:p-5 hover:bg-card/80 transition-colors cursor-pointer"
     >
       {/* Top Row: League Badge & Time */}
-      <div className="flex flex-col gap-2 mb-4">
+      <div className="flex flex-col gap-1.5 sm:gap-2 mb-3 sm:mb-4">
         <span className={`px-2 py-0.5 text-[10px] md:text-xs font-bold rounded-full text-white w-fit ${leagueColorClasses[fixture.league.color] || 'bg-blue-500'}`}>
           {fixture.league.shortCode || fixture.league.name}
         </span>
@@ -106,7 +106,7 @@ const FixtureCard: React.FC<FixtureCardProps> = ({ fixture, index }) => {
       </div>
       
       {/* Teams with Logos */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
         {/* Home Team */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <TeamLogo team={fixture.homeTeam} />
@@ -196,7 +196,7 @@ const UpcomingMatches: React.FC = () => {
         {/* Fixtures Grid */}
         {!isLoading && !isError && fixtures.length > 0 && (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               {visibleFixtures.map((fixture, index) => (
                 <FixtureCard key={fixture.id} fixture={fixture} index={index} />
               ))}

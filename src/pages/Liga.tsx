@@ -165,22 +165,22 @@ const Liga: React.FC = () => {
 
         {/* League Selector (shown on all leagues page) */}
         {!league && (
-          <section className="py-8 border-b border-border">
+          <section className="py-6 sm:py-8 border-b border-border">
             <div className="container mx-auto px-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4">
                 {leaguesData.map((l, idx) => (
                   <Link key={l.id} to={`/liga/${l.id}`}>
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
-                      className="bg-card rounded-xl p-5 text-center hover:border-primary border border-transparent transition-all hover:shadow-lg cursor-pointer group"
+                      className="bg-card rounded-xl p-3 sm:p-5 text-center hover:border-primary border border-transparent transition-all hover:shadow-lg cursor-pointer group"
                     >
-                      <div className="w-14 h-14 flex items-center justify-center mx-auto mb-3 transition-transform group-hover:scale-110">
+                      <div className="w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center mx-auto mb-2 sm:mb-3 transition-transform group-hover:scale-110">
                         {renderLeagueLogo(l, 'md')}
                       </div>
-                      <p className="text-sm font-semibold text-foreground">{l.name[language]}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{l.country}</p>
+                      <p className="text-xs sm:text-sm font-semibold text-foreground line-clamp-1">{l.name[language]}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">{l.country}</p>
                     </motion.div>
                   </Link>
                 ))}
@@ -191,11 +191,11 @@ const Liga: React.FC = () => {
 
         {/* Sub Navigation for specific league */}
         {league && (
-          <section className="py-4 border-b border-border">
+          <section className="py-3 sm:py-4 border-b border-border">
             <div className="container mx-auto px-4">
-              <div className="flex items-center gap-2 overflow-x-auto pb-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 pb-1">
                 <Link to="/liga">
-                  <Button variant="ghost" size="sm" className="rounded-full">
+                  <Button variant="ghost" size="sm" className="rounded-full text-xs sm:text-sm">
                     {language === 'id' ? 'Semua Liga' : 'All Leagues'}
                   </Button>
                 </Link>
@@ -204,10 +204,11 @@ const Liga: React.FC = () => {
                     <Button 
                       variant={l.id === league ? 'default' : 'ghost'} 
                       size="sm" 
-                      className="rounded-full whitespace-nowrap gap-2"
+                      className="rounded-full whitespace-nowrap gap-1.5 sm:gap-2 text-xs sm:text-sm"
                     >
                       {renderLeagueLogo(l, 'sm')}
-                      {l.name[language]}
+                      <span className="hidden sm:inline">{l.name[language]}</span>
+                      <span className="sm:hidden">{l.id === 'champions-league' ? 'UCL' : l.name[language].split(' ')[0]}</span>
                     </Button>
                   </Link>
                 ))}

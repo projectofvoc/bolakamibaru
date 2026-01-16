@@ -250,7 +250,7 @@ const BestMomentsCarousel: React.FC = () => {
           </div>
 
           {/* Carousel */}
-          <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4" style={{
+          <div ref={scrollRef} className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4" style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none'
         }}>
@@ -262,7 +262,7 @@ const BestMomentsCarousel: React.FC = () => {
             x: 0
           }} transition={{
             delay: index * 0.1
-          }} className="flex-shrink-0 w-40 md:w-44 group cursor-pointer" onClick={() => { setSelectedIndex(index); setIsVideoLoading(true); }}>
+          }} className="flex-shrink-0 w-28 sm:w-36 md:w-44 group cursor-pointer" onClick={() => { setSelectedIndex(index); setIsVideoLoading(true); }}>
                 <div className="relative rounded-xl overflow-hidden bg-card aspect-[3/4]">
                   <LazyThumbnail 
                     src={moment.thumbnail_url} 
@@ -297,7 +297,7 @@ const BestMomentsCarousel: React.FC = () => {
       setSelectedIndex(null);
       setShowShareSheet(false);
     }}>
-        <DialogContent className="max-w-md p-0 bg-background border-none overflow-hidden">
+        <DialogContent className="w-[calc(100%-1rem)] sm:w-full max-w-md p-0 bg-background border-none overflow-hidden mx-2 sm:mx-auto">
           <AnimatePresence mode="wait">
             {selectedMoment && <motion.div key={selectedMoment.id} initial={{
             opacity: 0,

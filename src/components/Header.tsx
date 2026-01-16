@@ -378,7 +378,7 @@ const Header: React.FC = () => {
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden bg-card border-b border-border"
           >
-            <nav className="container mx-auto px-4 py-4 flex flex-col gap-2">
+            <nav className="container mx-auto px-4 py-3 flex flex-col gap-2">
               {displayNavItems.map((item) => {
                 const IconComponent = item.icon;
                 return (

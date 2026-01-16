@@ -84,10 +84,10 @@ const Footer: React.FC = () => {
 
   return (
     <footer className="bg-card border-t border-border">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 lg:gap-10">
+      <div className="container mx-auto px-4 py-8 sm:py-12">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-6 gap-6 sm:gap-8 lg:gap-10">
           {/* About */}
-          <div className="lg:col-span-2">
+          <div className="col-span-2 lg:col-span-2">
             <Link to="/" className="flex items-center gap-1 text-xl font-bold mb-4">
               <span className="text-foreground">BOLA</span>
               <span className="text-primary">KAMI</span>
@@ -196,9 +196,9 @@ const Footer: React.FC = () => {
           </div>
 
           {/* Social Media */}
-          <div>
+          <div className="col-span-2 sm:col-span-1">
             <h4 className="font-semibold text-foreground mb-4">{t('footer.social')}</h4>
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex gap-2 sm:gap-3 flex-wrap">
               {socialLinks?.map((link) => (
                 <a 
                   key={link.id}

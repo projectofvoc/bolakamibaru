@@ -137,9 +137,9 @@ const Auth = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Logo */}
-            <div className="text-center mb-8">
+            <div className="text-center mb-6 sm:mb-8">
               <Link to="/" onClick={(e) => { e.preventDefault(); handleClose(); }}>
-                <img src={logoBolakami} alt="BOLAKAMI" className="h-12 mx-auto" />
+                <img src={logoBolakami} alt="BOLAKAMI" className="h-10 sm:h-12 mx-auto" />
               </Link>
               <p className="text-muted-foreground mt-4">
                 {isLogin ? t('auth.loginSubtitle') : t('auth.registerSubtitle')}
@@ -147,9 +147,9 @@ const Auth = () => {
             </div>
 
             {/* Card */}
-            <div className="bg-card border border-border rounded-2xl p-8">
+            <div className="bg-card border border-border rounded-2xl p-5 sm:p-6 md:p-8">
               {/* Toggle Tabs */}
-              <div className="flex bg-muted rounded-full p-1 mb-8">
+              <div className="flex bg-muted rounded-full p-1 mb-6 sm:mb-8">
                 <button
                   onClick={() => setIsLogin(true)}
                   className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${
