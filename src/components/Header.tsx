@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, Search, User, Radio, Brain, Trophy, Newspaper, Settings, LogOut, Link2 } from 'lucide-react';
+import { Menu, X, ChevronDown, Search, User, Radio, Trophy, Newspaper, Settings, LogOut, Link2 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,7 +20,6 @@ const getIcon = (iconName: string | null): React.ElementType => {
 // Fallback icons for known nav items
 const fallbackIcons: Record<string, React.ElementType> = {
   'Live': Radio,
-  'Prediksi AI': Brain,
   'Liga': Trophy,
   'Berita': Newspaper,
 };
@@ -130,7 +129,7 @@ const Header: React.FC = () => {
   const navItems = dynamicNavItems.map((item) => {
     const IconComponent = getIcon(item.icon) || fallbackIcons[item.label_id] || Link2;
     const hasDropdown = item.label_id === 'Liga' || item.label_id === 'Berita';
-    const isHighPriority = item.label_id === 'Live' || item.label_id === 'Prediksi AI';
+    const isHighPriority = item.label_id === 'Live';
     
     return {
       key: item.label_id,
@@ -147,7 +146,6 @@ const Header: React.FC = () => {
   // Fallback if database is empty
   const fallbackNavItems = [
     { key: 'Live', label_id: 'Live', label_en: 'Live', path: 'https://stream.bolakami.com/', icon: Radio, priority: 'high', isExternal: true, hasDropdown: false },
-    { key: 'Prediksi AI', label_id: 'Prediksi AI', label_en: 'AI Prediction', path: '/prediksi-ai', icon: Brain, priority: 'high', isExternal: false, hasDropdown: false },
     { key: 'Liga', label_id: 'Liga', label_en: 'Liga', path: '/liga', icon: Trophy, priority: 'medium', isExternal: false, hasDropdown: true },
     { key: 'Berita', label_id: 'Berita', label_en: 'Berita', path: '/berita', icon: Newspaper, priority: 'medium', isExternal: false, hasDropdown: true },
   ];
