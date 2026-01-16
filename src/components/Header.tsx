@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, Search, User, Radio, Brain, Trophy, Newspaper, Settings, LogOut, Link2 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
@@ -34,6 +34,39 @@ const Header: React.FC = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // Refs for dropdown close delay
+  const ligaTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const beritaTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Dropdown delay handlers
+  const handleLigaMouseEnter = () => {
+    if (ligaTimeoutRef.current) {
+      clearTimeout(ligaTimeoutRef.current);
+      ligaTimeoutRef.current = null;
+    }
+    setLigaDropdownOpen(true);
+  };
+
+  const handleLigaMouseLeave = () => {
+    ligaTimeoutRef.current = setTimeout(() => {
+      setLigaDropdownOpen(false);
+    }, 300);
+  };
+
+  const handleBeritaMouseEnter = () => {
+    if (beritaTimeoutRef.current) {
+      clearTimeout(beritaTimeoutRef.current);
+      beritaTimeoutRef.current = null;
+    }
+    setBeritaDropdownOpen(true);
+  };
+
+  const handleBeritaMouseLeave = () => {
+    beritaTimeoutRef.current = setTimeout(() => {
+      setBeritaDropdownOpen(false);
+    }, 300);
+  };
 
   // Fetch dynamic nav items from database
   const { data: dynamicNavItems = [] } = useQuery({
@@ -77,6 +110,14 @@ const Header: React.FC = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (ligaTimeoutRef.current) clearTimeout(ligaTimeoutRef.current);
+      if (beritaTimeoutRef.current) clearTimeout(beritaTimeoutRef.current);
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -167,12 +208,12 @@ const Header: React.FC = () => {
                     key={item.key}
                     className="relative"
                     onMouseEnter={() => {
-                      if (item.label_id === 'Liga') setLigaDropdownOpen(true);
-                      if (item.label_id === 'Berita') setBeritaDropdownOpen(true);
+                      if (item.label_id === 'Liga') handleLigaMouseEnter();
+                      if (item.label_id === 'Berita') handleBeritaMouseEnter();
                     }}
                     onMouseLeave={() => {
-                      if (item.label_id === 'Liga') setLigaDropdownOpen(false);
-                      if (item.label_id === 'Berita') setBeritaDropdownOpen(false);
+                      if (item.label_id === 'Liga') handleLigaMouseLeave();
+                      if (item.label_id === 'Berita') handleBeritaMouseLeave();
                     }}
                   >
                     {item.isExternal ? (
