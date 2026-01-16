@@ -8,25 +8,33 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useLeaguesLogo } from '@/hooks/useLeaguesLogo';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUpcomingFixtures, UpcomingFixture } from '@/hooks/useUpcomingFixtures';
+
+// Import SVG logos
+import liga1Logo from '@/assets/leagues/liga-1.svg';
+import liga2Logo from '@/assets/leagues/liga-2.svg';
+import premierLeagueLogo from '@/assets/leagues/premier-league.svg';
+import laLigaLogo from '@/assets/leagues/la-liga.svg';
+import serieALogo from '@/assets/leagues/serie-a.svg';
+import bundesligaLogo from '@/assets/leagues/bundesliga.svg';
+import championsLeagueLogo from '@/assets/leagues/champions-league.svg';
 
 interface LeagueInfo {
   id: string;
   name: { id: string; en: string };
   country: string;
-  color: string;
+  logo: string;
 }
 
 const leaguesData: LeagueInfo[] = [
-  { id: 'liga-1', name: { id: 'Liga 1 Indonesia', en: 'Liga 1 Indonesia' }, country: 'Indonesia', color: 'bg-red-600' },
-  { id: 'liga-2', name: { id: 'Liga 2 Indonesia', en: 'Liga 2 Indonesia' }, country: 'Indonesia', color: 'bg-orange-600' },
-  { id: 'premier-league', name: { id: 'Premier League', en: 'Premier League' }, country: 'England', color: 'bg-purple-700' },
-  { id: 'la-liga', name: { id: 'La Liga', en: 'La Liga' }, country: 'Spain', color: 'bg-orange-500' },
-  { id: 'serie-a', name: { id: 'Serie A', en: 'Serie A' }, country: 'Italy', color: 'bg-blue-800' },
-  { id: 'bundesliga', name: { id: 'Bundesliga', en: 'Bundesliga' }, country: 'Germany', color: 'bg-red-500' },
-  { id: 'champions-league', name: { id: 'Liga Champions', en: 'Champions League' }, country: 'Europe', color: 'bg-blue-950' },
+  { id: 'liga-1', name: { id: 'Liga 1 Indonesia', en: 'Liga 1 Indonesia' }, country: 'Indonesia', logo: liga1Logo },
+  { id: 'liga-2', name: { id: 'Liga 2 Indonesia', en: 'Liga 2 Indonesia' }, country: 'Indonesia', logo: liga2Logo },
+  { id: 'premier-league', name: { id: 'Premier League', en: 'Premier League' }, country: 'England', logo: premierLeagueLogo },
+  { id: 'la-liga', name: { id: 'La Liga', en: 'La Liga' }, country: 'Spain', logo: laLigaLogo },
+  { id: 'serie-a', name: { id: 'Serie A', en: 'Serie A' }, country: 'Italy', logo: serieALogo },
+  { id: 'bundesliga', name: { id: 'Bundesliga', en: 'Bundesliga' }, country: 'Germany', logo: bundesligaLogo },
+  { id: 'champions-league', name: { id: 'Liga Champions', en: 'Champions League' }, country: 'Europe', logo: championsLeagueLogo },
 ];
 
 const leagueColorClasses: Record<string, string> = {
@@ -81,19 +89,7 @@ const Liga: React.FC = () => {
   const { language, t } = useLanguage();
   const [visibleCount, setVisibleCount] = useState(8);
 
-  // Fetch league logos from Sportmonks API
-  const { data: apiLeagues = [], isLoading: isLoadingLogos } = useLeaguesLogo();
-
-  // Merge API logos with static data
-  const leaguesWithLogos = leaguesData.map(league => {
-    const apiLeague = apiLeagues.find(l => l.internalId === league.id);
-    return {
-      ...league,
-      logo: apiLeague?.logo || null,
-    };
-  });
-
-  const currentLeague = league ? leaguesWithLogos.find(l => l.id === league) : null;
+  const currentLeague = league ? leaguesData.find(l => l.id === league) : null;
 
   // Fetch articles from Supabase
   const { data: articles = [] } = useQuery({
@@ -121,33 +117,20 @@ const Liga: React.FC = () => {
   // Fetch upcoming fixtures from Sportmonks API
   const { data: fixtures = [], isLoading: isLoadingFixtures } = useUpcomingFixtures(league);
 
-  // Render league logo with loading state
-  const renderLeagueLogo = (l: typeof leaguesWithLogos[0], size: 'sm' | 'md' | 'lg' = 'md') => {
+  // Render league logo
+  const renderLeagueLogo = (l: LeagueInfo, size: 'sm' | 'md' | 'lg' = 'md') => {
     const sizeClasses = {
-      sm: 'w-3 h-3',
-      md: 'w-8 h-8',
-      lg: 'w-6 h-6',
+      sm: 'w-4 h-4',
+      md: 'w-10 h-10',
+      lg: 'w-8 h-8',
     };
 
-    if (isLoadingLogos) {
-      return <Skeleton className={`${sizeClasses[size]} rounded bg-white/20`} />;
-    }
-
-    if (l.logo) {
-      return (
-        <img 
-          src={l.logo} 
-          alt={l.name[language]} 
-          className={`${sizeClasses[size]} object-contain brightness-0 invert`}
-        />
-      );
-    }
-
-    // Fallback: first letter of league name
     return (
-      <span className="text-white font-bold text-lg">
-        {l.name[language].charAt(0)}
-      </span>
+      <img 
+        src={l.logo} 
+        alt={l.name[language]} 
+        className={`${sizeClasses[size]} object-contain`}
+      />
     );
   };
 
@@ -170,11 +153,7 @@ const Liga: React.FC = () => {
                   ? currentLeague.name[language] 
                   : (language === 'id' ? 'Semua Liga' : 'All Leagues')}
               </h1>
-              {currentLeague && (
-                <div className={`w-10 h-10 rounded-lg ${currentLeague.color} flex items-center justify-center`}>
-                  {renderLeagueLogo(currentLeague, 'lg')}
-                </div>
-              )}
+              {currentLeague && renderLeagueLogo(currentLeague, 'lg')}
             </motion.div>
             <p className="text-muted-foreground">
               {language === 'id' 
@@ -188,8 +167,8 @@ const Liga: React.FC = () => {
         {!league && (
           <section className="py-8 border-b border-border">
             <div className="container mx-auto px-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {leaguesWithLogos.map((l, idx) => (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
+                {leaguesData.map((l, idx) => (
                   <Link key={l.id} to={`/liga/${l.id}`}>
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
@@ -197,7 +176,7 @@ const Liga: React.FC = () => {
                       transition={{ delay: idx * 0.05 }}
                       className="bg-card rounded-xl p-5 text-center hover:border-primary border border-transparent transition-all hover:shadow-lg cursor-pointer group"
                     >
-                      <div className={`w-14 h-14 rounded-xl ${l.color} flex items-center justify-center mx-auto mb-3 transition-transform group-hover:scale-110`}>
+                      <div className="w-14 h-14 flex items-center justify-center mx-auto mb-3 transition-transform group-hover:scale-110">
                         {renderLeagueLogo(l, 'md')}
                       </div>
                       <p className="text-sm font-semibold text-foreground">{l.name[language]}</p>
@@ -220,16 +199,14 @@ const Liga: React.FC = () => {
                     {language === 'id' ? 'Semua Liga' : 'All Leagues'}
                   </Button>
                 </Link>
-                {leaguesWithLogos.map(l => (
+                {leaguesData.map(l => (
                   <Link key={l.id} to={`/liga/${l.id}`}>
                     <Button 
                       variant={l.id === league ? 'default' : 'ghost'} 
                       size="sm" 
                       className="rounded-full whitespace-nowrap gap-2"
                     >
-                      <div className={`w-5 h-5 rounded ${l.color} flex items-center justify-center`}>
-                        {renderLeagueLogo(l, 'sm')}
-                      </div>
+                      {renderLeagueLogo(l, 'sm')}
                       {l.name[language]}
                     </Button>
                   </Link>
