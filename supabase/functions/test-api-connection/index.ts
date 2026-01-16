@@ -54,6 +54,53 @@ async function testSportmonksApi(apiKey: string): Promise<TestResult> {
   }
 }
 
+async function testApiFootball(apiKey: string): Promise<TestResult> {
+  const startTime = Date.now();
+  
+  try {
+    const response = await fetch(
+      'https://v3.football.api-sports.io/status',
+      {
+        headers: {
+          'x-apisports-key': apiKey
+        }
+      }
+    );
+    
+    const latency = Date.now() - startTime;
+    const data = await response.json();
+    
+    if (response.ok && data.response) {
+      return {
+        success: true,
+        status: response.status,
+        message: `Connected successfully. Account: ${data.response.account?.firstname || 'Active'}`,
+        latency,
+        details: {
+          requests_remaining: data.response.requests?.current,
+          requests_limit: data.response.requests?.limit_day,
+          subscription: data.response.subscription?.plan || 'Unknown',
+        },
+      };
+    } else {
+      return {
+        success: false,
+        status: response.status,
+        message: data.errors?.token || data.message || 'API request failed',
+        latency,
+      };
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return {
+      success: false,
+      status: 0,
+      message: `Connection error: ${errorMessage}`,
+      latency: Date.now() - startTime,
+    };
+  }
+}
+
 async function testGenericApi(apiKey: string, testUrl?: string): Promise<TestResult> {
   const startTime = Date.now();
   
@@ -124,10 +171,12 @@ serve(async (req) => {
         result = await testSportmonksApi(apiKey);
         break;
         
-      // Add more API-specific tests here
-      // case 'football-data':
-      //   result = await testFootballDataApi(apiKey);
-      //   break;
+      case 'api_football_indo':
+      case 'api_football':
+      case 'api-football':
+      case 'football_live_score_api_-_indo':
+        result = await testApiFootball(apiKey);
+        break;
         
       default:
         result = await testGenericApi(apiKey, testUrl);
