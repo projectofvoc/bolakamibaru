@@ -185,6 +185,24 @@ const Header: React.FC = () => {
                         <IconComponent className="w-4 h-4" />
                         {getNavLabel(item)}
                       </a>
+                    ) : item.hasDropdown ? (
+                      <button
+                        onClick={() => {
+                          if (item.label_id === 'Liga') setLigaDropdownOpen(!ligaDropdownOpen);
+                          if (item.label_id === 'Berita') setBeritaDropdownOpen(!beritaDropdownOpen);
+                        }}
+                        className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full ${
+                          isActive(item.path)
+                            ? 'text-primary-foreground bg-primary'
+                            : 'text-foreground/80 hover:text-foreground hover:bg-secondary'
+                        }`}
+                      >
+                        <IconComponent className="w-4 h-4" />
+                        {getNavLabel(item)}
+                        <ChevronDown className={`w-3 h-3 ml-0.5 transition-transform ${
+                          (item.label_id === 'Liga' && ligaDropdownOpen) || (item.label_id === 'Berita' && beritaDropdownOpen) ? 'rotate-180' : ''
+                        }`} />
+                      </button>
                     ) : (
                       <Link
                         to={item.path}
@@ -196,7 +214,6 @@ const Header: React.FC = () => {
                       >
                         <IconComponent className="w-4 h-4" />
                         {getNavLabel(item)}
-                        {item.hasDropdown && <ChevronDown className="w-3 h-3 ml-0.5" />}
                       </Link>
                     )}
 
