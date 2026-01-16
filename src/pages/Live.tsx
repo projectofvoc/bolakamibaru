@@ -107,7 +107,7 @@ const Live: React.FC = () => {
                     
                     <div className="flex items-center justify-between">
                       <div className="text-center flex-1">
-                        <div className="w-12 h-12 mx-auto bg-muted rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto rounded-full bg-muted flex items-center justify-center text-lg font-bold mb-2">
                           {match.homeTeam.slice(0, 2).toUpperCase()}
                         </div>
                         <p className="text-sm font-medium text-foreground">{match.homeTeam}</p>
@@ -120,7 +120,7 @@ const Live: React.FC = () => {
                       </div>
                       
                       <div className="text-center flex-1">
-                        <div className="w-12 h-12 mx-auto bg-muted rounded-full flex items-center justify-center text-lg font-bold mb-2">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto rounded-full bg-muted flex items-center justify-center text-lg font-bold mb-2">
                           {match.awayTeam.slice(0, 2).toUpperCase()}
                         </div>
                         <p className="text-sm font-medium text-foreground">{match.awayTeam}</p>

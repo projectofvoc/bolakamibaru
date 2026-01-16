@@ -61,7 +61,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
         )}>
           {match.homeTeam}
         </span>
-        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold">
+        <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-xs font-bold shrink-0">
           {getTeamInitials(match.homeTeam)}
         </div>
       </div>
@@ -84,7 +84,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
 
       {/* Away Team */}
       <div className="flex-1 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold">
+        <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-xs font-bold shrink-0">
           {getTeamInitials(match.awayTeam)}
         </div>
         <span className={cn(
