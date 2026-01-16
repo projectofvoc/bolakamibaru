@@ -63,13 +63,22 @@ export function useLiveScores(): UseLiveScoresResult {
         console.warn('[Live Scores] API-Football error:', apiFootballResult.error);
       }
 
-      // Combine all matches, prioritizing live matches first
-      const allMatches = [...sportmonksMatches, ...apiFootballMatches];
+      // Combine all matches: Liga Indonesia first, then others
+      const allMatches = [...apiFootballMatches, ...sportmonksMatches];
       
-      // Sort: live matches first, then by league
+      // Sort: live matches first, then Liga 1 Indonesia, then others
       allMatches.sort((a, b) => {
+        // 1. Live matches always first
         if (a.status === 'live' && b.status !== 'live') return -1;
         if (a.status !== 'live' && b.status === 'live') return 1;
+        
+        // 2. Liga 1/2 Indonesia priority after live
+        const aIsLigaIndonesia = a.leagueShort === 'Liga 1' || a.leagueShort === 'Liga 2';
+        const bIsLigaIndonesia = b.leagueShort === 'Liga 1' || b.leagueShort === 'Liga 2';
+        
+        if (aIsLigaIndonesia && !bIsLigaIndonesia) return -1;
+        if (!aIsLigaIndonesia && bIsLigaIndonesia) return 1;
+        
         return 0;
       });
 
