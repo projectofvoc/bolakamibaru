@@ -274,10 +274,9 @@ const BestMomentsCarousel: React.FC = () => {
                       loop 
                       muted={isMuted}
                       playsInline
-                      preload="auto"
+                      preload="metadata"
                       onLoadedData={() => setIsVideoLoading(false)}
                       onCanPlay={() => setIsVideoLoading(false)}
-                      onWaiting={() => setIsVideoLoading(true)}
                       onPlaying={() => setIsVideoLoading(false)}
                     />
                   ) : (
