@@ -63,9 +63,9 @@ const CMSSidebar = ({ isAdmin }: { isAdmin: boolean }) => {
 
   return (
     <Sidebar className="border-r border-border bg-sidebar-background">
-      <SidebarContent className="pt-4">
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-xs text-muted-foreground">
+      <SidebarContent className="pt-8">
+        <SidebarGroup className="mt-2">
+          <SidebarGroupLabel className="px-4 text-xs text-muted-foreground mb-2">
             {!collapsed && 'KONTEN'}
           </SidebarGroupLabel>
           <SidebarGroupContent>
