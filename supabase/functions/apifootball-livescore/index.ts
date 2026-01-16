@@ -158,6 +158,29 @@ function getCurrentSeason(): number {
   return currentYear;
 }
 
+// Helper function to fetch fixtures for a single league
+async function fetchLeagueFixtures(
+  baseUrl: string, 
+  headers: Record<string, string>, 
+  leagueId: number, 
+  endpoint: string
+): Promise<ApiFootballFixture[]> {
+  try {
+    const response = await fetch(`${baseUrl}/fixtures?${endpoint}&league=${leagueId}`, { headers });
+    const data = await response.json();
+    
+    if (data.errors && Object.keys(data.errors).length > 0) {
+      console.error(`API error for league ${leagueId}:`, JSON.stringify(data.errors));
+      return [];
+    }
+    
+    return data.response || [];
+  } catch (error) {
+    console.error(`Failed to fetch league ${leagueId}:`, error);
+    return [];
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -186,50 +209,51 @@ Deno.serve(async (req) => {
     const headers = { 'x-apisports-key': apiKey };
     
     // Liga 1 Indonesia = 274, Liga 2 Indonesia = 275
-    const leagueIds = '274,275';
+    const LIGA_1_ID = 274;
+    const LIGA_2_ID = 275;
     const currentSeason = getCurrentSeason();
     console.log(`Using season: ${currentSeason} for Liga Indonesia (current date: ${new Date().toISOString()})`);
 
-    // Fetch live matches
-    console.log('Fetching live matches for Liga Indonesia...');
-    const liveResponse = await fetch(
-      `${baseUrl}/fixtures?live=all&league=${leagueIds}`,
-      { headers }
-    );
-    const liveData = await liveResponse.json();
-    console.log('Live matches response:', JSON.stringify(liveData).slice(0, 500));
+    // Fetch all data in parallel - separate calls for each league
+    console.log('Fetching Liga 1 & Liga 2 data in parallel...');
+    
+    const [
+      liveL1, liveL2,
+      upcomingL1, upcomingL2,
+      recentL1, recentL2
+    ] = await Promise.all([
+      // Live matches
+      fetchLeagueFixtures(baseUrl, headers, LIGA_1_ID, 'live=all'),
+      fetchLeagueFixtures(baseUrl, headers, LIGA_2_ID, 'live=all'),
+      // Upcoming matches
+      fetchLeagueFixtures(baseUrl, headers, LIGA_1_ID, `season=${currentSeason}&next=20`),
+      fetchLeagueFixtures(baseUrl, headers, LIGA_2_ID, `season=${currentSeason}&next=20`),
+      // Recent matches
+      fetchLeagueFixtures(baseUrl, headers, LIGA_1_ID, `season=${currentSeason}&last=20`),
+      fetchLeagueFixtures(baseUrl, headers, LIGA_2_ID, `season=${currentSeason}&last=20`),
+    ]);
 
-    const liveMatches: LiveMatch[] = (liveData.response || [])
+    // Combine results
+    const allLiveFixtures = [...liveL1, ...liveL2];
+    const allUpcomingFixtures = [...upcomingL1, ...upcomingL2];
+    const allRecentFixtures = [...recentL1, ...recentL2];
+
+    console.log(`Live matches: Liga1=${liveL1.length}, Liga2=${liveL2.length}, Total=${allLiveFixtures.length}`);
+    console.log(`Upcoming matches: Liga1=${upcomingL1.length}, Liga2=${upcomingL2.length}, Total=${allUpcomingFixtures.length}`);
+    console.log(`Recent matches: Liga1=${recentL1.length}, Liga2=${recentL2.length}, Total=${allRecentFixtures.length}`);
+
+    // Transform to output format
+    const liveMatches: LiveMatch[] = allLiveFixtures
       .map((f: ApiFootballFixture) => transformToLiveMatch(f));
 
-    // Get today's date in YYYY-MM-DD format
-    const today = new Date();
-    const todayStr = today.toISOString().slice(0, 10);
-    
-    // Fetch upcoming matches (next 20)
-    console.log('Fetching upcoming matches...');
-    const upcomingResponse = await fetch(
-      `${baseUrl}/fixtures?league=${leagueIds}&season=${currentSeason}&next=20`,
-      { headers }
-    );
-    const upcomingData = await upcomingResponse.json();
-    console.log('Upcoming matches count:', upcomingData.response?.length || 0);
-
-    const upcomingMatches: UpcomingMatch[] = (upcomingData.response || [])
+    const upcomingMatches: UpcomingMatch[] = allUpcomingFixtures
       .filter((f: ApiFootballFixture) => mapStatus(f.fixture.status.short) === 'scheduled')
+      .sort((a, b) => new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime())
       .map((f: ApiFootballFixture) => transformToUpcomingMatch(f));
 
-    // Fetch recent matches (last 20)
-    console.log('Fetching recent matches...');
-    const recentResponse = await fetch(
-      `${baseUrl}/fixtures?league=${leagueIds}&season=${currentSeason}&last=20`,
-      { headers }
-    );
-    const recentData = await recentResponse.json();
-    console.log('Recent matches count:', recentData.response?.length || 0);
-
-    const recentMatches: LiveMatch[] = (recentData.response || [])
+    const recentMatches: LiveMatch[] = allRecentFixtures
       .filter((f: ApiFootballFixture) => mapStatus(f.fixture.status.short) === 'ft')
+      .sort((a, b) => new Date(b.fixture.date).getTime() - new Date(a.fixture.date).getTime())
       .map((f: ApiFootballFixture) => transformToLiveMatch(f));
 
     return new Response(
@@ -239,7 +263,7 @@ Deno.serve(async (req) => {
         recentMatches,
         meta: {
           timestamp: new Date().toISOString(),
-          leagues: leagueIds,
+          leagues: [LIGA_1_ID, LIGA_2_ID],
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
