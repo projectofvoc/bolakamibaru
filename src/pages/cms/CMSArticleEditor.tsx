@@ -106,7 +106,7 @@ const CMSArticleEditor = () => {
     league: '',
     club: '',
     author_name: '',
-    publisher_name: '',
+    publisher_name: 'Bolakami',
     publisher_icon: '',
     publisher_verified: false,
     tags: [],
