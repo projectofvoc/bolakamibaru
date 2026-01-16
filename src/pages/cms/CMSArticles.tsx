@@ -38,7 +38,8 @@ import {
   ExternalLink,
   CheckCircle,
   Clock,
-  FileText
+  FileText,
+  Star
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
@@ -66,13 +67,30 @@ const CMSArticles = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [featuredFilter, setFeaturedFilter] = useState('all');
+
+  // Fetch featured count for published articles
+  const { data: featuredCount = 0 } = useQuery({
+    queryKey: ['featured-articles-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('articles')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_featured', true)
+        .eq('status', 'published');
+      
+      if (error) throw error;
+      return count || 0;
+    },
+  });
 
   const { data: articles = [], isLoading } = useQuery({
-    queryKey: ['cms-articles', statusFilter, categoryFilter],
+    queryKey: ['cms-articles', statusFilter, categoryFilter, featuredFilter],
     queryFn: async () => {
       let query = supabase
         .from('articles')
         .select('id, slug, title_id, title_en, category, status, views, is_featured, badges, published_at, created_at, author_name')
+        .order('is_featured', { ascending: false })
         .order('created_at', { ascending: false });
       
       if (statusFilter !== 'all') {
@@ -80,6 +98,11 @@ const CMSArticles = () => {
       }
       if (categoryFilter !== 'all') {
         query = query.eq('category', categoryFilter);
+      }
+      if (featuredFilter === 'featured') {
+        query = query.eq('is_featured', true);
+      } else if (featuredFilter === 'not-featured') {
+        query = query.eq('is_featured', false);
       }
       
       const { data, error } = await query;
@@ -147,7 +170,13 @@ const CMSArticles = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Semua Berita</h1>
-          <p className="text-muted-foreground">Kelola semua artikel dan berita</p>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="text-muted-foreground">Kelola semua artikel dan berita</p>
+            <Badge variant="outline" className="text-amber-400 border-amber-500/50">
+              <Star className="w-3 h-3 mr-1 fill-amber-400" />
+              {featuredCount}/10 Featured
+            </Badge>
+          </div>
         </div>
         <Link to="/cms/articles/new">
           <Button>
@@ -190,6 +219,16 @@ const CMSArticles = () => {
                 <SelectItem value="trending">Trending</SelectItem>
                 <SelectItem value="daily">Update Harian</SelectItem>
                 <SelectItem value="analisa">Analisa</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={featuredFilter} onValueChange={setFeaturedFilter}>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <SelectValue placeholder="Featured" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua</SelectItem>
+                <SelectItem value="featured">Featured</SelectItem>
+                <SelectItem value="not-featured">Non-Featured</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -236,9 +275,12 @@ const CMSArticles = () => {
                           <p className="font-medium text-foreground line-clamp-1">
                             {article.title_id}
                           </p>
-                          <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-1">
                             {article.is_featured && (
-                              <Badge variant="outline" className="text-xs">Featured</Badge>
+                              <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/50 text-xs gap-1">
+                                <Star className="w-3 h-3 fill-amber-400" />
+                                Featured
+                              </Badge>
                             )}
                             {article.badges?.map((badge) => (
                               <Badge key={badge} variant="outline" className="text-xs capitalize">

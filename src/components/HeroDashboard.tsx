@@ -14,7 +14,7 @@ const HeroDashboard: React.FC = () => {
   const { matches: liveMatches, isLoading: isLoadingScores, error: scoresError } = useLiveScores();
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Fetch 3 featured articles from database
+  // Fetch up to 10 featured articles from database
   const { data: featuredArticles = [], isLoading: isLoadingArticle } = useQuery({
     queryKey: ['featured-articles-hero'],
     queryFn: async () => {
@@ -24,7 +24,7 @@ const HeroDashboard: React.FC = () => {
         .eq('status', 'published')
         .eq('is_featured', true)
         .order('published_at', { ascending: false })
-        .limit(3);
+        .limit(10);
       
       if (error) throw error;
       return data || [];
