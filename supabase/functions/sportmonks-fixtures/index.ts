@@ -6,8 +6,8 @@ const corsHeaders = {
 };
 
 // Map internal league IDs to Sportmonks league IDs
+// Note: Liga 1 Indonesia is NOT available in Sportmonks - use API-Football instead
 const leagueIdMapping: Record<string, number> = {
-  'liga-1': 501,          // Indonesian Liga 1
   'premier-league': 8,     // English Premier League
   'la-liga': 564,         // Spanish La Liga
   'serie-a': 384,         // Italian Serie A
@@ -17,7 +17,6 @@ const leagueIdMapping: Record<string, number> = {
 
 // League colors for UI
 const leagueColors: Record<string, string> = {
-  'liga-1': 'red',
   'premier-league': 'purple',
   'la-liga': 'orange',
   'serie-a': 'blue',
