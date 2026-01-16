@@ -230,19 +230,19 @@ const NewsDetail: React.FC = () => {
             </span>
             
             {/* Title */}
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-6">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-4 sm:mb-6">
               {title}
             </h1>
             
             {/* Lead Paragraph - Excerpt */}
             {excerpt && (
-              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-6">
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed mb-4 sm:mb-6">
                 {excerpt}
               </p>
             )}
             
             {/* Author & Date with Share buttons - same line */}
-            <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-3 sm:gap-4">
               {/* Left: Publisher Info */}
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">{t('news.by')} {authorName}</span>
@@ -254,8 +254,8 @@ const NewsDetail: React.FC = () => {
               </div>
               
               {/* Right: Share buttons - Footer style (no colors) */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide mr-1">Share</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide mr-1 hidden sm:inline">Share</span>
                 <button 
                   onClick={handleShareFacebook}
                   aria-label="Share to Facebook"

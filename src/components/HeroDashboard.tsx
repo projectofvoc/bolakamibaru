@@ -92,7 +92,7 @@ const HeroDashboard: React.FC = () => {
           className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6"
         >
           {/* Card 1: Featured Article Slideshow (Left - 8 cols) */}
-          <div className="lg:col-span-8 relative overflow-hidden bg-card rounded-2xl border border-border min-h-[450px]">
+          <div className="lg:col-span-8 relative overflow-hidden bg-card rounded-2xl border border-border min-h-[300px] sm:min-h-[350px] md:min-h-[450px]">
             {isLoadingArticle ? (
               <div className="absolute inset-0 flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -139,13 +139,13 @@ const HeroDashboard: React.FC = () => {
                         </span>
                         
                         {/* Headline */}
-                        <motion.h2 
-                          key={`title-${currentArticle?.id}`}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.5, delay: 0.1 }}
-                          className="text-[26px] md:text-[34px] lg:text-[42px] font-bold text-white mb-3 leading-tight max-w-2xl"
-                        >
+                    <motion.h2 
+                      key={`title-${currentArticle?.id}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                      className="text-xl sm:text-[26px] md:text-[34px] lg:text-[42px] font-bold text-white mb-3 leading-tight max-w-2xl"
+                    >
                           {articleTitle}
                         </motion.h2>
                       </div>
@@ -210,7 +210,7 @@ const HeroDashboard: React.FC = () => {
             </div>
             
             {/* Table Header */}
-            <div className="grid grid-cols-[80px_1fr_60px_70px] px-4 py-2 text-[11px] font-medium text-muted-foreground border-b border-border bg-muted/30">
+            <div className="grid grid-cols-[60px_1fr_45px_55px] sm:grid-cols-[80px_1fr_60px_70px] px-3 sm:px-4 py-2 text-[10px] sm:text-[11px] font-medium text-muted-foreground border-b border-border bg-muted/30">
               <span>{t('liveScore.league')}</span>
               <span>{t('liveScore.match')}</span>
               <span className="text-center">{t('liveScore.score')}</span>
@@ -240,7 +240,7 @@ const HeroDashboard: React.FC = () => {
                 displayMatches.map((match) => (
                   <div
                     key={match.id}
-                    className="grid grid-cols-[80px_1fr_60px_70px] px-4 py-2.5 hover:bg-muted/50 transition-colors cursor-pointer items-center"
+                    className="grid grid-cols-[60px_1fr_45px_55px] sm:grid-cols-[80px_1fr_60px_70px] px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-muted/50 transition-colors cursor-pointer items-center"
                   >
                     {/* Liga */}
                     <span className="text-[11px] text-muted-foreground truncate pr-2">

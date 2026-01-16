@@ -149,33 +149,33 @@ const AICompanion: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card to-secondary p-8 md:p-12 border border-border"
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card to-secondary p-6 sm:p-8 md:p-12 border border-border"
           >
             {/* Decorative Elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-2xl" />
+            <div className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-primary/5 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-32 sm:w-48 h-32 sm:h-48 bg-primary/10 rounded-full blur-2xl" />
             
             <div className="relative z-10 max-w-2xl mx-auto text-center">
               {/* Icon - Simple Flag */}
-              <Flag className="w-8 h-8 text-primary mx-auto mb-4" />
+              <Flag className="w-6 h-6 sm:w-8 sm:h-8 text-primary mx-auto mb-3 sm:mb-4" />
               
               {/* Headline Line 1 - Primary/Orange */}
-              <h2 className="text-2xl md:text-4xl font-bold text-primary">
+              <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-primary">
                 {t('ai.headline1')}
               </h2>
               
               {/* Headline Line 2 - White */}
-              <p className="text-2xl md:text-4xl font-bold text-foreground mb-3">
+              <p className="text-xl sm:text-2xl md:text-4xl font-bold text-foreground mb-2 sm:mb-3">
                 {t('ai.headline2')}
               </p>
               
               {/* Subtitle - Smaller, Gray */}
-              <p className="text-sm md:text-base text-muted-foreground mb-8">
+              <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-6 sm:mb-8">
                 {t('ai.subtitle')}
               </p>
               
               {/* Input Field - Rounded Full with Icons */}
-              <div className="relative max-w-xl mx-auto flex items-center gap-2 bg-input border border-border rounded-full px-4 py-3 mb-6">
+              <div className="relative max-w-xl mx-auto flex items-center gap-2 bg-input border border-border rounded-full px-3 sm:px-4 py-2.5 sm:py-3 mb-4 sm:mb-6">
                 {/* Plus icon */}
                 <button className="text-muted-foreground hover:text-foreground transition-colors">
                   <Plus className="w-5 h-5" />
@@ -207,14 +207,14 @@ const AICompanion: React.FC = () => {
               </div>
               
               {/* Suggested Prompts - Below Input */}
-              <div className="flex flex-wrap justify-center gap-2">
+              <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
                 {prompts.map((prompt, index) => (
                   <motion.button
                     key={index}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handlePromptClick(prompt)}
-                    className="px-4 py-2 text-sm bg-card text-foreground rounded-full border border-muted-foreground/30 hover:border-primary hover:text-primary transition-colors"
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-card text-foreground rounded-full border border-muted-foreground/30 hover:border-primary hover:text-primary transition-colors"
                   >
                     {prompt}
                   </motion.button>

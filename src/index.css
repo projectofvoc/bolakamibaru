@@ -135,6 +135,21 @@
   .gradient-overlay {
     background: var(--gradient-hero);
   }
+
+  /* Hide scrollbar for carousel */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe area for iPhone notch */
+  .safe-area-inset {
+    padding-left: max(env(safe-area-inset-left), 1rem);
+    padding-right: max(env(safe-area-inset-right), 1rem);
+  }
 }
 
 /* Article Content Styling - Rich Text Editor Output */

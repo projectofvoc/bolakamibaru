@@ -66,7 +66,7 @@ const NewsGrid: React.FC = () => {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {visibleArticles.map((article, index) => (
             <Link key={article.id} to={`/news/${article.slug}`}>
               <motion.article
@@ -98,34 +98,34 @@ const NewsGrid: React.FC = () => {
                 )}
               </div>
               
-              <div className="mt-4">
-                <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+              <div className="mt-2 sm:mt-4">
+                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
                   {language === 'id' ? article.title_id : article.title_en}
                 </h3>
                 
                 {/* Publisher Metadata Footer */}
-                <div className="mt-3 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    {/* Publisher Icon */}
-                    <span className="w-5 h-5 flex-shrink-0 flex items-center justify-center bg-muted rounded-full text-xs">
+                <div className="mt-2 sm:mt-3 flex items-center justify-between">
+                  <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                    {/* Publisher Icon - Hidden on mobile */}
+                    <span className="hidden sm:flex w-5 h-5 flex-shrink-0 items-center justify-center bg-muted rounded-full text-xs">
                       {article.publisher_icon || '📰'}
                     </span>
                     
-                    {/* Publisher Name */}
-                    <span className="text-sm text-muted-foreground truncate max-w-[80px]">
+                    {/* Publisher Name - Hidden on mobile */}
+                    <span className="hidden sm:block text-xs sm:text-sm text-muted-foreground truncate max-w-[80px]">
                       {article.publisher_name || 'Bolakami'}
                     </span>
                     
-                    {/* Verified Badge */}
+                    {/* Verified Badge - Hidden on mobile */}
                     {article.publisher_verified && (
-                      <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 text-primary fill-primary/20" />
+                      <CheckCircle className="hidden sm:block w-3.5 h-3.5 flex-shrink-0 text-primary fill-primary/20" />
                     )}
                     
-                    {/* Separator */}
-                    <span className="text-muted-foreground/50 flex-shrink-0">·</span>
+                    {/* Separator - Hidden on mobile */}
+                    <span className="hidden sm:block text-muted-foreground/50 flex-shrink-0">·</span>
                     
                     {/* Timestamp */}
-                    <span className="text-sm text-muted-foreground truncate">
+                    <span className="text-[11px] sm:text-sm text-muted-foreground truncate">
                       {article.published_at 
                         ? new Date(article.published_at).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short' })
                         : ''}
