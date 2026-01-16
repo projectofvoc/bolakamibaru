@@ -9,3 +9,4 @@ export { default as CMSUsers } from './CMSUsers';
 export { default as CMSAnalytics } from './CMSAnalytics';
 export { default as CMSApi } from './CMSApi';
 export { default as CMSAdvertise } from './CMSAdvertise';
+export { default as CMSSocialMedia } from './CMSSocialMedia';

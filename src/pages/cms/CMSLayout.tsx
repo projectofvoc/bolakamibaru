@@ -31,7 +31,8 @@ import {
   ChevronLeft,
   BarChart3,
   Key,
-  Megaphone
+  Megaphone,
+  Share2
 } from 'lucide-react';
 import logoBolakami from '@/assets/logo-bolakami.png';
 
@@ -75,6 +76,7 @@ const CMSSidebar = () => {
     { title: 'Liga', url: '/cms/leagues', icon: Trophy },
     { title: 'Advertise', url: '/cms/advertise', icon: Megaphone },
     { title: 'Navigation', url: '/cms/navigation', icon: Link2 },
+    { title: 'Social Media', url: '/cms/social-media', icon: Share2 },
     { title: 'API', url: '/cms/api', icon: Key },
     { title: 'Users', url: '/cms/users', icon: Users },
   ];
