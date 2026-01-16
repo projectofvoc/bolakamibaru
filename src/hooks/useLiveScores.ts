@@ -16,13 +16,25 @@ export interface LiveMatch {
 
 interface ApiFootballUpcoming {
   id: number;
-  homeTeam: string;
-  awayTeam: string;
+  homeTeam: { name: string; logo: string | null };
+  awayTeam: { name: string; logo: string | null };
+  league: { name: string; logo: string | null };
   time: string;
   date: string;
+  startingAt: string;
+}
+
+interface ApiFootballRecent {
+  id: number;
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  status: string;
+  minute: number | null;
   league: string;
   leagueShort: string;
-  status: string;
+  time: string;
 }
 
 interface UseLiveScoresResult {
@@ -97,19 +109,25 @@ export function useLiveScores(): UseLiveScoresResult {
           time: m.time || ''
         })));
 
-        // Transform upcoming matches (scheduled)
-        apiFootballUpcomingMatches.push(...upcomingMatches.map((m: ApiFootballUpcoming) => ({
-          id: `api-up-${m.id}`,
-          homeTeam: m.homeTeam,
-          awayTeam: m.awayTeam,
-          homeScore: null,
-          awayScore: null,
-          status: 'scheduled' as const,
-          minute: null,
-          league: m.league,
-          leagueShort: m.leagueShort || 'Liga 1',
-          time: m.time || ''
-        })));
+        // Transform upcoming matches (scheduled) - note: homeTeam/awayTeam are objects here
+        apiFootballUpcomingMatches.push(...upcomingMatches.map((m: ApiFootballUpcoming) => {
+          const leagueName = typeof m.league === 'object' ? m.league.name : m.league;
+          const leagueShort = leagueName.includes('Liga 1') ? 'Liga 1' 
+                            : leagueName.includes('Liga 2') ? 'Liga 2' 
+                            : leagueName.slice(0, 8);
+          return {
+            id: `api-up-${m.id}`,
+            homeTeam: typeof m.homeTeam === 'object' ? m.homeTeam.name : m.homeTeam,
+            awayTeam: typeof m.awayTeam === 'object' ? m.awayTeam.name : m.awayTeam,
+            homeScore: null,
+            awayScore: null,
+            status: 'scheduled' as const,
+            minute: null,
+            league: leagueName,
+            leagueShort: leagueShort,
+            time: m.time || ''
+          };
+        }));
 
         // Transform recent matches (finished)
         apiFootballRecentMatches.push(...recentMatches.map((m: any) => ({
