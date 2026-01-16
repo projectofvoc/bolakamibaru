@@ -212,6 +212,21 @@ const CMSArticleEditor = () => {
     },
   });
 
+  // Fetch featured count for validation (max 10)
+  const { data: featuredCount = 0 } = useQuery({
+    queryKey: ['featured-count-validation'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('articles')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_featured', true)
+        .eq('status', 'published');
+      
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
   // Add category mutation
   const addCategoryMutation = useMutation({
     mutationFn: async (data: { name: string; icon: string }) => {
@@ -495,6 +510,21 @@ const CMSArticleEditor = () => {
     if (!form.title_id || !form.content_id) {
       toast({ title: 'Error', description: 'Judul dan konten wajib diisi', variant: 'destructive' });
       return;
+    }
+
+    // Validate max 10 featured articles when publishing as featured
+    if (form.is_featured && status === 'published') {
+      const isAlreadyFeatured = isEditing && article?.is_featured && article?.status === 'published';
+      const maxFeatured = 10;
+      
+      if (!isAlreadyFeatured && featuredCount >= maxFeatured) {
+        toast({ 
+          title: 'Batas Featured Tercapai', 
+          description: `Maksimal ${maxFeatured} artikel yang dapat di-featured. Hapus featured dari artikel lain terlebih dahulu.`, 
+          variant: 'destructive' 
+        });
+        return;
+      }
     }
 
     setIsUploading(true);
