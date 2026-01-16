@@ -31,24 +31,50 @@ export function useLiveScores(): UseLiveScoresResult {
     setError(null);
 
     try {
-      console.log('[Live Scores] Calling sportmonks-livescore edge function...');
+      console.log('[Live Scores] Fetching from both Sportmonks and API-Football...');
       
-      const { data, error: fnError } = await supabase.functions.invoke('sportmonks-livescore');
+      // Fetch from both APIs in parallel
+      const [sportmonksResult, apiFootballResult] = await Promise.all([
+        supabase.functions.invoke('sportmonks-livescore'),
+        supabase.functions.invoke('apifootball-livescore')
+      ]);
 
-      if (fnError) {
-        console.error('[Live Scores] Function error:', fnError);
-        throw new Error(fnError.message || 'Edge function error');
+      const sportmonksMatches: LiveMatch[] = [];
+      const apiFootballMatches: LiveMatch[] = [];
+
+      // Process Sportmonks data
+      if (!sportmonksResult.error && sportmonksResult.data?.matches) {
+        const matches = sportmonksResult.data.matches;
+        console.log('[Live Scores] Sportmonks matches:', matches.length);
+        sportmonksMatches.push(...matches.map((m: any) => ({
+          ...m,
+          leagueShort: m.leagueShort || m.league?.slice(0, 8) || 'Unknown'
+        })));
+      } else if (sportmonksResult.error) {
+        console.warn('[Live Scores] Sportmonks error:', sportmonksResult.error);
       }
 
-      console.log('[Live Scores] Response:', data);
-
-      if (data?.error) {
-        throw new Error(data.error);
+      // Process API-Football data (Liga Indonesia)
+      if (!apiFootballResult.error && apiFootballResult.data?.liveMatches) {
+        const liveMatches = apiFootballResult.data.liveMatches;
+        console.log('[Live Scores] API-Football live matches:', liveMatches.length);
+        apiFootballMatches.push(...liveMatches);
+      } else if (apiFootballResult.error) {
+        console.warn('[Live Scores] API-Football error:', apiFootballResult.error);
       }
 
-      const matchesData = data?.matches || [];
-      setMatches(matchesData);
-      console.log('[Live Scores] Loaded', matchesData.length, 'matches');
+      // Combine all matches, prioritizing live matches first
+      const allMatches = [...sportmonksMatches, ...apiFootballMatches];
+      
+      // Sort: live matches first, then by league
+      allMatches.sort((a, b) => {
+        if (a.status === 'live' && b.status !== 'live') return -1;
+        if (a.status !== 'live' && b.status === 'live') return 1;
+        return 0;
+      });
+
+      setMatches(allMatches);
+      console.log('[Live Scores] Total matches:', allMatches.length);
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';

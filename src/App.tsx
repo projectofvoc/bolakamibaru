@@ -12,7 +12,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import NewsDetail from "./pages/NewsDetail";
 import NotFound from "./pages/NotFound";
 import Live from "./pages/Live";
-import LiveIndonesia from "./pages/LiveIndonesia";
+
 import PrediksiAI from "./pages/PrediksiAI";
 import Liga from "./pages/Liga";
 import Berita from "./pages/Berita";
@@ -48,7 +48,6 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/news/:slug" element={<NewsDetail />} />
             <Route path="/live" element={<Live />} />
-            <Route path="/live-indonesia" element={<LiveIndonesia />} />
             <Route path="/prediksi-ai" element={<PrediksiAI />} />
             <Route path="/liga" element={<Liga />} />
             <Route path="/liga/:league" element={<Liga />} />
