@@ -141,6 +141,23 @@ function transformToUpcomingMatch(fixture: ApiFootballFixture): UpcomingMatch {
   };
 }
 
+// Helper function untuk menentukan season yang benar
+// Liga 1 Indonesia: Agustus - Mei tahun berikutnya
+// Jika bulan Jan-Jul -> season = tahun sebelumnya
+// Jika bulan Aug-Dec -> season = tahun ini
+function getCurrentSeason(): number {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1; // 1-12
+  
+  // Jika Jan-Jul, musim dimulai tahun lalu
+  if (currentMonth <= 7) {
+    return currentYear - 1;
+  }
+  // Jika Aug-Dec, musim dimulai tahun ini
+  return currentYear;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -170,7 +187,8 @@ Deno.serve(async (req) => {
     
     // Liga 1 Indonesia = 274, Liga 2 Indonesia = 275
     const leagueIds = '274';
-    const currentSeason = new Date().getFullYear();
+    const currentSeason = getCurrentSeason();
+    console.log(`Using season: ${currentSeason} for Liga 1 Indonesia (current date: ${new Date().toISOString()})`);
 
     // Fetch live matches
     console.log('Fetching live matches for Liga Indonesia...');
