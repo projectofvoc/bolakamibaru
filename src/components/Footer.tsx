@@ -1,14 +1,62 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Twitter, Instagram, Facebook, Youtube, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { TikTokIcon, ThreadsIcon } from '@/components/icons/SocialIcons';
+
+interface SocialLink {
+  id: string;
+  platform: string;
+  display_name: string;
+  url: string;
+  icon_name: string;
+  is_active: boolean;
+  sort_order: number;
+}
 
 const Footer: React.FC = () => {
   const { t, language } = useLanguage();
   const [email, setEmail] = useState('');
+
+  // Fetch social media links from database
+  const { data: socialLinks } = useQuery({
+    queryKey: ['social-links'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('social_media_links')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+      
+      if (error) throw error;
+      return data as SocialLink[];
+    },
+  });
+
+  const getIcon = (iconName: string) => {
+    const iconClass = "w-5 h-5";
+    switch (iconName) {
+      case 'instagram':
+        return <Instagram className={iconClass} />;
+      case 'twitter':
+        return <Twitter className={iconClass} />;
+      case 'facebook':
+        return <Facebook className={iconClass} />;
+      case 'youtube':
+        return <Youtube className={iconClass} />;
+      case 'tiktok':
+        return <TikTokIcon className={iconClass} />;
+      case 'threads':
+        return <ThreadsIcon className={iconClass} />;
+      default:
+        return null;
+    }
+  };
 
   const leagueLinks = [
     'Liga 1 Indonesia',
@@ -139,18 +187,18 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="font-semibold text-foreground mb-4">{t('footer.social')}</h4>
             <div className="flex gap-3 flex-wrap">
-              <a href="#" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Youtube className="w-5 h-5" />
-              </a>
+              {socialLinks?.map((link) => (
+                <a 
+                  key={link.id}
+                  href={link.url} 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={link.display_name}
+                  className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                >
+                  {getIcon(link.icon_name)}
+                </a>
+              ))}
             </div>
           </div>
         </div>
