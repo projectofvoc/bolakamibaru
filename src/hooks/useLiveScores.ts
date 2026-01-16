@@ -2,16 +2,27 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface LiveMatch {
-  id: number;
+  id: string;
   homeTeam: string;
   awayTeam: string;
   homeScore: number | null;
   awayScore: number | null;
-  status: 'live' | 'ft' | 'scheduled' | 'post';
+  status: 'live' | 'ft' | 'scheduled' | 'post' | 'postponed';
   minute: number | null;
   league: string;
   leagueShort: string;
   time: string;
+}
+
+interface ApiFootballUpcoming {
+  id: number;
+  homeTeam: string;
+  awayTeam: string;
+  time: string;
+  date: string;
+  league: string;
+  leagueShort: string;
+  status: string;
 }
 
 interface UseLiveScoresResult {
@@ -40,50 +51,124 @@ export function useLiveScores(): UseLiveScoresResult {
       ]);
 
       const sportmonksMatches: LiveMatch[] = [];
-      const apiFootballMatches: LiveMatch[] = [];
+      const apiFootballLiveMatches: LiveMatch[] = [];
+      const apiFootballUpcomingMatches: LiveMatch[] = [];
+      const apiFootballRecentMatches: LiveMatch[] = [];
 
       // Process Sportmonks data
       if (!sportmonksResult.error && sportmonksResult.data?.matches) {
         const matches = sportmonksResult.data.matches;
         console.log('[Live Scores] Sportmonks matches:', matches.length);
         sportmonksMatches.push(...matches.map((m: any) => ({
-          ...m,
-          leagueShort: m.leagueShort || m.league?.slice(0, 8) || 'Unknown'
+          id: `sm-${m.id}`,
+          homeTeam: m.homeTeam,
+          awayTeam: m.awayTeam,
+          homeScore: m.homeScore,
+          awayScore: m.awayScore,
+          status: m.status,
+          minute: m.minute,
+          league: m.league,
+          leagueShort: m.leagueShort || m.league?.slice(0, 8) || 'Unknown',
+          time: m.time || ''
         })));
       } else if (sportmonksResult.error) {
         console.warn('[Live Scores] Sportmonks error:', sportmonksResult.error);
       }
 
       // Process API-Football data (Liga Indonesia)
-      if (!apiFootballResult.error && apiFootballResult.data?.liveMatches) {
-        const liveMatches = apiFootballResult.data.liveMatches;
-        console.log('[Live Scores] API-Football live matches:', liveMatches.length);
-        apiFootballMatches.push(...liveMatches);
+      if (!apiFootballResult.error && apiFootballResult.data) {
+        const { liveMatches = [], upcomingMatches = [], recentMatches = [] } = apiFootballResult.data;
+        
+        console.log('[Live Scores] API-Football live:', liveMatches.length);
+        console.log('[Live Scores] API-Football upcoming:', upcomingMatches.length);
+        console.log('[Live Scores] API-Football recent:', recentMatches.length);
+        
+        // Transform live matches
+        apiFootballLiveMatches.push(...liveMatches.map((m: any) => ({
+          id: `api-${m.id}`,
+          homeTeam: m.homeTeam,
+          awayTeam: m.awayTeam,
+          homeScore: m.homeScore,
+          awayScore: m.awayScore,
+          status: m.status as 'live' | 'ft' | 'scheduled' | 'post' | 'postponed',
+          minute: m.minute,
+          league: m.league,
+          leagueShort: m.leagueShort || 'Liga 1',
+          time: m.time || ''
+        })));
+
+        // Transform upcoming matches (scheduled)
+        apiFootballUpcomingMatches.push(...upcomingMatches.map((m: ApiFootballUpcoming) => ({
+          id: `api-up-${m.id}`,
+          homeTeam: m.homeTeam,
+          awayTeam: m.awayTeam,
+          homeScore: null,
+          awayScore: null,
+          status: 'scheduled' as const,
+          minute: null,
+          league: m.league,
+          leagueShort: m.leagueShort || 'Liga 1',
+          time: m.time || ''
+        })));
+
+        // Transform recent matches (finished)
+        apiFootballRecentMatches.push(...recentMatches.map((m: any) => ({
+          id: `api-rc-${m.id}`,
+          homeTeam: m.homeTeam,
+          awayTeam: m.awayTeam,
+          homeScore: m.homeScore,
+          awayScore: m.awayScore,
+          status: 'ft' as const,
+          minute: null,
+          league: m.league,
+          leagueShort: m.leagueShort || 'Liga 1',
+          time: m.time || ''
+        })));
       } else if (apiFootballResult.error) {
         console.warn('[Live Scores] API-Football error:', apiFootballResult.error);
       }
 
-      // Combine all matches: Liga Indonesia first, then others
-      const allMatches = [...apiFootballMatches, ...sportmonksMatches];
+      // Build combined list with priority:
+      // 1. All live matches first (Liga Indonesia priority among live)
+      // 2. Liga Indonesia upcoming/recent (so Liga 1 always appears)
+      // 3. Other leagues
       
-      // Sort: live matches first, then Liga 1 Indonesia, then others
-      allMatches.sort((a, b) => {
-        // 1. Live matches always first
-        if (a.status === 'live' && b.status !== 'live') return -1;
-        if (a.status !== 'live' && b.status === 'live') return 1;
-        
-        // 2. Liga 1/2 Indonesia priority after live
-        const aIsLigaIndonesia = a.leagueShort === 'Liga 1' || a.leagueShort === 'Liga 2';
-        const bIsLigaIndonesia = b.leagueShort === 'Liga 1' || b.leagueShort === 'Liga 2';
-        
-        if (aIsLigaIndonesia && !bIsLigaIndonesia) return -1;
-        if (!aIsLigaIndonesia && bIsLigaIndonesia) return 1;
-        
+      const allLive = [...apiFootballLiveMatches, ...sportmonksMatches.filter(m => m.status === 'live')];
+      const allFinished = [...apiFootballRecentMatches, ...sportmonksMatches.filter(m => m.status === 'ft')];
+      const allScheduled = [...apiFootballUpcomingMatches, ...sportmonksMatches.filter(m => m.status === 'scheduled')];
+      const allOther = sportmonksMatches.filter(m => m.status !== 'live' && m.status !== 'ft' && m.status !== 'scheduled');
+
+      // Sort live matches: Liga Indonesia first
+      allLive.sort((a, b) => {
+        const aIsLiga = a.leagueShort === 'Liga 1' || a.leagueShort === 'Liga 2';
+        const bIsLiga = b.leagueShort === 'Liga 1' || b.leagueShort === 'Liga 2';
+        if (aIsLiga && !bIsLiga) return -1;
+        if (!aIsLiga && bIsLiga) return 1;
         return 0;
       });
 
-      setMatches(allMatches);
-      console.log('[Live Scores] Total matches:', allMatches.length);
+      // Combine: live first, then Liga Indonesia scheduled/recent, then others
+      const ligaScheduled = allScheduled.filter(m => m.leagueShort === 'Liga 1' || m.leagueShort === 'Liga 2');
+      const ligaRecent = allFinished.filter(m => m.leagueShort === 'Liga 1' || m.leagueShort === 'Liga 2');
+      const otherScheduled = allScheduled.filter(m => m.leagueShort !== 'Liga 1' && m.leagueShort !== 'Liga 2');
+      const otherFinished = allFinished.filter(m => m.leagueShort !== 'Liga 1' && m.leagueShort !== 'Liga 2');
+
+      const allMatches = [
+        ...allLive,
+        ...ligaScheduled.slice(0, 3), // Show up to 3 upcoming Liga 1 matches
+        ...ligaRecent.slice(0, 2),    // Show up to 2 recent Liga 1 matches
+        ...otherScheduled,
+        ...otherFinished,
+        ...allOther
+      ];
+
+      // Deduplicate by id
+      const uniqueMatches = allMatches.filter((match, index, self) => 
+        index === self.findIndex(m => m.id === match.id)
+      );
+
+      setMatches(uniqueMatches);
+      console.log('[Live Scores] Total matches:', uniqueMatches.length);
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
