@@ -21,17 +21,19 @@ export interface StandingsResponse {
   standings: StandingTeam[];
   league: string;
   leagueName: { id: string; en: string };
-  seasonId: number;
+  seasonId: number | null;
+  seasonLabel: string;
   totalTeams: number;
+  source: 'sportmonks' | 'api_football';
   error?: string;
 }
 
-export const useStandings = (leagueSlug: string) => {
+export const useStandings = (leagueSlug: string, seasonStartYear: number = 2025) => {
   return useQuery<StandingsResponse>({
-    queryKey: ['standings', leagueSlug],
+    queryKey: ['standings', leagueSlug, seasonStartYear],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('sportmonks-standings', {
-        body: { league: leagueSlug },
+        body: { league: leagueSlug, seasonStartYear },
       });
 
       if (error) {
