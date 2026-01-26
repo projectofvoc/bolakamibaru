@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.apifootball-livescore]
 verify_jwt = false
+
+[functions.sportmonks-standings]
+verify_jwt = false

@@ -30,7 +30,25 @@ const translations: Record<string, Record<Language, string>> = {
   'berita.trending': { id: 'Trending', en: 'Trending' },
   'berita.daily': { id: 'Update Harian', en: 'Daily Updates' },
   'berita.analisa': { id: 'Analisa Klub', en: 'Club Analysis' },
+  'berita.klasemen': { id: 'Klasemen', en: 'Standings' },
   'nav.standings': { id: 'KLASEMEN', en: 'STANDINGS' },
+  
+  // Klasemen Page
+  'klasemen.title': { id: 'Klasemen', en: 'Standings' },
+  'klasemen.selectLeague': { id: 'Pilih Liga', en: 'Select League' },
+  'klasemen.position': { id: 'Pos', en: 'Pos' },
+  'klasemen.team': { id: 'Tim', en: 'Team' },
+  'klasemen.played': { id: 'Main', en: 'P' },
+  'klasemen.won': { id: 'M', en: 'W' },
+  'klasemen.drawn': { id: 'S', en: 'D' },
+  'klasemen.lost': { id: 'K', en: 'L' },
+  'klasemen.points': { id: 'Poin', en: 'Pts' },
+  'klasemen.goalsFor': { id: 'GM', en: 'GF' },
+  'klasemen.goalsAgainst': { id: 'GK', en: 'GA' },
+  'klasemen.goalDiff': { id: '+/-', en: 'GD' },
+  'klasemen.relegation': { id: 'Degradasi', en: 'Relegation' },
+  'klasemen.noData': { id: 'Belum ada data klasemen untuk liga ini.', en: 'No standings data available for this league.' },
+  'klasemen.loadError': { id: 'Gagal memuat data klasemen. Silakan coba lagi.', en: 'Failed to load standings. Please try again.' },
   
   // Hero
   'hero.readMore': { id: 'Baca Selengkapnya', en: 'Read More' },

@@ -167,6 +167,7 @@ const Header: React.FC = () => {
     { key: 'berita.trending', path: '/berita/trending' },
     { key: 'berita.daily', path: '/berita/daily' },
     { key: 'berita.analisa', path: '/berita/analisa' },
+    { key: 'berita.klasemen', path: '/klasemen' },
   ];
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
