@@ -72,7 +72,7 @@ const Klasemen: React.FC = () => {
                     {language === 'id' ? 'Klasemen' : 'Standings'}
                   </h1>
                   <p className="text-muted-foreground text-sm">
-                    {getLeagueName(selectedLeague)} 2024/25
+                    {getLeagueName(selectedLeague)} {data?.seasonLabel || '2025/26'}
                   </p>
                 </div>
               </div>

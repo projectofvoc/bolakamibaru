@@ -23,15 +23,19 @@ interface StandingTeam {
   form?: string;
 }
 
-// Static League ID mapping (these don't change between seasons)
-const leagueIdMapping: Record<string, number> = {
-  'liga-1': 501,            // Liga 1 Indonesia
-  'liga-2': 648,            // Liga 2 Indonesia  
+// Static League ID mapping for Sportmonks (international leagues)
+const sportmonksLeagueIdMapping: Record<string, number> = {
   'premier-league': 8,      // Premier League (England)
   'la-liga': 564,           // La Liga (Spain)
   'serie-a': 384,           // Serie A (Italy)
   'bundesliga': 82,         // Bundesliga (Germany)
   'champions-league': 2,    // UEFA Champions League
+};
+
+// API Football league IDs for Indonesian leagues
+const apiFootballLeagueIds: Record<string, number> = {
+  'liga-1': 274,   // Liga 1 Indonesia
+  'liga-2': 275,   // Liga 2 Indonesia
 };
 
 // League display names
@@ -45,36 +49,132 @@ const leagueNames: Record<string, { id: string; en: string }> = {
   'champions-league': { id: 'Liga Champions', en: 'Champions League' },
 };
 
-// Function to get API key from database with fallback to env
-async function getApiKey(supabase: any, apiName: string): Promise<string | null> {
+// Function to get Sportmonks API key
+async function getSportmonksApiKey(supabase: any): Promise<string | null> {
   try {
     const { data, error } = await supabase
       .from('api_configurations')
       .select('api_key')
-      .eq('name', apiName)
+      .eq('name', 'sportmonks')
       .eq('is_active', true)
       .single();
     
     if (data?.api_key) {
-      console.log(`Using API key from database for: ${apiName}`);
+      console.log('Using Sportmonks API key from database');
       return data.api_key;
     }
   } catch (e) {
-    console.log(`Failed to get API key from database: ${e}`);
+    console.log('Failed to get Sportmonks API key from database:', e);
   }
   
   // Fallback to environment variable
-  console.log(`Falling back to env variable for: ${apiName}`);
+  console.log('Falling back to SPORTMONKS_API_KEY env variable');
   return Deno.env.get('SPORTMONKS_API_KEY') || null;
 }
 
-// Function to fetch current season ID dynamically from Sportmonks
-async function getCurrentSeasonId(leagueId: number, apiKey: string): Promise<number | null> {
+// Function to get API Football key (for Indonesian leagues)
+async function getApiFootballKey(supabase: any): Promise<string | null> {
   try {
-    console.log(`Fetching current season for league ID: ${leagueId}`);
+    const { data, error } = await supabase
+      .from('api_configurations')
+      .select('api_key')
+      .eq('name', 'api_football_indo')
+      .eq('is_active', true)
+      .single();
+    
+    if (data?.api_key) {
+      console.log('Using API Football key from database');
+      return data.api_key;
+    }
+  } catch (e) {
+    console.log('Failed to get API Football key from database:', e);
+  }
+  
+  // Fallback to environment variable
+  console.log('Falling back to API_FOOTBALL_KEY env variable');
+  return Deno.env.get('API_FOOTBALL_KEY') || null;
+}
+
+// Function to fetch standings from API Football (for Indonesian leagues)
+async function fetchApiFootballStandings(
+  leagueId: number,
+  season: number,
+  apiKey: string
+): Promise<{ standings: StandingTeam[]; seasonLabel: string } | null> {
+  try {
+    console.log(`Fetching API Football standings for league ${leagueId}, season ${season}`);
     
     const response = await fetch(
-      `https://api.sportmonks.com/v3/football/leagues/${leagueId}?api_token=${apiKey}&include=currentSeason`,
+      `https://v3.football.api-sports.io/standings?league=${leagueId}&season=${season}`,
+      {
+        method: 'GET',
+        headers: {
+          'x-apisports-key': apiKey,
+          'Accept': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Football error:', response.status, errorText);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log('API Football response:', JSON.stringify(data).slice(0, 800));
+
+    if (data.errors && Object.keys(data.errors).length > 0) {
+      console.error('API Football errors:', JSON.stringify(data.errors));
+      return null;
+    }
+
+    // API Football response structure:
+    // response[0].league.standings[0] = array of teams
+    const leagueData = data.response?.[0];
+    if (!leagueData?.league?.standings?.[0]) {
+      console.log('No standings data in API Football response');
+      return null;
+    }
+
+    const standingsData = leagueData.league.standings[0];
+    const standings: StandingTeam[] = standingsData.map((team: any) => ({
+      position: team.rank || 0,
+      teamId: team.team?.id || 0,
+      teamName: team.team?.name || 'Unknown',
+      teamLogo: team.team?.logo || '',
+      played: team.all?.played || 0,
+      won: team.all?.win || 0,
+      drawn: team.all?.draw || 0,
+      lost: team.all?.lose || 0,
+      goalsFor: team.all?.goals?.for || 0,
+      goalsAgainst: team.all?.goals?.against || 0,
+      goalDifference: team.goalsDiff || 0,
+      points: team.points || 0,
+      form: team.form || undefined,
+    }));
+
+    const seasonLabel = `${season}/${(season + 1).toString().slice(-2)}`;
+    
+    return { standings, seasonLabel };
+  } catch (error) {
+    console.error('Error fetching API Football standings:', error);
+    return null;
+  }
+}
+
+// Function to find season ID for a specific year range from Sportmonks
+async function findSeasonIdForYear(
+  leagueId: number,
+  targetStartYear: number,
+  apiKey: string
+): Promise<number | null> {
+  try {
+    console.log(`Finding season ID for league ${leagueId}, target year ${targetStartYear}`);
+    
+    // Fetch league with all seasons included
+    const response = await fetch(
+      `https://api.sportmonks.com/v3/football/leagues/${leagueId}?api_token=${apiKey}&include=seasons`,
       {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
@@ -88,130 +188,78 @@ async function getCurrentSeasonId(leagueId: number, apiKey: string): Promise<num
     }
 
     const data = await response.json();
-    console.log(`League ${leagueId} response:`, JSON.stringify(data).slice(0, 500));
+    console.log(`League ${leagueId} seasons response:`, JSON.stringify(data).slice(0, 1000));
 
-    // Extract current season ID from the response
-    const currentSeasonId = data.data?.current_season_id || data.data?.currentseason?.id || null;
+    const seasons = data.data?.seasons || [];
     
+    // Look for a season that matches the target year
+    // Season can have name like "2025/2026" or dates like starting_at: "2025-08-01"
+    for (const season of seasons) {
+      // Check by starting_at date
+      if (season.starting_at) {
+        const startYear = new Date(season.starting_at).getFullYear();
+        if (startYear === targetStartYear) {
+          console.log(`Found season by date: ID=${season.id}, name=${season.name}, starting_at=${season.starting_at}`);
+          return season.id;
+        }
+      }
+      
+      // Check by name (e.g., "2025/2026" or "2025-2026")
+      if (season.name) {
+        const nameMatch = season.name.match(/^(\d{4})/);
+        if (nameMatch && parseInt(nameMatch[1]) === targetStartYear) {
+          console.log(`Found season by name: ID=${season.id}, name=${season.name}`);
+          return season.id;
+        }
+      }
+    }
+
+    // If no exact match, try to get current season as fallback
+    const currentSeasonId = data.data?.current_season_id;
     if (currentSeasonId) {
-      console.log(`Found current season ID: ${currentSeasonId} for league ${leagueId}`);
+      console.log(`Using current season as fallback: ${currentSeasonId}`);
       return currentSeasonId;
     }
 
-    // If currentSeason is included, try to get it from there
-    if (data.data?.currentSeason?.id) {
-      console.log(`Found current season ID from include: ${data.data.currentSeason.id}`);
-      return data.data.currentSeason.id;
-    }
-
-    console.log(`No current season found for league ${leagueId}`);
+    console.log(`No matching season found for year ${targetStartYear}`);
     return null;
   } catch (error) {
-    console.error(`Error fetching current season for league ${leagueId}:`, error);
+    console.error(`Error finding season for league ${leagueId}:`, error);
     return null;
   }
 }
 
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+// Function to fetch standings from Sportmonks
+async function fetchSportmonksStandings(
+  seasonId: number,
+  apiKey: string
+): Promise<StandingTeam[]> {
   try {
-    // Parse request body or URL params
-    const url = new URL(req.url);
-    let leagueSlug = url.searchParams.get('league') || 'premier-league';
-
-    // Also support POST body
-    if (req.method === 'POST') {
-      try {
-        const body = await req.json();
-        if (body.league) {
-          leagueSlug = body.league;
-        }
-      } catch (e) {
-        // Ignore JSON parse errors, use default
-      }
-    }
-
-    // Create Supabase client with service role for reading api_configurations
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Get API key from database or fallback to env
-    const apiKey = await getApiKey(supabase, 'sportmonks');
+    console.log(`Fetching Sportmonks standings for season ID: ${seasonId}`);
     
-    if (!apiKey) {
-      throw new Error('SPORTMONKS_API_KEY not configured in database or environment');
-    }
-
-    // Get static League ID for the league slug
-    const leagueId = leagueIdMapping[leagueSlug];
-    
-    if (!leagueId) {
-      return new Response(JSON.stringify({ 
-        error: `League not supported: ${leagueSlug}`,
-        availableLeagues: Object.keys(leagueIdMapping),
-        standings: [] 
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    console.log(`Processing request for league: ${leagueSlug} (League ID: ${leagueId})`);
-
-    // Step 1: Fetch current season ID dynamically
-    const seasonId = await getCurrentSeasonId(leagueId, apiKey);
-
-    if (!seasonId) {
-      console.error(`Could not find current season for league: ${leagueSlug} (${leagueId})`);
-      return new Response(JSON.stringify({ 
-        error: `No current season found for league: ${leagueSlug}. This league may not be available in your Sportmonks subscription.`,
-        leagueId,
-        standings: [] 
-      }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    console.log(`Fetching standings for league: ${leagueSlug}, season ID: ${seasonId}`);
-
-    // Step 2: Fetch standings using the dynamic season ID
     const response = await fetch(
       `https://api.sportmonks.com/v3/football/standings/seasons/${seasonId}?api_token=${apiKey}&include=participant;details`,
       {
         method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
+        headers: { 'Accept': 'application/json' },
       }
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Sportmonks API error:', response.status, errorText);
-      throw new Error(`Sportmonks API error: ${response.status} - ${errorText}`);
+      console.error('Sportmonks standings error:', response.status, errorText);
+      return [];
     }
 
     const data = await response.json();
     console.log('Sportmonks standings response:', JSON.stringify(data).slice(0, 500));
 
-    // Transform the standings data
     const standingsData = data.data || [];
-    
-    // Find the overall standings (not home/away specific)
-    // Sportmonks returns standings grouped by stage, we want the overall one
     const standings: StandingTeam[] = [];
     
     for (const standing of standingsData) {
-      // Skip if no participant data
       if (!standing.participant) continue;
       
-      // Extract stats from details array
       const details = standing.details || [];
       
       const getDetailValue = (typeId: number): number => {
@@ -219,7 +267,7 @@ serve(async (req) => {
         return detail?.value || 0;
       };
 
-      // Sportmonks type_ids for standing details:
+      // Sportmonks type_ids:
       // 129 = Matches Played, 130 = Won, 131 = Draw, 132 = Lost
       // 133 = Goals For, 134 = Goals Against, 135 = Goal Difference
       // 187 = Points
@@ -240,27 +288,145 @@ serve(async (req) => {
         form: standing.form || undefined,
       };
       
-      // Only add if we have valid position (skip duplicates from home/away splits)
       if (team.position > 0 && !standings.find(s => s.teamId === team.teamId)) {
         standings.push(team);
       }
     }
 
-    // Sort by position
     standings.sort((a, b) => a.position - b.position);
+    return standings;
+  } catch (error) {
+    console.error('Error fetching Sportmonks standings:', error);
+    return [];
+  }
+}
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // Parse request body
+    const url = new URL(req.url);
+    let leagueSlug = url.searchParams.get('league') || 'premier-league';
+    let seasonStartYear = 2025; // Default to 2025/2026 season
+
+    if (req.method === 'POST') {
+      try {
+        const body = await req.json();
+        if (body.league) leagueSlug = body.league;
+        if (body.seasonStartYear) seasonStartYear = parseInt(body.seasonStartYear) || 2025;
+      } catch (e) {
+        // Ignore JSON parse errors
+      }
+    }
+
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const leagueName = leagueNames[leagueSlug] || { id: leagueSlug, en: leagueSlug };
+    const seasonLabel = `${seasonStartYear}/${(seasonStartYear + 1).toString().slice(-2)}`;
+
+    console.log(`Processing standings request: league=${leagueSlug}, seasonStartYear=${seasonStartYear}`);
+
+    // Check if this is an Indonesian league (use API Football)
+    if (apiFootballLeagueIds[leagueSlug]) {
+      const apiFootballId = apiFootballLeagueIds[leagueSlug];
+      console.log(`Using API Football for ${leagueSlug} (league ID: ${apiFootballId})`);
+
+      const apiKey = await getApiFootballKey(supabase);
+      if (!apiKey) {
+        throw new Error('API_FOOTBALL_KEY not configured');
+      }
+
+      const result = await fetchApiFootballStandings(apiFootballId, seasonStartYear, apiKey);
+
+      if (!result || result.standings.length === 0) {
+        return new Response(JSON.stringify({
+          standings: [],
+          league: leagueSlug,
+          leagueName,
+          seasonLabel,
+          seasonId: null,
+          totalTeams: 0,
+          source: 'api_football',
+          error: `No standings data available for ${leagueName.en} season ${seasonLabel}`,
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({
+        standings: result.standings,
+        league: leagueSlug,
+        leagueName,
+        seasonLabel: result.seasonLabel,
+        seasonId: null,
+        totalTeams: result.standings.length,
+        source: 'api_football',
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // International leagues - use Sportmonks
+    const sportmonksLeagueId = sportmonksLeagueIdMapping[leagueSlug];
+    
+    if (!sportmonksLeagueId) {
+      return new Response(JSON.stringify({ 
+        error: `League not supported: ${leagueSlug}`,
+        availableLeagues: [...Object.keys(apiFootballLeagueIds), ...Object.keys(sportmonksLeagueIdMapping)],
+        standings: [] 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log(`Using Sportmonks for ${leagueSlug} (league ID: ${sportmonksLeagueId})`);
+
+    const apiKey = await getSportmonksApiKey(supabase);
+    if (!apiKey) {
+      throw new Error('SPORTMONKS_API_KEY not configured');
+    }
+
+    // Find the correct season ID for the target year
+    const seasonId = await findSeasonIdForYear(sportmonksLeagueId, seasonStartYear, apiKey);
+
+    if (!seasonId) {
+      return new Response(JSON.stringify({ 
+        error: `No season found for ${leagueSlug} ${seasonLabel}. The season may not have started yet.`,
+        leagueId: sportmonksLeagueId,
+        standings: [],
+        seasonLabel,
+        source: 'sportmonks',
+      }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log(`Found season ID: ${seasonId} for ${leagueSlug} ${seasonLabel}`);
+
+    // Fetch standings
+    const standings = await fetchSportmonksStandings(seasonId, apiKey);
 
     return new Response(JSON.stringify({ 
       standings,
       league: leagueSlug,
       leagueName,
-      leagueId,
+      seasonLabel,
       seasonId,
       totalTeams: standings.length,
+      source: 'sportmonks',
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
   } catch (error) {
     console.error('Error in sportmonks-standings function:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
