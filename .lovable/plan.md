@@ -1,88 +1,136 @@
 
-Tujuan perubahan (berdasarkan request terbaru)
-- Untuk semua liga di halaman /klasemen, data klasemen harus untuk musim “2025/2026”.
-- Khusus Liga 1 & Liga 2 saat ini salah (tidak menampilkan tim Indonesia), jadi harus diperbaiki.
+## Rencana: Kontrol Akses CMS Berdasarkan Role
 
-Analisa masalah saat ini (kenapa Liga 1 & Liga 2 tidak tepat)
-1) Edge function `sportmonks-standings` saat ini memakai `leagueIdMapping`:
-   - `liga-1` -> 501
-   - `liga-2` -> 648
-2) Hasil real dari backend (sudah saya uji dengan request langsung):
-   - `liga-1` mengembalikan tim seperti “Hearts, Rangers, Celtic…” (itu bukan Liga 1 Indonesia)
-   - `liga-2` mengembalikan tim seperti “Corinthians, Flamengo…” (bukan Liga 2 Indonesia)
-3) Jadi akar masalahnya:
-   - ID liga Sportmonks untuk “Liga 1 Indonesia” dan “Liga 2 Indonesia” yang dipakai sekarang memang salah (mengarah ke liga negara lain).
-   - Selain itu, di codebase juga ada indikasi kuat bahwa liga Indonesia seharusnya dari API Football (lihat komentar di `supabase/functions/sportmonks-fixtures/index.ts`: “Liga 1 Indonesia is NOT available in Sportmonks - use API-Football instead”).
-4) Ada masalah tambahan di UI:
-   - `src/pages/Klasemen.tsx` menampilkan label musim “2024/25” secara hardcoded, padahal request sekarang wajib “2025/26”.
+### Masalah yang Ditemukan
 
-Keputusan teknis yang paling aman & sesuai requirement
-- Untuk Liga 1 & Liga 2: ambil klasemen dari API Football (karena memang sudah dipakai untuk Liga Indonesia di fitur lain).
-- Untuk liga internasional (Premier League, La Liga, Serie A, Bundesliga, Champions League): tetap dari Sportmonks, tetapi dipaksa mengambil musim 2025/2026 (bukan “current season” yang bisa berubah / tidak sesuai).
+1. **Tombol CMS muncul untuk semua user yang login**
+   - Saat ini di `Header.tsx`, kondisi hanya `{user ? ...}` - artinya semua user yang login akan melihat tombol CMS
+   - Seharusnya hanya user dengan role `admin` atau `author` yang bisa melihat tombol CMS
 
-Rencana implementasi (perubahan kode yang akan dilakukan)
+2. **CMSUsers.tsx memerlukan User ID (UUID) untuk menambah role**
+   - Ini tidak praktis karena admin harus mencari UUID user terlebih dahulu
+   - Request: Admin ingin menambahkan user baru dengan email dan password langsung
 
-A) Backend: perbaikan `sportmonks-standings` agar:
-1) Mendukung “musim target” 2025/2026
-   - Tambahkan parameter request (opsional) misalnya:
-     - `seasonStartYear: 2025` (untuk 2025/2026)
-   - Default-nya tetap 2025 supaya konsisten walau frontend tidak mengirim parameter.
+### Data Saat Ini di Database
 
-2) Routing data berdasarkan liga:
-   - Jika `leagueSlug` adalah `liga-1` atau `liga-2`:
-     - Jangan gunakan Sportmonks sama sekali.
-     - Panggil API Football endpoint standings:
-       - `GET https://v3.football.api-sports.io/standings?league=274&season=2025` (Liga 1)
-       - `GET https://v3.football.api-sports.io/standings?league=275&season=2025` (Liga 2)
-     - Parse response -> mapping ke format `StandingTeam` yang sama (position, teamName, teamLogo, played, won, drawn, lost, goalsFor, goalsAgainst, goalDifference, points)
-     - Pastikan logo club memakai `team.logo` dari API Football.
+| Email | User ID | Roles |
+|-------|---------|-------|
+| adminbolakami@gmail.com | 6c392d67-... | admin, author |
+| volkmanxd@gmail.com | b5f38442-... | (tidak ada) |
 
-   - Jika liga selain itu:
-     - Tetap pakai Sportmonks, tapi pilih season 2025/2026 secara eksplisit:
-       - Ambil daftar season liga dari endpoint league detail (include seasons), lalu pilih season yang:
-         - `starting_at` tahun 2025 dan `ending_at` tahun 2026 (paling robust), atau
-         - fallback: `name` mengandung “2025/2026” jika field tanggal tidak tersedia
-     - Setelah dapat `seasonId` yang benar untuk 2025/2026, baru hit endpoint standings Sportmonks:
-       - `/v3/football/standings/seasons/{seasonId}?include=participant;details`
+### Solusi yang Akan Diimplementasikan
 
-3) Output response dibuat lebih informatif untuk UI:
-   - Tambahkan field `seasonLabel` (mis. “2025/26” atau “2025/2026”)
-   - Tambahkan field `source` (mis. `sportmonks` / `api_football`)
-   - Ini membantu debugging dan UI tidak hardcode musim.
+#### A. Header.tsx - Sembunyikan Tombol CMS untuk User Biasa
 
-4) Catatan dependency konfigurasi:
-   - API Football key sudah digunakan oleh `apifootball-livescore`, jadi kita akan reuse pola yang sama (ambil dari `api_configurations` name `api_football_indo` dan fallback env `API_FOOTBALL_KEY`).
-   - Tidak akan meminta secret baru kecuali ternyata key-nya tidak tersedia (yang seharusnya tidak karena fitur livescore sudah berjalan).
+**Perubahan:**
+1. Tambahkan query untuk mengambil roles user yang sedang login
+2. Kondisi tombol CMS berubah dari `{user ? ...}` menjadi `{user && hasAccess ? ...}`
+3. `hasAccess` = user memiliki role `admin` atau `author`
 
-B) Frontend: update halaman Klasemen & hook agar sesuai musim 2025/26
-1) `src/hooks/useStandings.ts`
-   - Tambahkan parameter musim (mis. fixed `seasonStartYear = 2025`) dalam request ke backend:
-     - `supabase.functions.invoke('sportmonks-standings', { body: { league: leagueSlug, seasonStartYear: 2025 } })`
-   - Ubah `queryKey` menjadi `['standings', leagueSlug, 2025]` supaya cache React Query tidak bentrok bila nanti musim diganti.
+**Kode:**
+```typescript
+// Tambah query untuk cek role user
+const { data: userRoles = [] } = useQuery({
+  queryKey: ['user-roles', user?.id],
+  queryFn: async () => {
+    if (!user) return [];
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id);
+    if (error) throw error;
+    return data;
+  },
+  enabled: !!user,
+});
 
-2) `src/pages/Klasemen.tsx`
-   - Hapus hardcode “2024/25”
-   - Tampilkan `data?.seasonLabel` jika ada, fallback ke “2025/26”
-   - Opsional (disarankan): tampilkan juga sumber data kecil di UI (misalnya badge “Data: API Football” saat Liga 1/2, “Data: Sportmonks” untuk liga lain), supaya transparan dan mudah cek.
+const hasCMSAccess = userRoles.some(r => 
+  r.role === 'admin' || r.role === 'author'
+);
 
-C) Pengujian setelah implementasi
-1) Uji backend via request langsung:
-   - `league: liga-1, seasonStartYear: 2025` harus mengembalikan tim Indonesia (Persib, Persija, dll sesuai musim 2025/26 jika tersedia di API Football).
-   - `league: liga-2, seasonStartYear: 2025` harus mengembalikan tim Liga 2 Indonesia.
-   - Liga internasional tetap benar dan season yang dipakai harus mengarah ke 2025/2026 (divalidasi dari `seasonLabel` / `seasonId`).
-2) Uji UI:
-   - Dropdown liga -> pindah liga tidak membawa data liga lain.
-   - Subtitle musim terlihat “2025/26”.
-   - Logo klub muncul dan fallback placeholder bekerja jika ada logo error.
-3) Edge case:
-   - Jika API Football tidak punya standings untuk season=2025 (misalnya kompetisi belum mulai atau API belum menyediakan), UI akan tampil empty-state yang sudah ada (“Belum ada data…”), dan error message tetap rapi.
+// Ubah kondisi render tombol CMS
+{hasCMSAccess && (
+  <a href="/cms" ...>
+    <Settings />
+    <span>CMS</span>
+  </a>
+)}
+```
 
-Daftar file yang akan diubah (perkiraan)
-- `supabase/functions/sportmonks-standings/index.ts` (perubahan utama: paksa season 2025/26 + fallback API Football untuk Liga 1/2)
-- `src/hooks/useStandings.ts` (kirim seasonStartYear=2025 + queryKey update)
-- `src/pages/Klasemen.tsx` (ubah label musim dari hardcoded 2024/25 -> 2025/26 atau dari response)
+#### B. CMSUsers.tsx - Tambah User Baru dengan Email + Password
 
-Kenapa solusi ini menjawab masalah user
-- Liga 1 & Liga 2 tidak tepat karena mapping ID Sportmonks salah; menghindari Sportmonks untuk Liga Indonesia menghilangkan sumber kesalahan dan mengikuti pola codebase yang sudah ada (Liga Indonesia dari API Football).
-- “Musim 2025/2026” dijadikan parameter eksplisit, bukan “current season” yang bisa berbeda antar liga atau berubah seiring waktu.
-- UI ikut konsisten (tidak menampilkan 2024/25 lagi).
+**Flow Baru untuk Menambah CMS User:**
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  OPSI 1: Tambah User Baru (Create Account)                  │
+│  ─────────────────────────────────────────                  │
+│  1. Admin input email + password + role                     │
+│  2. Sistem membuat akun baru via Supabase Admin API         │
+│  3. Sistem otomatis assign role ke user baru                │
+│  4. User baru bisa login dengan email/password tersebut     │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  OPSI 2: Assign Role ke User Existing                       │
+│  ─────────────────────────────────────                      │
+│  1. Admin input email user yang sudah ada                   │
+│  2. Sistem cari user di database berdasarkan email          │
+│  3. Jika ditemukan, assign role baru                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Perubahan yang Diperlukan:**
+
+1. **Buat Edge Function `admin-create-user`**
+   - Menggunakan Supabase Admin API dengan `SUPABASE_SERVICE_ROLE_KEY`
+   - Menerima: email, password, role
+   - Membuat user baru dengan `auth.admin.createUser()`
+   - Otomatis insert role ke `user_roles` table
+   - Hanya bisa dipanggil oleh user dengan role `admin`
+
+2. **Update CMSUsers.tsx**
+   - Tambah form untuk create user baru (email + password + role)
+   - Tambah form untuk assign role ke existing user (email + role)
+   - Tampilkan email user di list, bukan hanya UUID
+
+#### C. Tampilkan Email di List User Roles
+
+**Masalah:** Saat ini `CMSUsers.tsx` hanya menampilkan User ID (UUID) yang tidak informatif
+
+**Solusi:** 
+- Edge function baru `get-users-with-roles` yang join `user_roles` dengan `auth.users` 
+- Return data dengan format: `{ user_id, email, role, created_at }`
+
+### File yang Akan Dibuat/Dimodifikasi
+
+| File | Aksi | Deskripsi |
+|------|------|-----------|
+| `src/components/Header.tsx` | Modify | Tambah role check, sembunyikan CMS button untuk user biasa |
+| `src/pages/cms/CMSUsers.tsx` | Modify | Form create user + tampilkan email |
+| `supabase/functions/admin-create-user/index.ts` | Create | Edge function untuk create user dengan admin API |
+| `supabase/functions/get-cms-users/index.ts` | Create | Edge function untuk get users dengan email |
+
+### Keamanan
+
+1. **Edge function `admin-create-user` hanya bisa diakses oleh admin**
+   - Validasi JWT token
+   - Cek role user = `admin` sebelum proses
+
+2. **RLS policies sudah ada di `user_roles`**
+   - Hanya admin yang bisa manage roles
+   - User biasa hanya bisa view role sendiri
+
+### Ringkasan Perubahan User Experience
+
+**Sebelum:**
+- Login dengan akun apapun -> Tombol CMS muncul
+- CMSUsers memerlukan UUID untuk tambah role
+
+**Sesudah:**
+- Login dengan akun biasa -> Tombol CMS **TIDAK** muncul
+- Login dengan `adminbolakami@gmail.com` -> Tombol CMS muncul
+- CMSUsers bisa:
+  1. Buat akun CMS baru dengan email + password
+  2. Assign role ke user existing dengan email
+  3. Lihat list user dengan email (bukan UUID)
