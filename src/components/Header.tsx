@@ -83,6 +83,25 @@ const Header: React.FC = () => {
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
+  // Query for user roles to check CMS access
+  const { data: userRoles = [] } = useQuery({
+    queryKey: ['user-roles', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  const hasCMSAccess = userRoles.some(
+    (r) => r.role === 'admin' || r.role === 'author'
+  );
+
   // Auth state listener
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -331,15 +350,17 @@ const Header: React.FC = () => {
               {/* User */}
               {user ? (
                 <div className="flex items-center gap-2">
-                  <a
-                    href="/bolakamicms"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-secondary/80 rounded-full transition-colors"
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span>CMS</span>
-                  </a>
+                  {hasCMSAccess && (
+                    <a
+                      href="/bolakamicms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-secondary/80 rounded-full transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      <span>CMS</span>
+                    </a>
+                  )}
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-destructive/10 hover:bg-destructive/20 rounded-full transition-colors"
@@ -457,16 +478,18 @@ const Header: React.FC = () => {
                 </button>
                 {user ? (
                   <div className="flex items-center gap-2">
-                    <a
-                      href="/bolakamicms"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-secondary/80 rounded-full transition-colors"
-                    >
-                      <Settings className="w-4 h-4" />
-                      <span>CMS</span>
-                    </a>
+                    {hasCMSAccess && (
+                      <a
+                        href="/bolakamicms"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-secondary/80 rounded-full transition-colors"
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span>CMS</span>
+                      </a>
+                    )}
                     <button
                       onClick={() => {
                         handleLogout();
