@@ -18,6 +18,7 @@ import Live from "./pages/Live";
 import Liga from "./pages/Liga";
 import Berita from "./pages/Berita";
 import BeritaTag from "./pages/BeritaTag";
+import Klasemen from "./pages/Klasemen";
 import {
   CMSLayout,
   CMSDashboard,
@@ -55,6 +56,7 @@ const App = () => (
             <Route path="/liga/:league" element={<Liga />} />
             <Route path="/berita/:filter" element={<Berita />} />
             <Route path="/berita" element={<BeritaTag />} />
+            <Route path="/klasemen" element={<Klasemen />} />
             
             {/* CMS Routes */}
             <Route path="/cms" element={<CMSLayout />}>
