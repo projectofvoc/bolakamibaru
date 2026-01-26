@@ -23,16 +23,15 @@ interface StandingTeam {
   form?: string;
 }
 
-// Season ID mapping for 2024/25 season (needs to be updated each season)
-// These are Sportmonks season IDs - you can find them via their seasons endpoint
-const leagueSeasonMapping: Record<string, number> = {
-  'liga-1': 23614,           // Liga 1 Indonesia 2024/25
-  'liga-2': 23615,           // Liga 2 Indonesia 2024/25
-  'premier-league': 23744,   // EPL 2024/25
-  'la-liga': 23686,          // La Liga 2024/25
-  'serie-a': 23775,          // Serie A 2024/25
-  'bundesliga': 23661,       // Bundesliga 2024/25
-  'champions-league': 23893, // UCL 2024/25
+// Static League ID mapping (these don't change between seasons)
+const leagueIdMapping: Record<string, number> = {
+  'liga-1': 501,            // Liga 1 Indonesia
+  'liga-2': 648,            // Liga 2 Indonesia  
+  'premier-league': 8,      // Premier League (England)
+  'la-liga': 564,           // La Liga (Spain)
+  'serie-a': 384,           // Serie A (Italy)
+  'bundesliga': 82,         // Bundesliga (Germany)
+  'champions-league': 2,    // UEFA Champions League
 };
 
 // League display names
@@ -67,6 +66,50 @@ async function getApiKey(supabase: any, apiName: string): Promise<string | null>
   // Fallback to environment variable
   console.log(`Falling back to env variable for: ${apiName}`);
   return Deno.env.get('SPORTMONKS_API_KEY') || null;
+}
+
+// Function to fetch current season ID dynamically from Sportmonks
+async function getCurrentSeasonId(leagueId: number, apiKey: string): Promise<number | null> {
+  try {
+    console.log(`Fetching current season for league ID: ${leagueId}`);
+    
+    const response = await fetch(
+      `https://api.sportmonks.com/v3/football/leagues/${leagueId}?api_token=${apiKey}&include=currentSeason`,
+      {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Failed to fetch league ${leagueId}:`, response.status, errorText);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log(`League ${leagueId} response:`, JSON.stringify(data).slice(0, 500));
+
+    // Extract current season ID from the response
+    const currentSeasonId = data.data?.current_season_id || data.data?.currentseason?.id || null;
+    
+    if (currentSeasonId) {
+      console.log(`Found current season ID: ${currentSeasonId} for league ${leagueId}`);
+      return currentSeasonId;
+    }
+
+    // If currentSeason is included, try to get it from there
+    if (data.data?.currentSeason?.id) {
+      console.log(`Found current season ID from include: ${data.data.currentSeason.id}`);
+      return data.data.currentSeason.id;
+    }
+
+    console.log(`No current season found for league ${leagueId}`);
+    return null;
+  } catch (error) {
+    console.error(`Error fetching current season for league ${leagueId}:`, error);
+    return null;
+  }
 }
 
 serve(async (req) => {
@@ -104,13 +147,13 @@ serve(async (req) => {
       throw new Error('SPORTMONKS_API_KEY not configured in database or environment');
     }
 
-    // Get season ID for the league
-    const seasonId = leagueSeasonMapping[leagueSlug];
+    // Get static League ID for the league slug
+    const leagueId = leagueIdMapping[leagueSlug];
     
-    if (!seasonId) {
+    if (!leagueId) {
       return new Response(JSON.stringify({ 
         error: `League not supported: ${leagueSlug}`,
-        availableLeagues: Object.keys(leagueSeasonMapping),
+        availableLeagues: Object.keys(leagueIdMapping),
         standings: [] 
       }), {
         status: 400,
@@ -118,9 +161,26 @@ serve(async (req) => {
       });
     }
 
-    console.log(`Fetching standings for league: ${leagueSlug}, season: ${seasonId}`);
+    console.log(`Processing request for league: ${leagueSlug} (League ID: ${leagueId})`);
 
-    // Fetch standings from Sportmonks
+    // Step 1: Fetch current season ID dynamically
+    const seasonId = await getCurrentSeasonId(leagueId, apiKey);
+
+    if (!seasonId) {
+      console.error(`Could not find current season for league: ${leagueSlug} (${leagueId})`);
+      return new Response(JSON.stringify({ 
+        error: `No current season found for league: ${leagueSlug}. This league may not be available in your Sportmonks subscription.`,
+        leagueId,
+        standings: [] 
+      }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log(`Fetching standings for league: ${leagueSlug}, season ID: ${seasonId}`);
+
+    // Step 2: Fetch standings using the dynamic season ID
     const response = await fetch(
       `https://api.sportmonks.com/v3/football/standings/seasons/${seasonId}?api_token=${apiKey}&include=participant;details`,
       {
@@ -134,7 +194,7 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Sportmonks API error:', response.status, errorText);
-      throw new Error(`Sportmonks API error: ${response.status}`);
+      throw new Error(`Sportmonks API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -195,6 +255,7 @@ serve(async (req) => {
       standings,
       league: leagueSlug,
       leagueName,
+      leagueId,
       seasonId,
       totalTeams: standings.length,
     }), {
