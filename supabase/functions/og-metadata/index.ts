@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
 
     const { data: article, error } = await supabase
       .from('articles')
-      .select('title_id, title_en, excerpt_id, excerpt_en, featured_image, slug, category')
+      .select('title_id, title_en, excerpt_id, excerpt_en, featured_image, slug, category, published_at, author_name')
       .eq('slug', slug)
       .eq('status', 'published')
       .maybeSingle()
@@ -106,6 +106,9 @@ Deno.serve(async (req) => {
   <meta property="og:image:alt" content="${escapeHtml(title)}">
   <meta property="og:site_name" content="BOLAKAMI">
   <meta property="og:locale" content="id_ID">
+  <meta property="article:published_time" content="${article.published_at || ''}">
+  <meta property="article:section" content="${article.category || ''}">
+  <meta property="article:author" content="${article.author_name || 'BOLAKAMI'}">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">

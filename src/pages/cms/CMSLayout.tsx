@@ -32,7 +32,8 @@ import {
   BarChart3,
   Key,
   Megaphone,
-  Share2
+  Share2,
+  Eye
 } from 'lucide-react';
 import logoBolakami from '@/assets/logo-bolakami.png';
 
@@ -57,6 +58,7 @@ const CMSSidebar = ({ isAdmin }: { isAdmin: boolean }) => {
     { title: 'Advertise', url: '/cms/advertise', icon: Megaphone },
     { title: 'Navigation', url: '/cms/navigation', icon: Link2 },
     { title: 'Social Media', url: '/cms/social-media', icon: Share2 },
+    { title: 'OG Preview', url: '/cms/og-preview', icon: Eye },
     { title: 'API', url: '/cms/api', icon: Key },
     { title: 'Users', url: '/cms/users', icon: Users },
   ];
