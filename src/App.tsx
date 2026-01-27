@@ -32,6 +32,7 @@ import {
   CMSApi,
   CMSAdvertise,
   CMSSocialMedia,
+  CMSOGPreview,
 } from "./pages/cms";
 
 const queryClient = new QueryClient();
@@ -70,6 +71,7 @@ const App = () => (
               <Route path="advertise" element={<CMSAdvertise />} />
               <Route path="navigation" element={<CMSNavigation />} />
               <Route path="social-media" element={<CMSSocialMedia />} />
+              <Route path="og-preview" element={<CMSOGPreview />} />
               <Route path="api" element={<CMSApi />} />
               <Route path="users" element={<CMSUsers />} />
             </Route>
