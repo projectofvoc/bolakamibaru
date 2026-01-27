@@ -1,136 +1,193 @@
 
-## Rencana: Kontrol Akses CMS Berdasarkan Role
+## Rencana: Implementasi Open Graph (OG) Metadata yang Benar untuk Bolakami
 
-### Masalah yang Ditemukan
+### Status Saat Ini
 
-1. **Tombol CMS muncul untuk semua user yang login**
-   - Saat ini di `Header.tsx`, kondisi hanya `{user ? ...}` - artinya semua user yang login akan melihat tombol CMS
-   - Seharusnya hanya user dengan role `admin` atau `author` yang bisa melihat tombol CMS
+Sebagian besar infrastruktur OG sudah ada dan berfungsi dengan baik:
 
-2. **CMSUsers.tsx memerlukan User ID (UUID) untuk menambah role**
-   - Ini tidak praktis karena admin harus mencari UUID user terlebih dahulu
-   - Request: Admin ingin menambahkan user baru dengan email dan password langsung
+| Komponen | Status | Catatan |
+|----------|--------|---------|
+| Data Model Article | Tersedia | `slug`, `title`, `excerpt`, `featured_image`, `published_at`, `category`, `author_name` |
+| Edge Function `og-metadata` | Tersedia | Sudah generate HTML dengan semua OG tags + Twitter Cards |
+| NewsDetail Sharing | Tersedia | Sudah menggunakan URL edge function untuk share |
+| QA/Validation Page | Belum ada | Perlu dibuat |
 
-### Data Saat Ini di Database
+### Masalah yang Perlu Diperbaiki
 
-| Email | User ID | Roles |
-|-------|---------|-------|
-| adminbolakami@gmail.com | 6c392d67-... | admin, author |
-| volkmanxd@gmail.com | b5f38442-... | (tidak ada) |
+1. **Domain URL Tidak Konsisten**
+   - Edge function menggunakan `bolakamibaru.lovable.app` sebagai site URL
+   - User ingin menggunakan domain `bolakami.work`
 
-### Solusi yang Akan Diimplementasikan
+2. **Share URL Terekspos**
+   - URL share saat ini: `https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=...`
+   - Ini mengekspos Supabase project ID (tidak ideal tapi tidak berbahaya)
+   - Solusi alternatif: buat route `/share/news/{slug}` yang lebih bersih (opsional)
 
-#### A. Header.tsx - Sembunyikan Tombol CMS untuk User Biasa
+3. **Tidak Ada QA/Validation Page**
+   - Admin tidak punya cara mudah untuk test OG tags sebelum share
+   - Perlu utility page untuk preview dan validasi
 
-**Perubahan:**
-1. Tambahkan query untuk mengambil roles user yang sedang login
-2. Kondisi tombol CMS berubah dari `{user ? ...}` menjadi `{user && hasAccess ? ...}`
-3. `hasAccess` = user memiliki role `admin` atau `author`
+### Rencana Implementasi
 
-**Kode:**
+#### A. Update Edge Function `og-metadata` - Domain & Image Dimensions
+
+**File:** `supabase/functions/og-metadata/index.ts`
+
+Perubahan:
+1. Ubah `siteUrl` dari `bolakamibaru.lovable.app` ke domain yang konsisten
+2. Pastikan `og:image:width` dan `og:image:height` selalu ada (1200x630)
+3. Tambahkan `article:published_time` untuk SEO
+4. Tambahkan `og:site_name` dengan nilai "Bolakami"
+
 ```typescript
-// Tambah query untuk cek role user
-const { data: userRoles = [] } = useQuery({
-  queryKey: ['user-roles', user?.id],
-  queryFn: async () => {
-    if (!user) return [];
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id);
-    if (error) throw error;
-    return data;
-  },
-  enabled: !!user,
-});
+// Perubahan utama:
+const siteUrl = 'https://bolakamibaru.lovable.app' // atau domain custom jika ada
 
-const hasCMSAccess = userRoles.some(r => 
-  r.role === 'admin' || r.role === 'author'
-);
-
-// Ubah kondisi render tombol CMS
-{hasCMSAccess && (
-  <a href="/cms" ...>
-    <Settings />
-    <span>CMS</span>
-  </a>
-)}
+// Tambahan meta tags:
+<meta property="article:published_time" content="${article.published_at || ''}">
+<meta property="article:section" content="${article.category}">
 ```
 
-#### B. CMSUsers.tsx - Tambah User Baru dengan Email + Password
+#### B. Buat QA/Validation Page di CMS
 
-**Flow Baru untuk Menambah CMS User:**
+**File Baru:** `src/pages/cms/CMSOGPreview.tsx`
+
+Fitur:
+1. Input field untuk slug artikel
+2. Preview computed OG values:
+   - Title
+   - Description/Excerpt  
+   - Cover Image (dengan preview visual)
+   - URL
+   - Published Date
+3. Link langsung ke debugger tools:
+   - Facebook Sharing Debugger
+   - LinkedIn Post Inspector
+   - Twitter Card Validator
+4. Button untuk test langsung ke edge function
+
+**UI Mockup:**
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│  OPSI 1: Tambah User Baru (Create Account)                  │
-│  ─────────────────────────────────────────                  │
-│  1. Admin input email + password + role                     │
-│  2. Sistem membuat akun baru via Supabase Admin API         │
-│  3. Sistem otomatis assign role ke user baru                │
-│  4. User baru bisa login dengan email/password tersebut     │
-└─────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────┐
-│  OPSI 2: Assign Role ke User Existing                       │
-│  ─────────────────────────────────────                      │
-│  1. Admin input email user yang sudah ada                   │
-│  2. Sistem cari user di database berdasarkan email          │
-│  3. Jika ditemukan, assign role baru                        │
+│  OG Metadata Preview Tool                                   │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Slug: [____arema-fc-kalahkan-bali-united____]  [Preview]   │
+│                                                              │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  Preview Card                                         │  │
+│  │  ┌─────────────────────────────────────────────────┐ │  │
+│  │  │            [Featured Image]                     │ │  │
+│  │  │              1200 x 630                         │ │  │
+│  │  └─────────────────────────────────────────────────┘ │  │
+│  │  Title: Arema FC Kalahkan Bali United...              │  │
+│  │  Description: Pertandingan sengit...                  │  │
+│  │  URL: https://bolakamibaru.lovable.app/news/arema... │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                              │
+│  Test dengan Debugger:                                       │
+│  [Facebook Debugger] [LinkedIn Inspector] [Twitter Cards]   │
+│                                                              │
+│  Share URL untuk crawler:                                    │
+│  https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/... │
+│  [Copy URL]                                                  │
+│                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Perubahan yang Diperlukan:**
+#### C. Update Routing untuk CMS OG Preview
 
-1. **Buat Edge Function `admin-create-user`**
-   - Menggunakan Supabase Admin API dengan `SUPABASE_SERVICE_ROLE_KEY`
-   - Menerima: email, password, role
-   - Membuat user baru dengan `auth.admin.createUser()`
-   - Otomatis insert role ke `user_roles` table
-   - Hanya bisa dipanggil oleh user dengan role `admin`
+**File:** `src/App.tsx`
 
-2. **Update CMSUsers.tsx**
-   - Tambah form untuk create user baru (email + password + role)
-   - Tambah form untuk assign role ke existing user (email + role)
-   - Tampilkan email user di list, bukan hanya UUID
+Tambah route baru di CMS:
+```typescript
+<Route path="og-preview" element={<CMSOGPreview />} />
+```
 
-#### C. Tampilkan Email di List User Roles
+**File:** `src/pages/cms/index.ts`
 
-**Masalah:** Saat ini `CMSUsers.tsx` hanya menampilkan User ID (UUID) yang tidak informatif
+Export komponen baru:
+```typescript
+export { default as CMSOGPreview } from './CMSOGPreview';
+```
 
-**Solusi:** 
-- Edge function baru `get-users-with-roles` yang join `user_roles` dengan `auth.users` 
-- Return data dengan format: `{ user_id, email, role, created_at }`
+#### D. (Opsional) Buat Route Share yang Lebih Bersih
 
-### File yang Akan Dibuat/Dimodifikasi
+Jika diinginkan URL share yang lebih bersih (tanpa ekspos Supabase URL), bisa tambahkan:
+
+**File Baru:** `supabase/functions/share-news/index.ts`
+
+Route: `/share/news/{slug}` 
+
+Ini akan menjadi alias untuk `og-metadata?slug={slug}` dengan URL yang lebih friendly.
+
+Namun ini opsional karena URL saat ini sudah berfungsi dengan baik untuk social media crawlers.
+
+### File yang Akan Dimodifikasi/Dibuat
 
 | File | Aksi | Deskripsi |
 |------|------|-----------|
-| `src/components/Header.tsx` | Modify | Tambah role check, sembunyikan CMS button untuk user biasa |
-| `src/pages/cms/CMSUsers.tsx` | Modify | Form create user + tampilkan email |
-| `supabase/functions/admin-create-user/index.ts` | Create | Edge function untuk create user dengan admin API |
-| `supabase/functions/get-cms-users/index.ts` | Create | Edge function untuk get users dengan email |
+| `supabase/functions/og-metadata/index.ts` | Modify | Tambah meta tags dan perbaiki format |
+| `src/pages/cms/CMSOGPreview.tsx` | Create | Halaman QA/validation untuk OG metadata |
+| `src/pages/cms/index.ts` | Modify | Export CMSOGPreview |
+| `src/App.tsx` | Modify | Tambah route /cms/og-preview |
+| `src/pages/cms/CMSLayout.tsx` | Modify | Tambah link ke OG Preview di sidebar |
 
-### Keamanan
+### Catatan Penting
 
-1. **Edge function `admin-create-user` hanya bisa diakses oleh admin**
-   - Validasi JWT token
-   - Cek role user = `admin` sebelum proses
+1. **Mengenai Domain `bolakami.work`**
+   - Jika domain custom sudah di-setup, site URL di edge function harus diupdate
+   - Saat ini menggunakan `bolakamibaru.lovable.app` (published URL)
 
-2. **RLS policies sudah ada di `user_roles`**
-   - Hanya admin yang bisa manage roles
-   - User biasa hanya bisa view role sendiri
+2. **Image Requirements**
+   - `featured_image` sudah tersimpan sebagai absolute URL di Supabase Storage
+   - Semua gambar public dan accessible tanpa auth
+   - Ukuran bervariasi, tapi OG tags akan tetap set 1200x630 (browser akan scale)
 
-### Ringkasan Perubahan User Experience
+3. **SSR Sudah Dihandle**
+   - Edge function `og-metadata` sudah menghasilkan static HTML dengan OG tags
+   - Social crawlers akan mendapat HTML lengkap, bukan JavaScript
+   - Browser redirect otomatis ke SPA via meta refresh
 
-**Sebelum:**
-- Login dengan akun apapun -> Tombol CMS muncul
-- CMSUsers memerlukan UUID untuk tambah role
+### Hasil yang Diharapkan
 
-**Sesudah:**
-- Login dengan akun biasa -> Tombol CMS **TIDAK** muncul
-- Login dengan `adminbolakami@gmail.com` -> Tombol CMS muncul
-- CMSUsers bisa:
-  1. Buat akun CMS baru dengan email + password
-  2. Assign role ke user existing dengan email
-  3. Lihat list user dengan email (bukan UUID)
+Setelah implementasi:
+1. Semua artikel memiliki OG metadata yang benar untuk social sharing
+2. Admin CMS bisa preview dan test OG tags sebelum publish
+3. Link debugger tersedia untuk validasi di Facebook, LinkedIn, Twitter
+4. Share URL menghasilkan preview card yang proper di semua platform
+
+### Technical Details untuk Developer
+
+**CMSOGPreview Component Structure:**
+```typescript
+// State
+const [slug, setSlug] = useState('');
+const [previewData, setPreviewData] = useState<OGPreviewData | null>(null);
+const [isLoading, setIsLoading] = useState(false);
+
+// Fetch preview data
+const fetchPreview = async () => {
+  // Query article from database
+  const { data: article } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+  
+  // Compute OG values
+  setPreviewData({
+    title: article.title_id,
+    description: article.excerpt_id || '',
+    image: article.featured_image,
+    url: `https://bolakamibaru.lovable.app/news/${article.slug}`,
+    publishedAt: article.published_at,
+  });
+};
+
+// Debugger URLs
+const facebookDebuggerUrl = `https://developers.facebook.com/tools/debug/?q=${encodeURIComponent(shareUrl)}`;
+const linkedinInspectorUrl = `https://www.linkedin.com/post-inspector/inspect/${encodeURIComponent(shareUrl)}`;
+const twitterCardsUrl = `https://cards-dev.twitter.com/validator`;
+```
