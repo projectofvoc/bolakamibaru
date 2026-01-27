@@ -68,7 +68,7 @@ const Klasemen: React.FC = () => {
                   <Trophy className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-foreground uppercase tracking-tight">
+                  <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
                     {language === 'id' ? 'Klasemen' : 'Standings'}
                   </h1>
                   <p className="text-muted-foreground text-sm">
