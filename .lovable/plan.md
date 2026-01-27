@@ -1,59 +1,136 @@
 
-## Rencana: Update Domain dari bolakamibaru.lovable.app ke bolakami.work
+## Rencana: Kontrol Akses CMS Berdasarkan Role
 
-### Lokasi Hardcoded URL yang Ditemukan
+### Masalah yang Ditemukan
 
-| File | Line | URL Lama | Perlu Update |
-|------|------|----------|--------------|
-| `supabase/functions/og-metadata/index.ts` | 44 | `https://bolakamibaru.lovable.app` | Ya |
-| `src/pages/NewsDetail.tsx` | 27 | `https://bolakamibaru.lovable.app/og-default.png` | Ya |
-| `src/pages/NewsDetail.tsx` | 28 | `https://bolakamibaru.lovable.app/berita/${article.slug}` | Ya |
+1. **Tombol CMS muncul untuk semua user yang login**
+   - Saat ini di `Header.tsx`, kondisi hanya `{user ? ...}` - artinya semua user yang login akan melihat tombol CMS
+   - Seharusnya hanya user dengan role `admin` atau `author` yang bisa melihat tombol CMS
 
-### Perubahan yang Akan Dilakukan
+2. **CMSUsers.tsx memerlukan User ID (UUID) untuk menambah role**
+   - Ini tidak praktis karena admin harus mencari UUID user terlebih dahulu
+   - Request: Admin ingin menambahkan user baru dengan email dan password langsung
 
-#### 1. supabase/functions/og-metadata/index.ts (Line 44)
+### Data Saat Ini di Database
 
+| Email | User ID | Roles |
+|-------|---------|-------|
+| adminbolakami@gmail.com | 6c392d67-... | admin, author |
+| volkmanxd@gmail.com | b5f38442-... | (tidak ada) |
+
+### Solusi yang Akan Diimplementasikan
+
+#### A. Header.tsx - Sembunyikan Tombol CMS untuk User Biasa
+
+**Perubahan:**
+1. Tambahkan query untuk mengambil roles user yang sedang login
+2. Kondisi tombol CMS berubah dari `{user ? ...}` menjadi `{user && hasAccess ? ...}`
+3. `hasAccess` = user memiliki role `admin` atau `author`
+
+**Kode:**
 ```typescript
-// SEBELUM
-const siteUrl = 'https://bolakamibaru.lovable.app'
+// Tambah query untuk cek role user
+const { data: userRoles = [] } = useQuery({
+  queryKey: ['user-roles', user?.id],
+  queryFn: async () => {
+    if (!user) return [];
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id);
+    if (error) throw error;
+    return data;
+  },
+  enabled: !!user,
+});
 
-// SESUDAH
-const siteUrl = 'https://bolakami.work'
+const hasCMSAccess = userRoles.some(r => 
+  r.role === 'admin' || r.role === 'author'
+);
+
+// Ubah kondisi render tombol CMS
+{hasCMSAccess && (
+  <a href="/cms" ...>
+    <Settings />
+    <span>CMS</span>
+  </a>
+)}
 ```
 
-Dampak:
-- OG meta tags akan mengarah ke domain baru
-- Social media crawlers (Facebook, WhatsApp, Twitter) akan mengambil metadata dengan URL yang benar
-- Redirect browser setelah crawling akan ke domain baru
+#### B. CMSUsers.tsx - Tambah User Baru dengan Email + Password
 
-#### 2. src/pages/NewsDetail.tsx (Lines 27-28)
+**Flow Baru untuk Menambah CMS User:**
 
-```typescript
-// SEBELUM
-const ogImage = article.featured_image || 'https://bolakamibaru.lovable.app/og-default.png';
-const articleUrl = `https://bolakamibaru.lovable.app/berita/${article.slug}`;
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  OPSI 1: Tambah User Baru (Create Account)                  │
+│  ─────────────────────────────────────────                  │
+│  1. Admin input email + password + role                     │
+│  2. Sistem membuat akun baru via Supabase Admin API         │
+│  3. Sistem otomatis assign role ke user baru                │
+│  4. User baru bisa login dengan email/password tersebut     │
+└─────────────────────────────────────────────────────────────┘
 
-// SESUDAH
-const ogImage = article.featured_image || 'https://bolakami.work/og-default.png';
-const articleUrl = `https://bolakami.work/berita/${article.slug}`;
+┌─────────────────────────────────────────────────────────────┐
+│  OPSI 2: Assign Role ke User Existing                       │
+│  ─────────────────────────────────────                      │
+│  1. Admin input email user yang sudah ada                   │
+│  2. Sistem cari user di database berdasarkan email          │
+│  3. Jika ditemukan, assign role baru                        │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-Dampak:
-- Client-side meta tags akan menggunakan domain baru
-- Canonical URL akan benar untuk SEO
-- Default OG image fallback akan ke domain baru
+**Perubahan yang Diperlukan:**
 
-### Ringkasan
+1. **Buat Edge Function `admin-create-user`**
+   - Menggunakan Supabase Admin API dengan `SUPABASE_SERVICE_ROLE_KEY`
+   - Menerima: email, password, role
+   - Membuat user baru dengan `auth.admin.createUser()`
+   - Otomatis insert role ke `user_roles` table
+   - Hanya bisa dipanggil oleh user dengan role `admin`
 
-| Aspek | Status |
-|-------|--------|
-| Social Sharing (WhatsApp, Facebook, Twitter) | Akan menggunakan `bolakami.work` |
-| SEO Canonical URL | Akan mengarah ke `bolakami.work` |
-| OG Image Fallback | Akan ke `bolakami.work/og-default.png` |
-| Browser Redirect dari Edge Function | Akan ke `bolakami.work` |
+2. **Update CMSUsers.tsx**
+   - Tambah form untuk create user baru (email + password + role)
+   - Tambah form untuk assign role ke existing user (email + role)
+   - Tampilkan email user di list, bukan hanya UUID
 
-### Catatan Teknis
+#### C. Tampilkan Email di List User Roles
 
-- Edge function `og-metadata` akan auto-deploy setelah perubahan
-- Tidak perlu konfigurasi tambahan karena SSL sudah dihandle otomatis oleh platform
-- Pastikan file `og-default.png` tersedia di domain baru (sudah ada di `/public/`)
+**Masalah:** Saat ini `CMSUsers.tsx` hanya menampilkan User ID (UUID) yang tidak informatif
+
+**Solusi:** 
+- Edge function baru `get-users-with-roles` yang join `user_roles` dengan `auth.users` 
+- Return data dengan format: `{ user_id, email, role, created_at }`
+
+### File yang Akan Dibuat/Dimodifikasi
+
+| File | Aksi | Deskripsi |
+|------|------|-----------|
+| `src/components/Header.tsx` | Modify | Tambah role check, sembunyikan CMS button untuk user biasa |
+| `src/pages/cms/CMSUsers.tsx` | Modify | Form create user + tampilkan email |
+| `supabase/functions/admin-create-user/index.ts` | Create | Edge function untuk create user dengan admin API |
+| `supabase/functions/get-cms-users/index.ts` | Create | Edge function untuk get users dengan email |
+
+### Keamanan
+
+1. **Edge function `admin-create-user` hanya bisa diakses oleh admin**
+   - Validasi JWT token
+   - Cek role user = `admin` sebelum proses
+
+2. **RLS policies sudah ada di `user_roles`**
+   - Hanya admin yang bisa manage roles
+   - User biasa hanya bisa view role sendiri
+
+### Ringkasan Perubahan User Experience
+
+**Sebelum:**
+- Login dengan akun apapun -> Tombol CMS muncul
+- CMSUsers memerlukan UUID untuk tambah role
+
+**Sesudah:**
+- Login dengan akun biasa -> Tombol CMS **TIDAK** muncul
+- Login dengan `adminbolakami@gmail.com` -> Tombol CMS muncul
+- CMSUsers bisa:
+  1. Buat akun CMS baru dengan email + password
+  2. Assign role ke user existing dengan email
+  3. Lihat list user dengan email (bukan UUID)

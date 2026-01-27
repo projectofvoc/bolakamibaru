@@ -24,8 +24,8 @@ import {
 const updateMetaTags = (article: { title_id: string; title_en: string; excerpt_id?: string | null; excerpt_en?: string | null; featured_image?: string | null; slug: string }, language: string) => {
   const title = language === 'id' ? article.title_id : article.title_en;
   const description = (language === 'id' ? article.excerpt_id : article.excerpt_en) || 'Baca berita terbaru di BOLAKAMI';
-  const ogImage = article.featured_image || 'https://bolakami.work/og-default.png';
-  const articleUrl = `https://bolakami.work/berita/${article.slug}`;
+  const ogImage = article.featured_image || 'https://bolakamibaru.lovable.app/og-default.png';
+  const articleUrl = `https://bolakamibaru.lovable.app/berita/${article.slug}`;
 
   // Update document title
   document.title = `${title} | BOLAKAMI`;
