@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const siteUrl = 'https://bolakamibaru.lovable.app'
+    const siteUrl = 'https://bolakami.work'
 
     console.log(`OG Metadata request - Slug: ${slug}`)
 
