@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Newspaper, TrendingUp, Calendar, BarChart3, CheckCircle, Bookmark, Clock, ChevronRight, Play } from 'lucide-react';
+import { Newspaper, TrendingUp, Calendar, Target, CheckCircle, Bookmark, Clock, ChevronRight, Play } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -33,10 +33,10 @@ const filterTypes: FilterInfo[] = [
     description: { id: 'Berita terbaru hari ini', en: 'Today\'s latest news' }
   },
   { 
-    id: 'analisa', 
-    name: { id: 'Analisa', en: 'Analysis' }, 
-    icon: BarChart3,
-    description: { id: 'Artikel analisa mendalam', en: 'In-depth analysis articles' }
+    id: 'prediksi', 
+    name: { id: 'Prediksi', en: 'Predictions' }, 
+    icon: Target,
+    description: { id: 'Prediksi skor dan analisa pertandingan', en: 'Match predictions and analysis' }
   },
 ];
 

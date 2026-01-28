@@ -29,7 +29,7 @@ const translations: Record<string, Record<Language, string>> = {
   // Berita Submenu
   'berita.trending': { id: 'Trending', en: 'Trending' },
   'berita.daily': { id: 'Update Harian', en: 'Daily Updates' },
-  'berita.analisa': { id: 'Analisa Klub', en: 'Club Analysis' },
+  'berita.prediksi': { id: 'Prediksi', en: 'Predictions' },
   'berita.klasemen': { id: 'Klasemen', en: 'Standings' },
   'nav.standings': { id: 'KLASEMEN', en: 'STANDINGS' },
   
