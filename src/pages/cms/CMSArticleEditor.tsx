@@ -31,8 +31,15 @@ import {
   Eye,
   Sparkles,
   Languages,
-  Plus
+  Plus,
+  Target
 } from 'lucide-react';
+import { 
+  generatePredictionTemplate, 
+  generatePredictionTitle, 
+  generatePredictionExcerpt,
+  type PredictionTemplateData 
+} from '@/lib/predictionTemplate';
 import RichTextEditor from '@/components/cms/RichTextEditor';
 import ArticlePreview from '@/components/cms/ArticlePreview';
 
@@ -127,12 +134,22 @@ const CMSArticleEditor = () => {
   const [showAddLeague, setShowAddLeague] = useState(false);
   const [showAddClub, setShowAddClub] = useState(false);
   const [showAddBadge, setShowAddBadge] = useState(false);
+  const [showPredictionTemplate, setShowPredictionTemplate] = useState(false);
 
   // New item states
   const [newCategory, setNewCategory] = useState({ name: '', icon: '' });
   const [newLeague, setNewLeague] = useState({ name: '', country: '' });
   const [newClub, setNewClub] = useState({ name: '', league_id: '' });
   const [newBadge, setNewBadge] = useState({ name: '', icon: '' });
+  const [predictionData, setPredictionData] = useState<PredictionTemplateData>({
+    homeTeam: '',
+    awayTeam: '',
+    competition: '',
+    matchday: '',
+    venue: '',
+    kickoffDate: '',
+    kickoffTime: '',
+  });
 
   // Fetch article if editing
   const { data: article, isLoading } = useQuery({
@@ -613,6 +630,36 @@ const CMSArticleEditor = () => {
     }));
   };
 
+  const handleInsertPredictionTemplate = () => {
+    if (!predictionData.homeTeam || !predictionData.awayTeam || !predictionData.competition || !predictionData.venue) {
+      toast({ title: 'Error', description: 'Harap isi Tim, Kompetisi, dan Venue', variant: 'destructive' });
+      return;
+    }
+    
+    const templateContent = generatePredictionTemplate(predictionData);
+    const autoTitle = generatePredictionTitle(predictionData.homeTeam, predictionData.awayTeam, predictionData.kickoffDate);
+    const autoExcerpt = generatePredictionExcerpt(predictionData.homeTeam, predictionData.awayTeam, predictionData.competition, predictionData.venue);
+    
+    setForm(prev => ({ 
+      ...prev, 
+      title_id: autoTitle,
+      excerpt_id: autoExcerpt,
+      content_id: templateContent,
+    }));
+    
+    setShowPredictionTemplate(false);
+    setPredictionData({
+      homeTeam: '',
+      awayTeam: '',
+      competition: '',
+      matchday: '',
+      venue: '',
+      kickoffDate: '',
+      kickoffTime: '',
+    });
+    toast({ title: 'Template berhasil diterapkan!', description: 'Edit placeholder [...] dengan data aktual' });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -708,6 +755,22 @@ const CMSArticleEditor = () => {
                   rows={2}
                 />
               </div>
+              
+              {/* Prediction Template Button - Only show for Prediksi category */}
+              {form.category === 'Prediksi' && (
+                <div className="flex justify-start">
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowPredictionTemplate(true)}
+                    className="gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                  >
+                    <Target className="w-4 h-4" />
+                    Gunakan Template Prediksi
+                  </Button>
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <Label>Konten *</Label>
                 <RichTextEditor
@@ -1166,6 +1229,95 @@ const CMSArticleEditor = () => {
                 disabled={!newBadge.name || addBadgeMutation.isPending}
               >
                 {addBadgeMutation.isPending ? 'Menyimpan...' : 'Tambah'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Prediction Template Dialog */}
+      <Dialog open={showPredictionTemplate} onOpenChange={setShowPredictionTemplate}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-primary" />
+              Template Prediksi Pertandingan
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Tim Tuan Rumah *</Label>
+                <Input
+                  value={predictionData.homeTeam}
+                  onChange={(e) => setPredictionData(prev => ({ ...prev, homeTeam: e.target.value }))}
+                  placeholder="Manchester United"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Tim Tamu *</Label>
+                <Input
+                  value={predictionData.awayTeam}
+                  onChange={(e) => setPredictionData(prev => ({ ...prev, awayTeam: e.target.value }))}
+                  placeholder="Chelsea"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Kompetisi/Liga *</Label>
+                <Input
+                  value={predictionData.competition}
+                  onChange={(e) => setPredictionData(prev => ({ ...prev, competition: e.target.value }))}
+                  placeholder="Premier League"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Pekan ke-</Label>
+                <Input
+                  value={predictionData.matchday}
+                  onChange={(e) => setPredictionData(prev => ({ ...prev, matchday: e.target.value }))}
+                  placeholder="Pekan ke-10"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Stadion/Venue *</Label>
+              <Input
+                value={predictionData.venue}
+                onChange={(e) => setPredictionData(prev => ({ ...prev, venue: e.target.value }))}
+                placeholder="Old Trafford, Manchester"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Tanggal Pertandingan</Label>
+                <Input
+                  value={predictionData.kickoffDate}
+                  onChange={(e) => setPredictionData(prev => ({ ...prev, kickoffDate: e.target.value }))}
+                  placeholder="Sabtu, 20 September 2025"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Waktu Kick-off</Label>
+                <Input
+                  value={predictionData.kickoffTime}
+                  onChange={(e) => setPredictionData(prev => ({ ...prev, kickoffTime: e.target.value }))}
+                  placeholder="23:30"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowPredictionTemplate(false)}>
+                Batal
+              </Button>
+              <Button 
+                onClick={handleInsertPredictionTemplate}
+                disabled={!predictionData.homeTeam || !predictionData.awayTeam || !predictionData.competition || !predictionData.venue}
+                className="gap-2"
+              >
+                <Target className="w-4 h-4" />
+                Terapkan Template
               </Button>
             </div>
           </div>
