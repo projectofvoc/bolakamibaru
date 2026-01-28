@@ -162,9 +162,9 @@ const NewsDetail: React.FC = () => {
     return labels[category] || category;
   };
 
-  // Share handlers - use Edge Function URL for proper OG metadata
-  // The Edge Function returns HTML with OG tags and auto-redirects to the article
-  const shareUrl = `https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=${article.slug}`;
+  // Share handlers - use internal /share/:slug route for professional URLs
+  // The ShareRedirect page sets OG meta tags and redirects to the article
+  const shareUrl = `https://bolakamibaru.lovable.app/share/${article.slug}`;
   const shareTitle = title;
 
   const handleShareFacebook = () => {
