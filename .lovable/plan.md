@@ -1,193 +1,145 @@
 
-## Rencana: Implementasi Open Graph (OG) Metadata yang Benar untuk Bolakami
+
+## Rencana: Ganti "Analisa Klub" menjadi "Prediksi"
+
+### Ringkasan Perubahan
+
+User ingin mengganti menu "Analisa Klub" di dropdown navigasi menjadi **"Prediksi"** yang akan menampilkan konten berita prediksi pertandingan (seperti contoh dari bola.net).
 
 ### Status Saat Ini
 
-Sebagian besar infrastruktur OG sudah ada dan berfungsi dengan baik:
+| Komponen | Nilai Saat Ini | Nilai Baru |
+|----------|---------------|------------|
+| Dropdown Menu | "Analisa Klub" / "Club Analysis" | "Prediksi" / "Predictions" |
+| Route | `/berita/analisa` | `/berita/prediksi` |
+| Kategori DB | "Analisa" (sudah ada) | "Prediksi" (perlu update/tambah) |
 
-| Komponen | Status | Catatan |
-|----------|--------|---------|
-| Data Model Article | Tersedia | `slug`, `title`, `excerpt`, `featured_image`, `published_at`, `category`, `author_name` |
-| Edge Function `og-metadata` | Tersedia | Sudah generate HTML dengan semua OG tags + Twitter Cards |
-| NewsDetail Sharing | Tersedia | Sudah menggunakan URL edge function untuk share |
-| QA/Validation Page | Belum ada | Perlu dibuat |
+### Struktur Konten Prediksi (Berdasarkan Referensi bola.net)
 
-### Masalah yang Perlu Diperbaiki
+Artikel prediksi biasanya memiliki struktur:
+1. **Judul**: "Prediksi [Tim A] vs [Tim B] [Tanggal]"
+2. **Intro**: Konteks pertandingan (pekan ke-?, liga apa, venue, waktu kick-off)
+3. **Analisa Tim**: Kondisi kedua tim, performa terakhir, tekanan/momentum
+4. **Prediksi Starting XI**: Formasi dan lineup kedua tim
+5. **Head to Head**: Statistik pertemuan sebelumnya
+6. **5 Laga Terakhir**: Form kedua tim
+7. **Prediksi Skor**: Perkiraan hasil akhir
 
-1. **Domain URL Tidak Konsisten**
-   - Edge function menggunakan `bolakamibaru.lovable.app` sebagai site URL
-   - User ingin menggunakan domain `bolakami.work`
+### File yang Akan Dimodifikasi
 
-2. **Share URL Terekspos**
-   - URL share saat ini: `https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=...`
-   - Ini mengekspos Supabase project ID (tidak ideal tapi tidak berbahaya)
-   - Solusi alternatif: buat route `/share/news/{slug}` yang lebih bersih (opsional)
+| File | Perubahan |
+|------|-----------|
+| `src/contexts/LanguageContext.tsx` | Ganti translation `berita.analisa` dari "Analisa Klub" menjadi "Prediksi" |
+| `src/components/Header.tsx` | Ganti path `/berita/analisa` menjadi `/berita/prediksi` di beritaSubmenu |
+| `src/pages/Berita.tsx` | Update filterTypes: ganti `id: 'analisa'` menjadi `id: 'prediksi'`, update nama dan deskripsi |
+| Database `categories` | Update kategori "Analisa" menjadi "Prediksi" atau tambah kategori baru |
 
-3. **Tidak Ada QA/Validation Page**
-   - Admin tidak punya cara mudah untuk test OG tags sebelum share
-   - Perlu utility page untuk preview dan validasi
+### Detail Perubahan
 
-### Rencana Implementasi
-
-#### A. Update Edge Function `og-metadata` - Domain & Image Dimensions
-
-**File:** `supabase/functions/og-metadata/index.ts`
-
-Perubahan:
-1. Ubah `siteUrl` dari `bolakamibaru.lovable.app` ke domain yang konsisten
-2. Pastikan `og:image:width` dan `og:image:height` selalu ada (1200x630)
-3. Tambahkan `article:published_time` untuk SEO
-4. Tambahkan `og:site_name` dengan nilai "Bolakami"
+#### 1. LanguageContext.tsx
 
 ```typescript
-// Perubahan utama:
-const siteUrl = 'https://bolakamibaru.lovable.app' // atau domain custom jika ada
+// Ubah dari:
+'berita.analisa': { id: 'Analisa Klub', en: 'Club Analysis' },
 
-// Tambahan meta tags:
-<meta property="article:published_time" content="${article.published_at || ''}">
-<meta property="article:section" content="${article.category}">
+// Menjadi:
+'berita.prediksi': { id: 'Prediksi', en: 'Predictions' },
 ```
 
-#### B. Buat QA/Validation Page di CMS
+#### 2. Header.tsx - beritaSubmenu
 
-**File Baru:** `src/pages/cms/CMSOGPreview.tsx`
-
-Fitur:
-1. Input field untuk slug artikel
-2. Preview computed OG values:
-   - Title
-   - Description/Excerpt  
-   - Cover Image (dengan preview visual)
-   - URL
-   - Published Date
-3. Link langsung ke debugger tools:
-   - Facebook Sharing Debugger
-   - LinkedIn Post Inspector
-   - Twitter Card Validator
-4. Button untuk test langsung ke edge function
-
-**UI Mockup:**
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  OG Metadata Preview Tool                                   │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  Slug: [____arema-fc-kalahkan-bali-united____]  [Preview]   │
-│                                                              │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │  Preview Card                                         │  │
-│  │  ┌─────────────────────────────────────────────────┐ │  │
-│  │  │            [Featured Image]                     │ │  │
-│  │  │              1200 x 630                         │ │  │
-│  │  └─────────────────────────────────────────────────┘ │  │
-│  │  Title: Arema FC Kalahkan Bali United...              │  │
-│  │  Description: Pertandingan sengit...                  │  │
-│  │  URL: https://bolakamibaru.lovable.app/news/arema... │  │
-│  └───────────────────────────────────────────────────────┘  │
-│                                                              │
-│  Test dengan Debugger:                                       │
-│  [Facebook Debugger] [LinkedIn Inspector] [Twitter Cards]   │
-│                                                              │
-│  Share URL untuk crawler:                                    │
-│  https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/... │
-│  [Copy URL]                                                  │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
-```
-
-#### C. Update Routing untuk CMS OG Preview
-
-**File:** `src/App.tsx`
-
-Tambah route baru di CMS:
 ```typescript
-<Route path="og-preview" element={<CMSOGPreview />} />
+const beritaSubmenu = [
+  { key: 'berita.trending', path: '/berita/trending' },
+  { key: 'berita.daily', path: '/berita/daily' },
+  { key: 'berita.prediksi', path: '/berita/prediksi' },  // Ganti dari 'analisa'
+  { key: 'berita.klasemen', path: '/klasemen' },
+];
 ```
 
-**File:** `src/pages/cms/index.ts`
+#### 3. Berita.tsx - filterTypes
 
-Export komponen baru:
 ```typescript
-export { default as CMSOGPreview } from './CMSOGPreview';
+const filterTypes: FilterInfo[] = [
+  { 
+    id: 'trending', 
+    name: { id: 'Trending', en: 'Trending' }, 
+    icon: TrendingUp,
+    description: { id: 'Berita paling populer dan viral', en: 'Most popular and viral news' }
+  },
+  { 
+    id: 'daily', 
+    name: { id: 'Update Harian', en: 'Daily Updates' }, 
+    icon: Calendar,
+    description: { id: 'Berita terbaru hari ini', en: 'Today\'s latest news' }
+  },
+  { 
+    id: 'prediksi',  // Ganti dari 'analisa'
+    name: { id: 'Prediksi', en: 'Predictions' },  // Ganti nama
+    icon: Target,  // Ganti icon dari BarChart3 ke Target (lebih cocok untuk prediksi)
+    description: { id: 'Prediksi skor dan analisa pertandingan', en: 'Match predictions and analysis' }
+  },
+];
 ```
 
-#### D. (Opsional) Buat Route Share yang Lebih Bersih
+#### 4. Database - Update Kategori
 
-Jika diinginkan URL share yang lebih bersih (tanpa ekspos Supabase URL), bisa tambahkan:
+Opsi A: Update nama kategori yang ada
+```sql
+UPDATE categories SET name = 'Prediksi', icon = '🎯' WHERE name = 'Analisa';
+```
 
-**File Baru:** `supabase/functions/share-news/index.ts`
+Opsi B: Tambah kategori baru "Prediksi" (jika ingin mempertahankan "Analisa")
+```sql
+INSERT INTO categories (name, icon, sort_order, is_active) 
+VALUES ('Prediksi', '🎯', 3, true);
+```
 
-Route: `/share/news/{slug}` 
+**Rekomendasi**: Opsi A (update) karena lebih clean dan tidak ada duplikasi.
 
-Ini akan menjadi alias untuk `og-metadata?slug={slug}` dengan URL yang lebih friendly.
+#### 5. Berita.tsx - Filter Logic untuk Prediksi
 
-Namun ini opsional karena URL saat ini sudah berfungsi dengan baik untuk social media crawlers.
+Tambah logic untuk menampilkan artikel dengan kategori "Prediksi" saat filter aktif:
 
-### File yang Akan Dimodifikasi/Dibuat
+```typescript
+// Di dalam komponen, tambahkan filtering berdasarkan kategori
+const getFilteredArticles = () => {
+  if (!allArticles) return [];
+  
+  switch (filter) {
+    case 'prediksi':
+      return allArticles.filter(a => a.category === 'Prediksi');
+    case 'trending':
+      // existing logic...
+    case 'daily':
+      // existing logic...
+    default:
+      return allArticles;
+  }
+};
+```
 
-| File | Aksi | Deskripsi |
-|------|------|-----------|
-| `supabase/functions/og-metadata/index.ts` | Modify | Tambah meta tags dan perbaiki format |
-| `src/pages/cms/CMSOGPreview.tsx` | Create | Halaman QA/validation untuk OG metadata |
-| `src/pages/cms/index.ts` | Modify | Export CMSOGPreview |
-| `src/App.tsx` | Modify | Tambah route /cms/og-preview |
-| `src/pages/cms/CMSLayout.tsx` | Modify | Tambah link ke OG Preview di sidebar |
-
-### Catatan Penting
-
-1. **Mengenai Domain `bolakami.work`**
-   - Jika domain custom sudah di-setup, site URL di edge function harus diupdate
-   - Saat ini menggunakan `bolakamibaru.lovable.app` (published URL)
-
-2. **Image Requirements**
-   - `featured_image` sudah tersimpan sebagai absolute URL di Supabase Storage
-   - Semua gambar public dan accessible tanpa auth
-   - Ukuran bervariasi, tapi OG tags akan tetap set 1200x630 (browser akan scale)
-
-3. **SSR Sudah Dihandle**
-   - Edge function `og-metadata` sudah menghasilkan static HTML dengan OG tags
-   - Social crawlers akan mendapat HTML lengkap, bukan JavaScript
-   - Browser redirect otomatis ke SPA via meta refresh
-
-### Hasil yang Diharapkan
+### Hasil Akhir
 
 Setelah implementasi:
-1. Semua artikel memiliki OG metadata yang benar untuk social sharing
-2. Admin CMS bisa preview dan test OG tags sebelum publish
-3. Link debugger tersedia untuk validasi di Facebook, LinkedIn, Twitter
-4. Share URL menghasilkan preview card yang proper di semua platform
+1. **Dropdown "BERITA"** akan menampilkan:
+   - Trending
+   - Update Harian
+   - **Prediksi** (bukan "Analisa Klub" lagi)
+   - Klasemen
 
-### Technical Details untuk Developer
+2. **Halaman /berita/prediksi** akan menampilkan:
+   - Artikel-artikel dengan kategori "Prediksi"
+   - Deskripsi: "Prediksi skor dan analisa pertandingan"
+   - Icon Target (🎯)
 
-**CMSOGPreview Component Structure:**
-```typescript
-// State
-const [slug, setSlug] = useState('');
-const [previewData, setPreviewData] = useState<OGPreviewData | null>(null);
-const [isLoading, setIsLoading] = useState(false);
+3. **CMS Article Editor** akan memiliki:
+   - Kategori "Prediksi" tersedia di dropdown
+   - Admin bisa membuat artikel prediksi dengan struktur seperti contoh bola.net
 
-// Fetch preview data
-const fetchPreview = async () => {
-  // Query article from database
-  const { data: article } = await supabase
-    .from('articles')
-    .select('*')
-    .eq('slug', slug)
-    .single();
-  
-  // Compute OG values
-  setPreviewData({
-    title: article.title_id,
-    description: article.excerpt_id || '',
-    image: article.featured_image,
-    url: `https://bolakamibaru.lovable.app/news/${article.slug}`,
-    publishedAt: article.published_at,
-  });
-};
+### Technical Notes
 
-// Debugger URLs
-const facebookDebuggerUrl = `https://developers.facebook.com/tools/debug/?q=${encodeURIComponent(shareUrl)}`;
-const linkedinInspectorUrl = `https://www.linkedin.com/post-inspector/inspect/${encodeURIComponent(shareUrl)}`;
-const twitterCardsUrl = `https://cards-dev.twitter.com/validator`;
-```
+- Icon yang cocok untuk "Prediksi": `Target` dari lucide-react (lebih representatif daripada `BarChart3`)
+- Route tetap menggunakan pola `/berita/{filter}` yang sudah ada
+- Tidak perlu buat halaman baru, cukup update filter dan kategori
+
