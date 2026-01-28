@@ -13,6 +13,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import NewsDetail from "./pages/NewsDetail";
 import NotFound from "./pages/NotFound";
 import Live from "./pages/Live";
+import ShareRedirect from "./pages/ShareRedirect";
 
 
 import Liga from "./pages/Liga";
@@ -50,6 +51,7 @@ const App = () => (
             
             <Route path="/auth" element={<Auth />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/share/:slug" element={<ShareRedirect />} />
             <Route path="/news/:slug" element={<NewsDetail />} />
             <Route path="/live" element={<Live />} />
             
