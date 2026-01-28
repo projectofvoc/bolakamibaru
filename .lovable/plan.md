@@ -1,135 +1,81 @@
 
-## Rencana: URL Share Profesional dengan Internal Redirect
+## Rencana: Fix OG Metadata untuk Social Share
 
-### Masalah Saat Ini
+### Analisis Masalah
 
-URL share saat ini menampilkan URL Supabase yang terlihat tidak profesional:
-```
-https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=...
-```
+Dari screenshot Telegram dan WhatsApp terlihat:
+- **URL sudah benar**: `bolakamibaru.lovable.app/share/...` 
+- **OG Preview salah**: Menampilkan metadata homepage bukan artikel
+
+Ini terjadi karena:
+1. Crawler Telegram/WhatsApp **tidak menjalankan JavaScript**
+2. Mereka membaca `index.html` yang berisi meta tags default homepage
+3. Komponen `ShareRedirect.tsx` yang mengupdate meta tags berjalan di client-side setelah halaman load - sudah terlambat untuk crawler
 
 ### Solusi
 
-Membuat route internal `/share/:slug` yang akan:
-1. Menampilkan halaman dengan OG meta tags yang benar
-2. Auto-redirect ke halaman artikel sebenarnya (`/news/:slug`)
-3. URL yang di-share menjadi lebih profesional: `bolakamibaru.lovable.app/share/artikel-slug`
+Modifikasi `ShareRedirect.tsx` untuk **langsung redirect ke Edge Function** yang sudah ada, sehingga:
 
-### File yang Akan Dimodifikasi/Dibuat
+1. User tetap melihat URL profesional di chat: `bolakamibaru.lovable.app/share/slug-artikel`
+2. Ketika diklik, browser langsung redirect ke Edge Function yang meng-generate HTML dengan OG tags yang benar
+3. Edge Function kemudian redirect lagi ke halaman artikel sebenarnya
+
+### Alur Kerja
+
+```text
+[User Share]
+     ↓
+bolakamibaru.lovable.app/share/slug-artikel  ← URL yang terlihat di chat
+     ↓
+[Redirect ke Edge Function]
+     ↓
+Edge Function → Generate HTML dengan OG Tags → Crawler baca OG Tags
+     ↓
+[Browser redirect ke artikel]
+     ↓
+bolakamibaru.lovable.app/news/slug-artikel  ← Halaman final
+```
+
+### File yang Dimodifikasi
 
 | File | Aksi | Deskripsi |
 |------|------|-----------|
-| `src/pages/ShareRedirect.tsx` | Create | Halaman yang fetch OG metadata dan redirect |
-| `src/App.tsx` | Modify | Tambah route `/share/:slug` |
-| `src/pages/NewsDetail.tsx` | Modify | Update shareUrl ke format baru |
+| `src/pages/ShareRedirect.tsx` | Modify | Ubah dari client-side meta injection ke redirect Edge Function |
 
-### Detail Implementasi
+### Perubahan Code
 
-#### A. Buat ShareRedirect.tsx
+**ShareRedirect.tsx** - Akan diubah menjadi sederhana:
+- Ambil slug dari URL
+- Langsung redirect ke Edge Function URL
+- Tidak perlu fetch data atau set meta tags
 
-Halaman ini akan:
-1. Fetch data artikel berdasarkan slug
-2. Set OG meta tags menggunakan `document.head` manipulation
-3. Langsung redirect ke `/news/:slug`
-
-Karena SPA, meta tags yang di-set secara client-side tidak akan terbaca oleh crawler. Namun, kita tetap perlu Edge Function untuk crawler.
-
-**Pendekatan Hybrid:**
-- URL share: `https://bolakamibaru.lovable.app/share/:slug`
-- ShareRedirect page akan check apakah request dari crawler atau browser
-- Browser: langsung redirect ke `/news/:slug`
-- Crawler: Edge function tetap diperlukan
-
-**Solusi Terbaik:**
-Menggunakan Edge Function yang sudah ada, tapi mengubah URL di frontend menjadi path yang lebih bersih dengan memanfaatkan custom domain dan reverse proxy.
-
-Karena keterbatasan SPA, solusi terbaik adalah:
-1. **Tetap gunakan Edge Function** untuk OG metadata (crawler butuh ini)
-2. **Buat halaman ShareRedirect** yang menampilkan loading singkat sebelum redirect
-3. **Update URL format** yang di-share menjadi domain sendiri
-
-#### Opsi Implementasi
-
-**Opsi 1: Internal Route + Edge Function (Direkomendasikan)**
-
-Buat route `/share/:slug` yang:
-- Fetch artikel dan update meta tags
-- Langsung redirect ke `/news/:slug` 
-- **Masalah**: Crawler tidak bisa baca meta tags dari SPA
-
-**Opsi 2: Simpan URL Cantik tapi Tetap Pakai Edge Function**
-
-Update Edge Function untuk menerima request dari domain utama via reverse proxy. Sayangnya Lovable tidak support reverse proxy.
-
-**Opsi 3: Fallback - Tampilkan URL Domain tapi Redirect ke Edge Function**
-
-Buat page `/share/:slug` yang hanya redirect ke Edge Function. URL terlihat lebih baik di chat tapi tetap redirect ke Supabase.
-
-### Implementasi yang Dipilih: Client-Side OG + Redirect
-
-Meskipun tidak sempurna untuk semua crawler, kita bisa:
-1. Buat halaman `/share/:slug` dengan proper meta tags
-2. Gunakan `react-helmet` atau manual meta injection
-3. WhatsApp dan beberapa crawler modern bisa membaca client-side rendered meta tags
-
-```tsx
-// src/pages/ShareRedirect.tsx
-const ShareRedirect: React.FC = () => {
-  const { slug } = useParams();
-  const navigate = useNavigate();
-  
-  // Fetch article data
-  const { data: article } = useQuery({...});
-  
-  // Set meta tags when article loads
-  useEffect(() => {
-    if (article) {
-      // Update OG meta tags
-      updateMetaTags(article);
-      // Redirect after small delay to let crawlers read meta
-      setTimeout(() => navigate(`/news/${slug}`), 100);
-    }
-  }, [article]);
-  
-  return <LoadingSpinner />;
-};
-```
-
-### Update NewsDetail.tsx
-
-```diff
-- const shareUrl = `https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=${article.slug}`;
-+ const shareUrl = `https://bolakamibaru.lovable.app/share/${article.slug}`;
-```
-
-### Update App.tsx
-
-```diff
-+ import ShareRedirect from "./pages/ShareRedirect";
-
-  <Routes>
-    ...
-+   <Route path="/share/:slug" element={<ShareRedirect />} />
-    <Route path="/news/:slug" element={<NewsDetail />} />
-    ...
-  </Routes>
+```typescript
+// Redirect langsung ke Edge Function untuk OG metadata
+const edgeFunctionUrl = `https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=${slug}`;
+window.location.replace(edgeFunctionUrl);
 ```
 
 ### Hasil Akhir
 
-**Sebelum:**
+**URL di Chat:**
 ```
-https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=prediksi-mu-vs-chelsea
+https://bolakamibaru.lovable.app/share/harga-tiket-piala-dunia-2026
 ```
+(Terlihat profesional, tidak ada URL Supabase yang terlihat)
 
-**Sesudah:**
-```
-https://bolakamibaru.lovable.app/share/prediksi-mu-vs-chelsea
-```
+**Saat Diklik:**
+1. Browser redirect ke Edge Function
+2. Edge Function generate OG HTML dengan judul/gambar artikel yang benar
+3. Crawler baca OG tags
+4. Browser redirect ke halaman artikel
 
-### Catatan Penting
+**OG Preview di Telegram/WhatsApp:**
+- Judul: Judul artikel yang benar
+- Gambar: Featured image artikel
+- Deskripsi: Excerpt artikel
 
-- Beberapa crawler (Facebook, Twitter) mungkin tidak membaca meta tags dari SPA karena tidak menjalankan JavaScript
-- WhatsApp biasanya bisa membaca meta tags dengan delay kecil
-- Untuk crawler yang butuh server-rendered HTML, Edge Function tetap diperlukan
-- Jika OG preview tidak muncul di Facebook/Twitter, kita bisa fallback ke Edge Function dengan URL yang lebih bersih menggunakan custom subdomain di masa depan
+### Catatan Teknis
+
+- Edge Function sudah ada dan berfungsi dengan baik (`supabase/functions/og-metadata/index.ts`)
+- Redirect ke Edge Function menggunakan `window.location.replace()` agar tidak menambah history entry
+- Untuk optimasi kecepatan, redirect dilakukan seketika tanpa menunggu data apapun
