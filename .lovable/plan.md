@@ -1,254 +1,135 @@
 
+## Rencana: URL Share Profesional dengan Internal Redirect
 
-## Rencana: Template Khusus Artikel Prediksi di CMS
+### Masalah Saat Ini
 
-### Tujuan
+URL share saat ini menampilkan URL Supabase yang terlihat tidak profesional:
+```
+https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=...
+```
 
-Menambahkan fitur template konten untuk artikel Prediksi yang memudahkan penulis membuat artikel dengan struktur standar seperti di bola.net, meliputi:
-- Head to Head
-- Prediksi Lineup (Starting XI)
-- 5 Laga Terakhir
-- Prediksi Skor
+### Solusi
 
-### Struktur Referensi (bola.net)
-
-Berdasarkan analisis artikel prediksi bola.net:
-1. **Intro**: Konteks pertandingan (pekan ke-?, liga, venue, kick-off)
-2. **Prediksi Starting XI**: Formasi dan lineup kedua tim
-3. **Head to Head**: Statistik pertemuan + 5 laga terakhir masing-masing
-4. **Prediksi Skor**: Analisis dan prediksi skor akhir
-5. **Jadwal Live Streaming**: Info jadwal pertandingan
-
-### Solusi yang Diusulkan
-
-Menambahkan fitur "Insert Template" di CMSArticleEditor yang akan:
-1. Mendeteksi kategori "Prediksi" dan menampilkan tombol khusus
-2. Mengisi Rich Text Editor dengan template HTML terstruktur
-3. Placeholder yang mudah diisi oleh penulis
+Membuat route internal `/share/:slug` yang akan:
+1. Menampilkan halaman dengan OG meta tags yang benar
+2. Auto-redirect ke halaman artikel sebenarnya (`/news/:slug`)
+3. URL yang di-share menjadi lebih profesional: `bolakamibaru.lovable.app/share/artikel-slug`
 
 ### File yang Akan Dimodifikasi/Dibuat
 
 | File | Aksi | Deskripsi |
 |------|------|-----------|
-| `src/pages/cms/CMSArticleEditor.tsx` | Modify | Tambah tombol "Insert Template Prediksi" dan dialog input tim |
-| `src/lib/predictionTemplate.ts` | Create | Helper function untuk generate template HTML |
+| `src/pages/ShareRedirect.tsx` | Create | Halaman yang fetch OG metadata dan redirect |
+| `src/App.tsx` | Modify | Tambah route `/share/:slug` |
+| `src/pages/NewsDetail.tsx` | Modify | Update shareUrl ke format baru |
 
 ### Detail Implementasi
 
-#### A. Buat Helper Template (`src/lib/predictionTemplate.ts`)
+#### A. Buat ShareRedirect.tsx
 
-```typescript
-interface PredictionTemplateData {
-  homeTeam: string;
-  awayTeam: string;
-  competition: string;
-  matchday: string;
-  venue: string;
-  kickoffDate: string;
-  kickoffTime: string;
-}
+Halaman ini akan:
+1. Fetch data artikel berdasarkan slug
+2. Set OG meta tags menggunakan `document.head` manipulation
+3. Langsung redirect ke `/news/:slug`
 
-export const generatePredictionTemplate = (data: PredictionTemplateData): string => {
-  return `
-<p><strong>Bolakami</strong> - <strong>${data.homeTeam}</strong> akan menjamu <strong>${data.awayTeam}</strong> 
-pada ${data.matchday} <strong>${data.competition}</strong>. Pertandingan ini akan berlangsung di ${data.venue}, 
-${data.kickoffDate}, pukul ${data.kickoffTime} WIB.</p>
+Karena SPA, meta tags yang di-set secara client-side tidak akan terbaca oleh crawler. Namun, kita tetap perlu Edge Function untuk crawler.
 
-<p>[Tulis konteks pertandingan: tekanan pada kedua tim, performa terakhir, momentum, dll.]</p>
+**Pendekatan Hybrid:**
+- URL share: `https://bolakamibaru.lovable.app/share/:slug`
+- ShareRedirect page akan check apakah request dari crawler atau browser
+- Browser: langsung redirect ke `/news/:slug`
+- Crawler: Edge function tetap diperlukan
 
-<h2>🎽 Prediksi Starting XI ${data.homeTeam} vs ${data.awayTeam}</h2>
+**Solusi Terbaik:**
+Menggunakan Edge Function yang sudah ada, tapi mengubah URL di frontend menjadi path yang lebih bersih dengan memanfaatkan custom domain dan reverse proxy.
 
-<p>[Tulis analisis kondisi pemain, cedera, dan ketersediaan squad kedua tim]</p>
+Karena keterbatasan SPA, solusi terbaik adalah:
+1. **Tetap gunakan Edge Function** untuk OG metadata (crawler butuh ini)
+2. **Buat halaman ShareRedirect** yang menampilkan loading singkat sebelum redirect
+3. **Update URL format** yang di-share menjadi domain sendiri
 
-<p><strong>${data.homeTeam} (Formasi):</strong><br/>
-[Kiper]; [Bek 1], [Bek 2], [Bek 3]; [Gelandang 1], [Gelandang 2]; [Winger 1], [Gelandang Serang], [Winger 2]; [Striker]</p>
+#### Opsi Implementasi
 
-<p><strong>Pelatih:</strong> [Nama Pelatih]</p>
+**Opsi 1: Internal Route + Edge Function (Direkomendasikan)**
 
-<p><strong>${data.awayTeam} (Formasi):</strong><br/>
-[Kiper]; [Bek 1], [Bek 2], [Bek 3]; [Gelandang 1], [Gelandang 2]; [Winger 1], [Gelandang Serang], [Winger 2]; [Striker]</p>
+Buat route `/share/:slug` yang:
+- Fetch artikel dan update meta tags
+- Langsung redirect ke `/news/:slug` 
+- **Masalah**: Crawler tidak bisa baca meta tags dari SPA
 
-<p><strong>Pelatih:</strong> [Nama Pelatih]</p>
+**Opsi 2: Simpan URL Cantik tapi Tetap Pakai Edge Function**
 
-<h2>📊 Head to Head ${data.homeTeam} vs ${data.awayTeam}</h2>
+Update Edge Function untuk menerima request dari domain utama via reverse proxy. Sayangnya Lovable tidak support reverse proxy.
 
-<p><strong>Catatan pertemuan di ${data.competition}:</strong></p>
-<ul>
-<li>${data.homeTeam} menang: [X]</li>
-<li>Seri: [X]</li>
-<li>${data.awayTeam} menang: [X]</li>
-</ul>
+**Opsi 3: Fallback - Tampilkan URL Domain tapi Redirect ke Edge Function**
 
-<p><strong>5 pertemuan terakhir:</strong></p>
-<ul>
-<li>[DD/MM/YY] [Tim A] [Skor] [Tim B]</li>
-<li>[DD/MM/YY] [Tim A] [Skor] [Tim B]</li>
-<li>[DD/MM/YY] [Tim A] [Skor] [Tim B]</li>
-<li>[DD/MM/YY] [Tim A] [Skor] [Tim B]</li>
-<li>[DD/MM/YY] [Tim A] [Skor] [Tim B]</li>
-</ul>
+Buat page `/share/:slug` yang hanya redirect ke Edge Function. URL terlihat lebih baik di chat tapi tetap redirect ke Supabase.
 
-<h2>📈 5 Laga Terakhir</h2>
+### Implementasi yang Dipilih: Client-Side OG + Redirect
 
-<p><strong>5 laga terakhir ${data.homeTeam}:</strong></p>
-<ul>
-<li>[DD/MM/YY] [Tim A] [Skor] [Tim B]</li>
-<li>[DD/MM/YY] [Tim A] [Skor] [Tim B]</li>
-<li>[DD/MM/YY] [Tim A] [Skor] [Tim B]</li>
-<li>[DD/MM/YY] [Tim A] [Skor] [Tim B]</li>
-<li>[DD/MM/YY] [Tim A] [Skor] [Tim B]</li>
-</ul>
+Meskipun tidak sempurna untuk semua crawler, kita bisa:
+1. Buat halaman `/share/:slug` dengan proper meta tags
+2. Gunakan `react-helmet` atau manual meta injection
+3. WhatsApp dan beberapa crawler modern bisa membaca client-side rendered meta tags
 
-<p><strong>5 laga terakhir ${data.awayTeam}:</strong></p>
-<ul>
-<li>[DD/MM/YY] [Tim A] [Skor] [Tim B]</li>
-<li>[DD/MM/YY] [Tim A] [Skor] [Tim B]</li>
-<li>[DD/MM/YY] [Tim A] [Skor] [Tim B]</li>
-<li>[DD/MM/YY] [Tim A] [Skor] [Tim B]</li>
-<li>[DD/MM/YY] [Tim A] [Skor] [Tim B]</li>
-</ul>
-
-<h2>🎯 Prediksi Skor ${data.homeTeam} vs ${data.awayTeam}</h2>
-
-<p>[Tulis analisis mendalam: kekuatan dan kelemahan kedua tim, faktor kunci, prediksi jalannya pertandingan]</p>
-
-<p><strong>Prediksi skor akhir: ${data.homeTeam} [X] - [X] ${data.awayTeam}</strong></p>
-
-<h2>📺 Jadwal Live Streaming</h2>
-<ul>
-<li><strong>Kompetisi:</strong> ${data.competition}</li>
-<li><strong>Pertandingan:</strong> ${data.homeTeam} vs ${data.awayTeam}</li>
-<li><strong>Tempat:</strong> ${data.venue}</li>
-<li><strong>Hari, tanggal:</strong> ${data.kickoffDate}</li>
-<li><strong>Jam kick-off:</strong> ${data.kickoffTime} WIB</li>
-<li><strong>Live streaming:</strong> [Platform]</li>
-</ul>
-`;
-};
-```
-
-#### B. Update CMSArticleEditor.tsx
-
-Perubahan yang akan dilakukan:
-
-1. **Tambah State Baru:**
-```typescript
-const [showPredictionTemplate, setShowPredictionTemplate] = useState(false);
-const [predictionData, setPredictionData] = useState({
-  homeTeam: '',
-  awayTeam: '',
-  competition: '',
-  matchday: '',
-  venue: '',
-  kickoffDate: '',
-  kickoffTime: '',
-});
-```
-
-2. **Tambah Tombol "Use Template" di Card Konten:**
-Akan muncul ketika kategori adalah "Prediksi"
 ```tsx
-{form.category === 'Prediksi' && (
-  <Button 
-    type="button"
-    variant="outline"
-    onClick={() => setShowPredictionTemplate(true)}
-    className="gap-2"
-  >
-    <Target className="w-4 h-4" />
-    Gunakan Template Prediksi
-  </Button>
-)}
-```
-
-3. **Tambah Dialog Input Data Pertandingan:**
-Modal dengan form untuk mengisi:
-- Tim Tuan Rumah
-- Tim Tamu
-- Kompetisi/Liga
-- Pekan ke-
-- Venue/Stadion
-- Tanggal Pertandingan
-- Waktu Kick-off
-
-4. **Handler untuk Insert Template:**
-```typescript
-const handleInsertPredictionTemplate = () => {
-  const templateContent = generatePredictionTemplate(predictionData);
-  setForm(prev => ({ ...prev, content_id: templateContent }));
+// src/pages/ShareRedirect.tsx
+const ShareRedirect: React.FC = () => {
+  const { slug } = useParams();
+  const navigate = useNavigate();
   
-  // Auto-generate title
-  const autoTitle = `Prediksi ${predictionData.homeTeam} vs ${predictionData.awayTeam} ${predictionData.kickoffDate}`;
-  setForm(prev => ({ ...prev, title_id: autoTitle }));
+  // Fetch article data
+  const { data: article } = useQuery({...});
   
-  setShowPredictionTemplate(false);
-  toast({ title: 'Template berhasil diterapkan!' });
+  // Set meta tags when article loads
+  useEffect(() => {
+    if (article) {
+      // Update OG meta tags
+      updateMetaTags(article);
+      // Redirect after small delay to let crawlers read meta
+      setTimeout(() => navigate(`/news/${slug}`), 100);
+    }
+  }, [article]);
+  
+  return <LoadingSpinner />;
 };
 ```
 
-### UI Flow
+### Update NewsDetail.tsx
 
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│  CMSArticleEditor                                               │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  Kategori: [Prediksi ▼]                                         │
-│                                                                  │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │ 🇮🇩 Konten Artikel                                       │    │
-│  │                                                          │    │
-│  │ Judul *: [________________________________]              │    │
-│  │                                                          │    │
-│  │ Ringkasan: [______________________________]              │    │
-│  │                                                          │    │
-│  │ ┌──────────────────────────────────────────────────┐    │    │
-│  │ │ [🎯 Gunakan Template Prediksi]                   │    │    │
-│  │ └──────────────────────────────────────────────────┘    │    │
-│  │                                                          │    │
-│  │ Konten *:                                                │    │
-│  │ ┌──────────────────────────────────────────────────┐    │    │
-│  │ │ [Rich Text Editor]                               │    │    │
-│  │ │ ...template akan di-insert di sini...            │    │    │
-│  │ └──────────────────────────────────────────────────┘    │    │
-│  └─────────────────────────────────────────────────────────┘    │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│  Dialog: Input Data Pertandingan                                │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  Tim Tuan Rumah *: [Manchester United        ]                  │
-│  Tim Tamu *:       [Chelsea                   ]                  │
-│  Kompetisi *:      [Premier League            ]                  │
-│  Pekan ke-:        [Pekan ke-5               ]                  │
-│  Stadion/Venue *:  [Old Trafford             ]                  │
-│  Tanggal:          [Sabtu, 20 September 2025 ]                  │
-│  Waktu Kick-off:   [23:30                    ]                  │
-│                                                                  │
-│                           [Batal]  [Terapkan Template]          │
-└─────────────────────────────────────────────────────────────────┘
+```diff
+- const shareUrl = `https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=${article.slug}`;
++ const shareUrl = `https://bolakamibaru.lovable.app/share/${article.slug}`;
 ```
 
-### Hasil Template yang Dihasilkan
+### Update App.tsx
 
-Setelah penulis mengisi data pertandingan, konten editor akan terisi dengan:
+```diff
++ import ShareRedirect from "./pages/ShareRedirect";
 
-1. **Intro paragraph** dengan placeholder untuk konteks
-2. **Heading "Prediksi Starting XI"** dengan placeholder lineup
-3. **Heading "Head to Head"** dengan struktur statistik
-4. **Heading "5 Laga Terakhir"** dengan bullet points
-5. **Heading "Prediksi Skor"** dengan placeholder analisis
-6. **Heading "Jadwal Live Streaming"** dengan info pertandingan
+  <Routes>
+    ...
++   <Route path="/share/:slug" element={<ShareRedirect />} />
+    <Route path="/news/:slug" element={<NewsDetail />} />
+    ...
+  </Routes>
+```
 
-Penulis tinggal mengedit placeholder `[...]` dengan data aktual.
+### Hasil Akhir
 
-### Keuntungan Pendekatan Ini
+**Sebelum:**
+```
+https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=prediksi-mu-vs-chelsea
+```
 
-1. **Konsistensi**: Semua artikel prediksi mengikuti struktur yang sama
-2. **Efisiensi**: Penulis tidak perlu membuat struktur dari awal
-3. **Profesional**: Struktur mengikuti standar media bola profesional (bola.net)
-4. **Fleksibel**: Penulis tetap bisa mengedit/menambah konten sesuai kebutuhan
-5. **SEO-friendly**: Heading terstruktur dengan baik untuk SEO
+**Sesudah:**
+```
+https://bolakamibaru.lovable.app/share/prediksi-mu-vs-chelsea
+```
 
+### Catatan Penting
+
+- Beberapa crawler (Facebook, Twitter) mungkin tidak membaca meta tags dari SPA karena tidak menjalankan JavaScript
+- WhatsApp biasanya bisa membaca meta tags dengan delay kecil
+- Untuk crawler yang butuh server-rendered HTML, Edge Function tetap diperlukan
+- Jika OG preview tidak muncul di Facebook/Twitter, kita bisa fallback ke Edge Function dengan URL yang lebih bersih menggunakan custom subdomain di masa depan
