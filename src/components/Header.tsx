@@ -185,7 +185,7 @@ const Header: React.FC = () => {
   const beritaSubmenu = [
     { key: 'berita.trending', path: '/berita/trending' },
     { key: 'berita.daily', path: '/berita/daily' },
-    { key: 'berita.analisa', path: '/berita/analisa' },
+    { key: 'berita.prediksi', path: '/berita/prediksi' },
     { key: 'berita.klasemen', path: '/klasemen' },
   ];
 
