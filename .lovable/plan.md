@@ -1,71 +1,110 @@
 
-# Perbaikan Copywriting AI Companion - Kebijakan Non-Judi
+
+# Perbaikan Line Height & Spacing Artikel - Audit CMS
 
 ## Masalah yang Ditemukan
-Di file `src/contexts/LanguageContext.tsx`, terdapat **7 instance** kata-kata yang berpotensi terkena filter Nawala dan melanggar kebijakan Google Ads:
 
-| Baris | Key | Kata Bermasalah |
-|-------|-----|-----------------|
-| 79 | `ai.headline1` | "parlay" |
-| 81 | `ai.subtitle` | "odds drop", "cuan" |
-| 82 | `ai.placeholder` | "BTTS", "odds" |
-| 87 | `ai.chatSubtitle` | "parlay" |
-| 107 | `footer.aboutText` | "parlay" |
+Dari screenshot dan analisis kode di `src/index.css`, ditemukan **3 masalah utama** pada styling `.article-content`:
 
-## Solusi Copywriting
+| Lokasi | Property | Nilai Saat Ini | Masalah |
+|--------|----------|----------------|---------|
+| Baris 177 | `ul space-y` | `space-y-2` (8px) | Terlalu besar untuk list pendek |
+| Baris 185 | `li leading` | `leading-relaxed` (1.625) | Line-height terlalu tinggi |
+| Baris 173 | `p leading` | `leading-relaxed` (1.625) | Paragraf terlihat renggang |
 
-### Perubahan di `src/contexts/LanguageContext.tsx`
+### Dampak Visual
 
-#### 1. AI Headline 1 (baris 79)
-| Sebelum | Sesudah |
-|---------|---------|
-| "Mau menang parlay?" | "Mau tahu siapa yang menang?" |
-| "Want to win parlay?" | "Want to know who wins?" |
-
-#### 2. AI Headline 2 (baris 80)
-| Sebelum | Sesudah |
-|---------|---------|
-| "Gue bantu lu analisa!" | "Gue bantu lu analisa!" |
-| (tidak berubah) | (tidak berubah) |
-
-#### 3. AI Subtitle (baris 81)
-| Sebelum | Sesudah |
-|---------|---------|
-| "Live score + alert odds drop! Waktunya cuan!" | "Live score + statistik lengkap! Waktunya update!" |
-| "Live score + odds drop alerts! Time to win!" | "Live score + complete stats! Time to stay updated!" |
-
-#### 4. AI Placeholder (baris 82)
-| Sebelum | Sesudah |
-|---------|---------|
-| "Contoh: Analisa MU vs Arsenal, fokus BTTS + odds..." | "Contoh: Analisa MU vs Arsenal, fokus head-to-head..." |
-| "Example: Analyze MU vs Arsenal, focus on BTTS + odds..." | "Example: Analyze MU vs Arsenal, focus on head-to-head..." |
-
-#### 5. AI Chat Subtitle (baris 87)
-| Sebelum | Sesudah |
-|---------|---------|
-| "Siap bantu analisa parlay kamu" | "Siap bantu analisa pertandingan kamu" |
-| "Ready to help analyze your parlay" | "Ready to help analyze your matches" |
-
-#### 6. Footer About Text (baris 107)
-| Sebelum | Sesudah |
-|---------|---------|
-| "...plus prediksi parlay berbasis AI yang cerdas..." | "...plus analisa pertandingan berbasis AI yang cerdas..." |
-| "...plus smart AI-powered parlay predictions..." | "...plus smart AI-powered match analysis..." |
+- List "Jadwal Live Streaming" memiliki gap **~50px** antar item
+- Paragraf artikel terlihat terlalu "sparse" dan tidak compact
+- Reading experience kurang optimal terutama untuk informasi ringkas
 
 ---
 
-## Ringkasan Perubahan
+## Solusi yang Direkomendasikan
 
-| Key | Kata Dihapus | Pengganti |
-|-----|--------------|-----------|
-| `ai.headline1` | parlay | "siapa yang menang" |
-| `ai.subtitle` | odds drop, cuan | "statistik lengkap", "update" |
-| `ai.placeholder` | BTTS, odds | "head-to-head" |
-| `ai.chatSubtitle` | parlay | "pertandingan" |
-| `footer.aboutText` | parlay | "pertandingan" |
+### Perubahan di `src/index.css`
+
+#### 1. Ubah spacing list (`ul`)
+**Baris 176-178**
+
+| Sebelum | Sesudah |
+|---------|---------|
+| `@apply list-disc pl-6 mb-5 space-y-2;` | `@apply list-disc pl-6 mb-5 space-y-1;` |
+
+**Alasan**: `space-y-1` (4px) lebih proporsional untuk list item yang pendek seperti jadwal
+
+#### 2. Ubah line-height list item (`li`)
+**Baris 184-186**
+
+| Sebelum | Sesudah |
+|---------|---------|
+| `@apply text-lg leading-relaxed text-foreground/90;` | `@apply text-lg leading-normal text-foreground/90;` |
+
+**Alasan**: `leading-normal` (1.5) lebih compact namun tetap readable
+
+#### 3. Ubah line-height paragraf (`p`)
+**Baris 172-174**
+
+| Sebelum | Sesudah |
+|---------|---------|
+| `@apply text-lg leading-relaxed mb-5 text-foreground/90;` | `@apply text-lg leading-[1.75] mb-5 text-foreground/90;` |
+
+**Alasan**: `leading-[1.75]` memberikan keseimbangan antara readability dan density untuk teks panjang
+
+#### 4. Ubah margin bottom heading (`h2`)
+**Baris 164-166**
+
+| Sebelum | Sesudah |
+|---------|---------|
+| `@apply text-2xl md:text-3xl font-bold mb-4 mt-8 text-foreground leading-tight;` | `@apply text-2xl md:text-3xl font-bold mb-3 mt-8 text-foreground leading-tight;` |
+
+**Alasan**: Mengurangi jarak antara heading dan konten di bawahnya
+
+---
+
+## Perbandingan Visual (Estimasi)
+
+### Sebelum
+```
+📺 Jadwal Live Streaming
+                                    ← 50px gap
+• Kompetisi: UEFA Europa League
+                                    ← 50px gap
+• Pertandingan: Panathinaikos vs Roma
+                                    ← 50px gap
+• Tempat: Olympiako Stadio...
+```
+
+### Sesudah
+```
+📺 Jadwal Live Streaming
+                              ← 20px gap
+• Kompetisi: UEFA Europa League
+                              ← 20px gap
+• Pertandingan: Panathinaikos vs Roma
+                              ← 20px gap
+• Tempat: Olympiako Stadio...
+```
+
+---
+
+## Ringkasan Perubahan File
+
+**File:** `src/index.css`
+
+| Baris | Class | Perubahan |
+|-------|-------|-----------|
+| 173 | `.article-content p` | `leading-relaxed` → `leading-[1.75]` |
+| 165 | `.article-content h2` | `mb-4` → `mb-3` |
+| 177 | `.article-content ul` | `space-y-2` → `space-y-1` |
+| 185 | `.article-content li` | `leading-relaxed` → `leading-normal` |
+
+---
 
 ## Dampak
-- Copywriting menjadi fokus pada **analisa pertandingan dan statistik** (bukan judi/taruhan)
-- Aman dari filter Nawala Indonesia
-- Comply dengan kebijakan Google Ads dan App Store
-- Messaging tetap menarik dan relevan untuk pengguna sepak bola
+
+- Spacing antar bullet point berkurang ~50% (dari ~50px ke ~25px)
+- Section "Jadwal Live Streaming" tampil lebih compact dan profesional
+- Paragraf artikel tetap readable namun lebih dense
+- Konsisten dengan standar editorial modern (National Geographic, The Athletic, dll)
+
