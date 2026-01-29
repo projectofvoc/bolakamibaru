@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import { ChevronRight, Facebook, Twitter, Clock, Loader2, Copy, Check, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { LazyImage } from '@/components/ui/LazyImage';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -360,10 +361,11 @@ const NewsDetail: React.FC = () => {
             {article.featured_image && (
               <>
                 <div className="relative w-full aspect-[16/9] overflow-hidden mb-2">
-                  <img
+                  <LazyImage
                     src={article.featured_image}
                     alt={title}
                     className="w-full h-full object-cover"
+                    fallback="/placeholder.svg"
                   />
                 </div>
                 

@@ -10,6 +10,7 @@ import heroImage from '@/assets/hero-stadium.jpg';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { LazyImage } from '@/components/ui/LazyImage';
 import { useLiveScores } from '@/hooks/useLiveScores';
 
 interface FilterInfo {
@@ -424,10 +425,11 @@ const Berita: React.FC = () => {
                     className="group cursor-pointer"
                   >
                     <div className="relative rounded-lg overflow-hidden bg-card aspect-[4/3]">
-                      <img
+                      <LazyImage
                         src={article.featured_image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=250&fit=crop'}
                         alt={language === 'id' ? article.title_id : article.title_en}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        fallback="/placeholder.svg"
                       />
                       {/* Category Badge */}
                       <div className="absolute top-3 left-3">

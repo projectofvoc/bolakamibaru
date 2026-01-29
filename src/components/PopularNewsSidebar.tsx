@@ -5,6 +5,7 @@ import { CheckCircle, Bookmark } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { LazyImage } from '@/components/ui/LazyImage';
 
 const PopularNewsSidebar: React.FC = () => {
   const { language, t } = useLanguage();
@@ -71,10 +72,11 @@ const PopularNewsSidebar: React.FC = () => {
           >
             {/* Thumbnail with badges - 16:9 aspect ratio */}
             <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden mb-3">
-              <img
+              <LazyImage
                 src={article.featured_image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=225&fit=crop'}
                 alt={language === 'id' ? article.title_id : article.title_en}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                fallback="/placeholder.svg"
               />
               
               {/* Category Badge - Top Left */}

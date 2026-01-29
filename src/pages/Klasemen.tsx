@@ -19,6 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { LazyImage } from '@/components/ui/LazyImage';
 import { Trophy, ChevronDown, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -196,13 +197,11 @@ const Klasemen: React.FC = () => {
                           <TableCell>
                             <div className="flex items-center gap-3">
                               {team.teamLogo ? (
-                                <img 
+                                <LazyImage 
                                   src={team.teamLogo} 
                                   alt={team.teamName}
                                   className="w-7 h-7 object-contain"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src = '/placeholder.svg';
-                                  }}
+                                  fallback="/placeholder.svg"
                                 />
                               ) : (
                                 <div className="w-7 h-7 bg-muted rounded-full flex items-center justify-center">

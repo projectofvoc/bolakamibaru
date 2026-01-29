@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { LazyImage } from '@/components/ui/LazyImage';
 
 const LatestUpdates: React.FC = () => {
   const { language, t } = useLanguage();
@@ -64,10 +65,11 @@ const LatestUpdates: React.FC = () => {
               >
                 {/* Thumbnail */}
                 <div className="flex-shrink-0 w-24 h-16 rounded overflow-hidden">
-                  <img
+                  <LazyImage
                     src={article.featured_image || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=200&h=120&fit=crop'}
                     alt={language === 'id' ? article.title_id : article.title_en}
                     className="w-full h-full object-cover"
+                    fallback="/placeholder.svg"
                   />
                 </div>
                 
