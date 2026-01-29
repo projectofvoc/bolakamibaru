@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { lovable } from '@/integrations/lovable';
 import logoBolakami from '@/assets/logo-bolakami.png';
 
 const Auth = () => {
@@ -299,11 +300,8 @@ const Auth = () => {
                   variant="outline"
                   className="w-full h-12 rounded-full border-border bg-muted hover:bg-muted/80 text-foreground hover:text-foreground"
                   onClick={async () => {
-                    const { error } = await supabase.auth.signInWithOAuth({
-                      provider: 'google',
-                      options: {
-                        redirectTo: window.location.origin,
-                      },
+                    const { error } = await lovable.auth.signInWithOAuth('google', {
+                      redirect_uri: window.location.origin,
                     });
                     if (error) {
                       toast({ title: 'Error', description: error.message, variant: 'destructive' });
