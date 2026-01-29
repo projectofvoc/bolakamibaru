@@ -86,6 +86,7 @@ const NewsDetail: React.FC = () => {
       return data;
     },
     enabled: !!slug,
+    staleTime: 1000 * 60 * 5, // 5 minutes cache
   });
 
   // Track if we've already attempted to count this view

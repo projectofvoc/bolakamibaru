@@ -23,6 +23,19 @@ interface StandingTeam {
   form?: string;
 }
 
+interface CachedStandingsData {
+  standings: StandingTeam[];
+  league: string;
+  leagueName: { id: string; en: string };
+  seasonLabel: string;
+  seasonId: number | null;
+  totalTeams: number;
+  source: string;
+}
+
+// Cache TTL: 30 minutes for standings (klasemen jarang berubah)
+const CACHE_TTL_SECONDS = 30 * 60;
+
 // Static League ID mapping for Sportmonks (international leagues)
 const sportmonksLeagueIdMapping: Record<string, number> = {
   'premier-league': 8,      // Premier League (England)
@@ -48,6 +61,49 @@ const leagueNames: Record<string, { id: string; en: string }> = {
   'bundesliga': { id: 'Bundesliga', en: 'Bundesliga' },
   'champions-league': { id: 'Liga Champions', en: 'Champions League' },
 };
+
+// Cache helper function
+async function getCachedOrFetch<T>(
+  supabase: any,
+  cacheKey: string,
+  ttlSeconds: number,
+  fetchFn: () => Promise<T>
+): Promise<{ data: T; fromCache: boolean }> {
+  try {
+    // 1. Check cache
+    const { data: cached, error: cacheError } = await supabase
+      .from('api_cache')
+      .select('cache_value')
+      .eq('cache_key', cacheKey)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+    
+    if (!cacheError && cached) {
+      console.log(`[Cache HIT] ${cacheKey}`);
+      return { data: cached.cache_value as T, fromCache: true };
+    }
+  } catch (e) {
+    console.log(`[Cache] Error checking cache: ${e}`);
+  }
+  
+  // 2. Fetch fresh data
+  console.log(`[Cache MISS] ${cacheKey}`);
+  const freshData = await fetchFn();
+  
+  // 3. Store in cache (upsert)
+  try {
+    await supabase.from('api_cache').upsert({
+      cache_key: cacheKey,
+      cache_value: freshData,
+      expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
+    }, { onConflict: 'cache_key' });
+    console.log(`[Cache] Stored: ${cacheKey}, TTL: ${ttlSeconds}s`);
+  } catch (e) {
+    console.log(`[Cache] Error storing cache: ${e}`);
+  }
+  
+  return { data: freshData, fromCache: false };
+}
 
 // Function to get Sportmonks API key
 async function getSportmonksApiKey(supabase: any): Promise<string | null> {
@@ -330,6 +386,7 @@ serve(async (req) => {
 
     const leagueName = leagueNames[leagueSlug] || { id: leagueSlug, en: leagueSlug };
     const seasonLabel = `${seasonStartYear}/${(seasonStartYear + 1).toString().slice(-2)}`;
+    const cacheKey = `standings:${leagueSlug}:${seasonStartYear}`;
 
     console.log(`Processing standings request: league=${leagueSlug}, seasonStartYear=${seasonStartYear}`);
 
@@ -343,32 +400,39 @@ serve(async (req) => {
         throw new Error('API_FOOTBALL_KEY not configured');
       }
 
-      const result = await fetchApiFootballStandings(apiFootballId, seasonStartYear, apiKey);
+      // Use cache helper
+      const { data: cachedData, fromCache } = await getCachedOrFetch<CachedStandingsData>(
+        supabase,
+        cacheKey,
+        CACHE_TTL_SECONDS,
+        async () => {
+          const result = await fetchApiFootballStandings(apiFootballId, seasonStartYear, apiKey);
 
-      if (!result || result.standings.length === 0) {
-        return new Response(JSON.stringify({
-          standings: [],
-          league: leagueSlug,
-          leagueName,
-          seasonLabel,
-          seasonId: null,
-          totalTeams: 0,
-          source: 'api_football',
-          error: `No standings data available for ${leagueName.en} season ${seasonLabel}`,
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
+          if (!result || result.standings.length === 0) {
+            return {
+              standings: [],
+              league: leagueSlug,
+              leagueName,
+              seasonLabel,
+              seasonId: null,
+              totalTeams: 0,
+              source: 'api_football',
+            };
+          }
 
-      return new Response(JSON.stringify({
-        standings: result.standings,
-        league: leagueSlug,
-        leagueName,
-        seasonLabel: result.seasonLabel,
-        seasonId: null,
-        totalTeams: result.standings.length,
-        source: 'api_football',
-      }), {
+          return {
+            standings: result.standings,
+            league: leagueSlug,
+            leagueName,
+            seasonLabel: result.seasonLabel,
+            seasonId: null,
+            totalTeams: result.standings.length,
+            source: 'api_football',
+          };
+        }
+      );
+
+      return new Response(JSON.stringify({ ...cachedData, fromCache }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -394,36 +458,45 @@ serve(async (req) => {
       throw new Error('SPORTMONKS_API_KEY not configured');
     }
 
-    // Find the correct season ID for the target year
-    const seasonId = await findSeasonIdForYear(sportmonksLeagueId, seasonStartYear, apiKey);
+    // Use cache helper
+    const { data: cachedData, fromCache } = await getCachedOrFetch<CachedStandingsData>(
+      supabase,
+      cacheKey,
+      CACHE_TTL_SECONDS,
+      async () => {
+        // Find the correct season ID for the target year
+        const seasonId = await findSeasonIdForYear(sportmonksLeagueId, seasonStartYear, apiKey);
 
-    if (!seasonId) {
-      return new Response(JSON.stringify({ 
-        error: `No season found for ${leagueSlug} ${seasonLabel}. The season may not have started yet.`,
-        leagueId: sportmonksLeagueId,
-        standings: [],
-        seasonLabel,
-        source: 'sportmonks',
-      }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+        if (!seasonId) {
+          return { 
+            standings: [],
+            league: leagueSlug,
+            leagueName,
+            seasonLabel,
+            seasonId: null,
+            totalTeams: 0,
+            source: 'sportmonks',
+          };
+        }
 
-    console.log(`Found season ID: ${seasonId} for ${leagueSlug} ${seasonLabel}`);
+        console.log(`Found season ID: ${seasonId} for ${leagueSlug} ${seasonLabel}`);
 
-    // Fetch standings
-    const standings = await fetchSportmonksStandings(seasonId, apiKey);
+        // Fetch standings
+        const standings = await fetchSportmonksStandings(seasonId, apiKey);
 
-    return new Response(JSON.stringify({ 
-      standings,
-      league: leagueSlug,
-      leagueName,
-      seasonLabel,
-      seasonId,
-      totalTeams: standings.length,
-      source: 'sportmonks',
-    }), {
+        return { 
+          standings,
+          league: leagueSlug,
+          leagueName,
+          seasonLabel,
+          seasonId,
+          totalTeams: standings.length,
+          source: 'sportmonks',
+        };
+      }
+    );
+
+    return new Response(JSON.stringify({ ...cachedData, fromCache }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

@@ -29,6 +29,7 @@ const HeroDashboard: React.FC = () => {
       if (error) throw error;
       return data || [];
     },
+    staleTime: 1000 * 60 * 2, // 2 minutes cache
   });
 
   // Auto-slide every 5 seconds
