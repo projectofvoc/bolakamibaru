@@ -76,15 +76,15 @@ const translations: Record<string, Record<Language, string>> = {
   'liveScore.viewAll': { id: 'Lihat semua', en: 'View all' },
   
   // AI Companion
-  'ai.headline1': { id: 'Mau menang parlay?', en: 'Want to win parlay?' },
+  'ai.headline1': { id: 'Mau tahu siapa yang menang?', en: 'Want to know who wins?' },
   'ai.headline2': { id: 'Gue bantu lu analisa!', en: 'Let me help you analyze!' },
-  'ai.subtitle': { id: 'Live score + alert odds drop! Waktunya cuan!', en: 'Live score + odds drop alerts! Time to win!' },
-  'ai.placeholder': { id: 'Contoh: Analisa MU vs Arsenal, fokus BTTS + odds...', en: 'Example: Analyze MU vs Arsenal, focus on BTTS + odds...' },
+  'ai.subtitle': { id: 'Live score + statistik lengkap! Waktunya update!', en: 'Live score + complete stats! Time to stay updated!' },
+  'ai.placeholder': { id: 'Contoh: Analisa MU vs Arsenal, fokus head-to-head...', en: 'Example: Analyze MU vs Arsenal, focus on head-to-head...' },
   'ai.prompt1': { id: 'Siapa pencetak gol terbanyak Liga 1?', en: 'Who is the top scorer in Liga 1?' },
   'ai.prompt2': { id: 'Jadwal pertandingan Persebaya', en: 'Persebaya match schedule' },
   'ai.prompt3': { id: 'Statistik pemain terbaik', en: 'Best player statistics' },
   'ai.chatTitle': { id: 'Predicto AI Assistant', en: 'Predicto AI Assistant' },
-  'ai.chatSubtitle': { id: 'Siap bantu analisa parlay kamu', en: 'Ready to help analyze your parlay' },
+  'ai.chatSubtitle': { id: 'Siap bantu analisa pertandingan kamu', en: 'Ready to help analyze your matches' },
   
   // Fixtures
   'fixtures.allUpdates': { id: 'SEMUA UPDATE', en: 'ALL UPDATES' },
@@ -104,7 +104,7 @@ const translations: Record<string, Record<Language, string>> = {
   'footer.quickLinks': { id: 'Tautan Cepat', en: 'Quick Links' },
   'footer.social': { id: 'Media Sosial', en: 'Social Media' },
   'footer.copyright': { id: '© 2025 BOLAKAMI. Semua hak dilindungi.', en: '© 2025 BOLAKAMI. All rights reserved.' },
-  'footer.aboutText': { id: 'Bolakami adalah portal sepak bola terlengkap di Indonesia yang menyajikan update skor, jadwal, dan berita terbaru, plus prediksi parlay berbasis AI yang cerdas dan live streaming pertandingan favoritmu — semua dalam satu tempat', en: 'Bolakami is the most complete football portal in Indonesia, delivering live scores, fixtures, and the latest news, plus smart AI-powered parlay predictions and live streaming of your favorite matches — all in one place' },
+  'footer.aboutText': { id: 'Bolakami adalah portal sepak bola terlengkap di Indonesia yang menyajikan update skor, jadwal, dan berita terbaru, plus analisa pertandingan berbasis AI yang cerdas dan live streaming pertandingan favoritmu — semua dalam satu tempat', en: 'Bolakami is the most complete football portal in Indonesia, delivering live scores, fixtures, and the latest news, plus smart AI-powered match analysis and live streaming of your favorite matches — all in one place' },
   
   // Common
   'common.search': { id: 'Cari...', en: 'Search...' },
