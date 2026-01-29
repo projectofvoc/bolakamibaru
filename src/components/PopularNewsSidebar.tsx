@@ -21,7 +21,8 @@ const PopularNewsSidebar: React.FC = () => {
       
       if (error) throw error;
       return data;
-    }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes cache
   });
 
   const thumbnailArticles = articles?.slice(0, 3) || [];

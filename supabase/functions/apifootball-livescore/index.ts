@@ -53,6 +53,19 @@ interface UpcomingMatch {
   date: string;
 }
 
+interface CachedData {
+  liveMatches: LiveMatch[];
+  upcomingMatches: UpcomingMatch[];
+  recentMatches: LiveMatch[];
+  meta: {
+    timestamp: string;
+    leagues: number[];
+  };
+}
+
+// Cache TTL in seconds (30 seconds for live data)
+const CACHE_TTL_SECONDS = 30;
+
 async function getApiKey(supabase: any): Promise<string | null> {
   // Try to get from database first
   const { data, error } = await supabase
@@ -68,6 +81,49 @@ async function getApiKey(supabase: any): Promise<string | null> {
   
   // Fallback to environment variable
   return Deno.env.get('API_FOOTBALL_KEY') || null;
+}
+
+// Cache helper function
+async function getCachedOrFetch<T>(
+  supabase: any,
+  cacheKey: string,
+  ttlSeconds: number,
+  fetchFn: () => Promise<T>
+): Promise<{ data: T; fromCache: boolean }> {
+  try {
+    // 1. Check cache
+    const { data: cached, error: cacheError } = await supabase
+      .from('api_cache')
+      .select('cache_value')
+      .eq('cache_key', cacheKey)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+    
+    if (!cacheError && cached) {
+      console.log(`[Cache HIT] ${cacheKey}`);
+      return { data: cached.cache_value as T, fromCache: true };
+    }
+  } catch (e) {
+    console.log(`[Cache] Error checking cache: ${e}`);
+  }
+  
+  // 2. Fetch fresh data
+  console.log(`[Cache MISS] ${cacheKey}`);
+  const freshData = await fetchFn();
+  
+  // 3. Store in cache (upsert)
+  try {
+    await supabase.from('api_cache').upsert({
+      cache_key: cacheKey,
+      cache_value: freshData,
+      expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
+    }, { onConflict: 'cache_key' });
+    console.log(`[Cache] Stored: ${cacheKey}, TTL: ${ttlSeconds}s`);
+  } catch (e) {
+    console.log(`[Cache] Error storing cache: ${e}`);
+  }
+  
+  return { data: freshData, fromCache: false };
 }
 
 function mapStatus(shortStatus: string): 'live' | 'ft' | 'scheduled' | 'postponed' {
@@ -205,66 +261,83 @@ Deno.serve(async (req) => {
       );
     }
 
-    const baseUrl = 'https://v3.football.api-sports.io';
-    const headers = { 'x-apisports-key': apiKey };
-    
-    // Liga 1 Indonesia = 274, Liga 2 Indonesia = 275
-    const LIGA_1_ID = 274;
-    const LIGA_2_ID = 275;
-    const currentSeason = getCurrentSeason();
-    console.log(`Using season: ${currentSeason} for Liga Indonesia (current date: ${new Date().toISOString()})`);
+    // Get today's date for cache key
+    const today = new Date().toISOString().split('T')[0];
+    const cacheKey = `apifb-livescore:${today}`;
 
-    // Fetch all data in parallel - separate calls for each league
-    console.log('Fetching Liga 1 & Liga 2 data in parallel...');
-    
-    const [
-      liveL1, liveL2,
-      upcomingL1, upcomingL2,
-      recentL1, recentL2
-    ] = await Promise.all([
-      // Live matches
-      fetchLeagueFixtures(baseUrl, headers, LIGA_1_ID, 'live=all'),
-      fetchLeagueFixtures(baseUrl, headers, LIGA_2_ID, 'live=all'),
-      // Upcoming matches
-      fetchLeagueFixtures(baseUrl, headers, LIGA_1_ID, `season=${currentSeason}&next=20`),
-      fetchLeagueFixtures(baseUrl, headers, LIGA_2_ID, `season=${currentSeason}&next=20`),
-      // Recent matches
-      fetchLeagueFixtures(baseUrl, headers, LIGA_1_ID, `season=${currentSeason}&last=20`),
-      fetchLeagueFixtures(baseUrl, headers, LIGA_2_ID, `season=${currentSeason}&last=20`),
-    ]);
+    // Use cache helper
+    const { data: cachedData, fromCache } = await getCachedOrFetch<CachedData>(
+      supabase,
+      cacheKey,
+      CACHE_TTL_SECONDS,
+      async () => {
+        const baseUrl = 'https://v3.football.api-sports.io';
+        const headers = { 'x-apisports-key': apiKey };
+        
+        // Liga 1 Indonesia = 274, Liga 2 Indonesia = 275
+        const LIGA_1_ID = 274;
+        const LIGA_2_ID = 275;
+        const currentSeason = getCurrentSeason();
+        console.log(`Using season: ${currentSeason} for Liga Indonesia (current date: ${new Date().toISOString()})`);
 
-    // Combine results
-    const allLiveFixtures = [...liveL1, ...liveL2];
-    const allUpcomingFixtures = [...upcomingL1, ...upcomingL2];
-    const allRecentFixtures = [...recentL1, ...recentL2];
+        // Fetch all data in parallel - separate calls for each league
+        console.log('Fetching Liga 1 & Liga 2 data in parallel...');
+        
+        const [
+          liveL1, liveL2,
+          upcomingL1, upcomingL2,
+          recentL1, recentL2
+        ] = await Promise.all([
+          // Live matches
+          fetchLeagueFixtures(baseUrl, headers, LIGA_1_ID, 'live=all'),
+          fetchLeagueFixtures(baseUrl, headers, LIGA_2_ID, 'live=all'),
+          // Upcoming matches
+          fetchLeagueFixtures(baseUrl, headers, LIGA_1_ID, `season=${currentSeason}&next=20`),
+          fetchLeagueFixtures(baseUrl, headers, LIGA_2_ID, `season=${currentSeason}&next=20`),
+          // Recent matches
+          fetchLeagueFixtures(baseUrl, headers, LIGA_1_ID, `season=${currentSeason}&last=20`),
+          fetchLeagueFixtures(baseUrl, headers, LIGA_2_ID, `season=${currentSeason}&last=20`),
+        ]);
 
-    console.log(`Live matches: Liga1=${liveL1.length}, Liga2=${liveL2.length}, Total=${allLiveFixtures.length}`);
-    console.log(`Upcoming matches: Liga1=${upcomingL1.length}, Liga2=${upcomingL2.length}, Total=${allUpcomingFixtures.length}`);
-    console.log(`Recent matches: Liga1=${recentL1.length}, Liga2=${recentL2.length}, Total=${allRecentFixtures.length}`);
+        // Combine results
+        const allLiveFixtures = [...liveL1, ...liveL2];
+        const allUpcomingFixtures = [...upcomingL1, ...upcomingL2];
+        const allRecentFixtures = [...recentL1, ...recentL2];
 
-    // Transform to output format
-    const liveMatches: LiveMatch[] = allLiveFixtures
-      .map((f: ApiFootballFixture) => transformToLiveMatch(f));
+        console.log(`Live matches: Liga1=${liveL1.length}, Liga2=${liveL2.length}, Total=${allLiveFixtures.length}`);
+        console.log(`Upcoming matches: Liga1=${upcomingL1.length}, Liga2=${upcomingL2.length}, Total=${allUpcomingFixtures.length}`);
+        console.log(`Recent matches: Liga1=${recentL1.length}, Liga2=${recentL2.length}, Total=${allRecentFixtures.length}`);
 
-    const upcomingMatches: UpcomingMatch[] = allUpcomingFixtures
-      .filter((f: ApiFootballFixture) => mapStatus(f.fixture.status.short) === 'scheduled')
-      .sort((a, b) => new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime())
-      .map((f: ApiFootballFixture) => transformToUpcomingMatch(f));
+        // Transform to output format
+        const liveMatches: LiveMatch[] = allLiveFixtures
+          .map((f: ApiFootballFixture) => transformToLiveMatch(f));
 
-    const recentMatches: LiveMatch[] = allRecentFixtures
-      .filter((f: ApiFootballFixture) => mapStatus(f.fixture.status.short) === 'ft')
-      .sort((a, b) => new Date(b.fixture.date).getTime() - new Date(a.fixture.date).getTime())
-      .map((f: ApiFootballFixture) => transformToLiveMatch(f));
+        const upcomingMatches: UpcomingMatch[] = allUpcomingFixtures
+          .filter((f: ApiFootballFixture) => mapStatus(f.fixture.status.short) === 'scheduled')
+          .sort((a, b) => new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime())
+          .map((f: ApiFootballFixture) => transformToUpcomingMatch(f));
+
+        const recentMatches: LiveMatch[] = allRecentFixtures
+          .filter((f: ApiFootballFixture) => mapStatus(f.fixture.status.short) === 'ft')
+          .sort((a, b) => new Date(b.fixture.date).getTime() - new Date(a.fixture.date).getTime())
+          .map((f: ApiFootballFixture) => transformToLiveMatch(f));
+
+        return {
+          liveMatches,
+          upcomingMatches,
+          recentMatches,
+          meta: {
+            timestamp: new Date().toISOString(),
+            leagues: [LIGA_1_ID, LIGA_2_ID],
+          }
+        };
+      }
+    );
 
     return new Response(
       JSON.stringify({
-        liveMatches,
-        upcomingMatches,
-        recentMatches,
-        meta: {
-          timestamp: new Date().toISOString(),
-          leagues: [LIGA_1_ID, LIGA_2_ID],
-        }
+        ...cachedData,
+        fromCache,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

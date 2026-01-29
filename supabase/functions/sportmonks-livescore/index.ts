@@ -52,6 +52,9 @@ interface TransformedMatch {
   time: string;
 }
 
+// Cache TTL in seconds (30 seconds for live data)
+const CACHE_TTL_SECONDS = 30;
+
 // Function to get API key from database with fallback to env
 async function getApiKey(supabase: any, apiName: string): Promise<string | null> {
   try {
@@ -75,6 +78,49 @@ async function getApiKey(supabase: any, apiName: string): Promise<string | null>
   return Deno.env.get('SPORTMONKS_API_KEY') || null;
 }
 
+// Cache helper function
+async function getCachedOrFetch<T>(
+  supabase: any,
+  cacheKey: string,
+  ttlSeconds: number,
+  fetchFn: () => Promise<T>
+): Promise<{ data: T; fromCache: boolean }> {
+  try {
+    // 1. Check cache
+    const { data: cached, error: cacheError } = await supabase
+      .from('api_cache')
+      .select('cache_value')
+      .eq('cache_key', cacheKey)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+    
+    if (!cacheError && cached) {
+      console.log(`[Cache HIT] ${cacheKey}`);
+      return { data: cached.cache_value as T, fromCache: true };
+    }
+  } catch (e) {
+    console.log(`[Cache] Error checking cache: ${e}`);
+  }
+  
+  // 2. Fetch fresh data
+  console.log(`[Cache MISS] ${cacheKey}`);
+  const freshData = await fetchFn();
+  
+  // 3. Store in cache (upsert)
+  try {
+    await supabase.from('api_cache').upsert({
+      cache_key: cacheKey,
+      cache_value: freshData,
+      expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
+    }, { onConflict: 'cache_key' });
+    console.log(`[Cache] Stored: ${cacheKey}, TTL: ${ttlSeconds}s`);
+  } catch (e) {
+    console.log(`[Cache] Error storing cache: ${e}`);
+  }
+  
+  return { data: freshData, fromCache: false };
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -94,63 +140,78 @@ serve(async (req) => {
       throw new Error('SPORTMONKS_API_KEY not configured in database or environment');
     }
 
-    // Get today's date in YYYY-MM-DD format
+    // Get today's date in YYYY-MM-DD format for cache key
     const today = new Date().toISOString().split('T')[0];
-    
-    // Fetch live fixtures with scores, participants, and league info
-    const response = await fetch(
-      `https://api.sportmonks.com/v3/football/livescores/inplay?api_token=${apiKey}&include=participants;scores;league;state;periods`,
-      {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
+    const cacheKey = `livescore:${today}`;
+
+    // Use cache helper
+    const { data: transformedMatches, fromCache } = await getCachedOrFetch<TransformedMatch[]>(
+      supabase,
+      cacheKey,
+      CACHE_TTL_SECONDS,
+      async () => {
+        // Fetch live fixtures with scores, participants, and league info
+        const response = await fetch(
+          `https://api.sportmonks.com/v3/football/livescores/inplay?api_token=${apiKey}&include=participants;scores;league;state;periods`,
+          {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Sportmonks API error:', response.status, errorText);
+          throw new Error(`Sportmonks API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Sportmonks response:', JSON.stringify(data).slice(0, 500));
+
+        const fixtures: SportmonksFixture[] = data.data || [];
+
+        // If no live matches, fetch recent finished matches
+        let matches: TransformedMatch[] = [];
+
+        if (fixtures.length === 0) {
+          // Fetch today's fixtures including finished ones
+          const fixturesResponse = await fetch(
+            `https://api.sportmonks.com/v3/football/fixtures/date/${today}?api_token=${apiKey}&include=participants;scores;league;state;periods`,
+            {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/json',
+              },
+            }
+          );
+
+          if (fixturesResponse.ok) {
+            const fixturesData = await fixturesResponse.json();
+            const allFixtures: SportmonksFixture[] = fixturesData.data || [];
+            
+            matches = allFixtures
+              .map((fixture) => transformFixture(fixture))
+              .filter(Boolean)
+              .slice(0, 10) as TransformedMatch[];
+          }
+        } else {
+          matches = fixtures
+            .map((fixture) => transformFixture(fixture))
+            .filter(Boolean)
+            .slice(0, 10) as TransformedMatch[];
+        }
+
+        return matches;
       }
     );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Sportmonks API error:', response.status, errorText);
-      throw new Error(`Sportmonks API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log('Sportmonks response:', JSON.stringify(data).slice(0, 500));
-
-    const fixtures: SportmonksFixture[] = data.data || [];
-
-    // If no live matches, fetch recent finished matches
-    let transformedMatches: TransformedMatch[] = [];
-
-    if (fixtures.length === 0) {
-      // Fetch today's fixtures including finished ones
-      const fixturesResponse = await fetch(
-        `https://api.sportmonks.com/v3/football/fixtures/date/${today}?api_token=${apiKey}&include=participants;scores;league;state;periods`,
-        {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-          },
-        }
-      );
-
-      if (fixturesResponse.ok) {
-        const fixturesData = await fixturesResponse.json();
-        const allFixtures: SportmonksFixture[] = fixturesData.data || [];
-        
-        transformedMatches = allFixtures
-          .map((fixture) => transformFixture(fixture))
-          .filter(Boolean)
-          .slice(0, 10) as TransformedMatch[];
-      }
-    } else {
-      transformedMatches = fixtures
-        .map((fixture) => transformFixture(fixture))
-        .filter(Boolean)
-        .slice(0, 10) as TransformedMatch[];
-    }
-
-    return new Response(JSON.stringify({ matches: transformedMatches }), {
+    return new Response(JSON.stringify({ 
+      matches: transformedMatches,
+      fromCache,
+      cacheKey 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

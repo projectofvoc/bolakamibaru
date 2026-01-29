@@ -161,6 +161,30 @@ export type Database = {
         }
         Relationships: []
       }
+      api_cache: {
+        Row: {
+          cache_key: string
+          cache_value: Json
+          created_at: string | null
+          expires_at: string
+          id: string
+        }
+        Insert: {
+          cache_key: string
+          cache_value: Json
+          created_at?: string | null
+          expires_at: string
+          id?: string
+        }
+        Update: {
+          cache_key?: string
+          cache_value?: Json
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       api_configurations: {
         Row: {
           api_key: string | null
@@ -636,6 +660,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_cache: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

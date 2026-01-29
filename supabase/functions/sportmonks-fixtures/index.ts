@@ -1,9 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Cache TTL: 5 minutes for fixtures (jadwal cukup stabil)
+const CACHE_TTL_SECONDS = 5 * 60;
 
 // Map internal league IDs to Sportmonks league IDs
 // Note: Liga 1 Indonesia is NOT available in Sportmonks - use API-Football instead
@@ -79,6 +83,53 @@ interface TransformedFixture {
   time: string;
   dateLabel: { id: string; en: string };
   venue: string | null;
+}
+
+interface CachedFixturesData {
+  fixtures: TransformedFixture[];
+}
+
+// Cache helper function
+async function getCachedOrFetch<T>(
+  supabase: any,
+  cacheKey: string,
+  ttlSeconds: number,
+  fetchFn: () => Promise<T>
+): Promise<{ data: T; fromCache: boolean }> {
+  try {
+    // 1. Check cache
+    const { data: cached, error: cacheError } = await supabase
+      .from('api_cache')
+      .select('cache_value')
+      .eq('cache_key', cacheKey)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+    
+    if (!cacheError && cached) {
+      console.log(`[Cache HIT] ${cacheKey}`);
+      return { data: cached.cache_value as T, fromCache: true };
+    }
+  } catch (e) {
+    console.log(`[Cache] Error checking cache: ${e}`);
+  }
+  
+  // 2. Fetch fresh data
+  console.log(`[Cache MISS] ${cacheKey}`);
+  const freshData = await fetchFn();
+  
+  // 3. Store in cache (upsert)
+  try {
+    await supabase.from('api_cache').upsert({
+      cache_key: cacheKey,
+      cache_value: freshData,
+      expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
+    }, { onConflict: 'cache_key' });
+    console.log(`[Cache] Stored: ${cacheKey}, TTL: ${ttlSeconds}s`);
+  } catch (e) {
+    console.log(`[Cache] Error storing cache: ${e}`);
+  }
+  
+  return { data: freshData, fromCache: false };
 }
 
 function getDateLabel(date: Date, now: Date): { id: string; en: string } {
@@ -174,6 +225,11 @@ serve(async (req) => {
   }
 
   try {
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
     const apiKey = Deno.env.get('SPORTMONKS_API_KEY');
     if (!apiKey) {
       throw new Error('SPORTMONKS_API_KEY not configured');
@@ -205,38 +261,51 @@ serve(async (req) => {
       );
     }
 
-    // Fetch fixtures from Sportmonks (removed venue include - not available in current plan)
-    const url = `https://api.sportmonks.com/v3/football/fixtures/between/${startDate}/${endDate}?api_token=${apiKey}&include=participants;league&filters=fixtureLeagues:${leagueIds.join(',')}`;
-    
-    console.log(`Fetching fixtures from ${startDate} to ${endDate} for leagues: ${leagueIds.join(',')}`);
-    
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Sportmonks API error:', errorText);
-      throw new Error(`Sportmonks API error: ${response.status}`);
-    }
+    // Cache key includes league filter and date range
+    const cacheKey = `fixtures:${leagueId || 'all'}:${startDate}`;
 
-    const data = await response.json();
-    console.log(`Received ${data.data?.length || 0} fixtures from Sportmonks`);
+    // Use cache helper
+    const { data: cachedData, fromCache } = await getCachedOrFetch<CachedFixturesData>(
+      supabase,
+      cacheKey,
+      CACHE_TTL_SECONDS,
+      async () => {
+        // Fetch fixtures from Sportmonks (removed venue include - not available in current plan)
+        const url = `https://api.sportmonks.com/v3/football/fixtures/between/${startDate}/${endDate}?api_token=${apiKey}&include=participants;league&filters=fixtureLeagues:${leagueIds.join(',')}`;
+        
+        console.log(`Fetching fixtures from ${startDate} to ${endDate} for leagues: ${leagueIds.join(',')}`);
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Sportmonks API error:', errorText);
+          throw new Error(`Sportmonks API error: ${response.status}`);
+        }
 
-    // Transform fixtures
-    const fixtures: TransformedFixture[] = [];
-    for (const fixture of data.data || []) {
-      const transformed = transformFixture(fixture, now);
-      if (transformed) {
-        fixtures.push(transformed);
+        const data = await response.json();
+        console.log(`Received ${data.data?.length || 0} fixtures from Sportmonks`);
+
+        // Transform fixtures
+        const fixtures: TransformedFixture[] = [];
+        for (const fixture of data.data || []) {
+          const transformed = transformFixture(fixture, now);
+          if (transformed) {
+            fixtures.push(transformed);
+          }
+        }
+
+        // Sort by date
+        fixtures.sort((a, b) => new Date(a.startingAt).getTime() - new Date(b.startingAt).getTime());
+
+        console.log(`Transformed ${fixtures.length} fixtures`);
+
+        return { fixtures };
       }
-    }
-
-    // Sort by date
-    fixtures.sort((a, b) => new Date(a.startingAt).getTime() - new Date(b.startingAt).getTime());
-
-    console.log(`Transformed ${fixtures.length} fixtures`);
+    );
 
     return new Response(
-      JSON.stringify({ fixtures }),
+      JSON.stringify({ ...cachedData, fromCache }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
