@@ -1,80 +1,95 @@
 
 # Perbaikan Layout Tabel Klasemen
 
-## Masalah Utama
-Komponen `LazyImage` memiliki wrapper div dengan `w-full h-full` yang menyebabkan area logo melebar melebihi ukuran seharusnya (28x28px), menciptakan gap besar antara logo dan nama tim.
+## Masalah
+Gap besar antara logo dan nama tim disebabkan oleh:
+1. **LazyImage wrapper menggunakan `w-full h-full`** - membuat wrapper melebar ke seluruh cell, bukan mengikuti ukuran logo (w-7 h-7)
+2. **Prop `wrapperClassName` tidak digunakan** - sehingga ukuran wrapper tidak terkontrol
+3. **Team name menggunakan `truncate`** - menyebabkan nama terpotong dan layout tidak proporsional
 
 ## Solusi
 
-### 1. Perbaiki LazyImage di Klasemen.tsx
-Tambahkan prop `wrapperClassName` untuk mengontrol ukuran wrapper:
+### Perubahan di `src/pages/Klasemen.tsx`
 
-**File:** `src/pages/Klasemen.tsx`
+#### 1. Perbaiki LazyImage dengan `wrapperClassName`
+Tambahkan prop `wrapperClassName` untuk mengunci ukuran wrapper logo:
 
-**Perubahan pada team logo (sekitar baris 170-176):**
-- Tambahkan `wrapperClassName="w-6 h-6 shrink-0"` pada LazyImage
-- Ubah `className` menjadi `w-full h-full object-contain`
-- Kurangi `gap-3` menjadi `gap-2` untuk spacing lebih rapat
+**Lokasi:** Baris 200-205
 
-**Kode sebelum:**
-```tsx
-<div className="flex items-center gap-3">
-  {team.teamLogo ? (
-    <LazyImage 
-      src={team.teamLogo} 
-      alt={team.teamName}
-      className="w-7 h-7 object-contain"
-      fallback="/placeholder.svg"
-    />
-```
+| Sebelum | Sesudah |
+|---------|---------|
+| `className="w-7 h-7 object-contain"` | `wrapperClassName="w-6 h-6 shrink-0"` + `className="w-full h-full object-contain"` |
 
-**Kode sesudah:**
-```tsx
-<div className="flex items-center gap-2">
-  {team.teamLogo ? (
-    <LazyImage 
-      src={team.teamLogo} 
-      alt={team.teamName}
-      wrapperClassName="w-6 h-6 shrink-0"
-      className="w-full h-full object-contain"
-      fallback="/placeholder.svg"
-    />
-```
+#### 2. Kurangi gap container
+**Lokasi:** Baris 198
 
-### 2. Perbaiki fallback icon (trophy placeholder)
-Samakan ukuran fallback dengan logo:
-- Ubah `w-7 h-7` menjadi `w-6 h-6 shrink-0`
+| Sebelum | Sesudah |
+|---------|---------|
+| `gap-3` | `gap-2` |
 
-### 3. Perbaiki team name container
-Hapus `truncate` dan `max-w` agar nama tidak terpotong:
+#### 3. Perbaiki team name agar tidak terpotong
+**Lokasi:** Baris 211
 
-**Sebelum:**
-```tsx
-<span className="font-medium text-sm truncate max-w-[140px] sm:max-w-none">
-```
+| Sebelum | Sesudah |
+|---------|---------|
+| `truncate max-w-[140px] sm:max-w-none` | `whitespace-nowrap` |
 
-**Sesudah:**
-```tsx
-<span className="font-medium text-sm whitespace-nowrap">
-```
+#### 4. Samakan ukuran fallback icon
+**Lokasi:** Baris 207
 
-### 4. Kompres kolom statistik
-Untuk tampilan lebih compact:
-- Ubah header kolom TIM dari `min-w-[180px]` menjadi tanpa min-width
-- Kurangi padding kolom angka dari default ke `px-2`
+| Sebelum | Sesudah |
+|---------|---------|
+| `w-7 h-7` | `w-6 h-6 shrink-0` |
+
+#### 5. Hapus min-width kolom TIM
+**Lokasi:** Baris 156
+
+| Sebelum | Sesudah |
+|---------|---------|
+| `min-w-[180px]` | (dihapus) |
 
 ---
 
-## Ringkasan Perubahan
-| Lokasi | Sebelum | Sesudah |
-|--------|---------|---------|
-| LazyImage wrapper | tidak ada | `wrapperClassName="w-6 h-6 shrink-0"` |
-| Flex gap | `gap-3` | `gap-2` |
-| Team name | `truncate max-w-[140px]` | `whitespace-nowrap` |
-| Fallback icon | `w-7 h-7` | `w-6 h-6 shrink-0` |
+## Kode Setelah Perbaikan
+
+```tsx
+{/* Table Cell untuk kolom TIM */}
+<TableCell>
+  <div className="flex items-center gap-2">
+    {team.teamLogo ? (
+      <LazyImage 
+        src={team.teamLogo} 
+        alt={team.teamName}
+        wrapperClassName="w-6 h-6 shrink-0"
+        className="w-full h-full object-contain"
+        fallback="/placeholder.svg"
+      />
+    ) : (
+      <div className="w-6 h-6 shrink-0 bg-muted rounded-full flex items-center justify-center">
+        <Trophy className="w-3 h-3 text-muted-foreground" />
+      </div>
+    )}
+    <span className="font-medium text-sm whitespace-nowrap">
+      {team.teamName}
+    </span>
+  </div>
+</TableCell>
+```
+
+---
 
 ## Dampak
-- Logo dan nama tim akan rapat tanpa gap berlebih
-- Nama tim tidak terpotong
-- Layout konsisten untuk semua liga di dropdown
-- Responsive di mobile dan desktop
+- Logo akan memiliki ukuran fixed 24x24px (w-6 h-6) dan tidak akan melebar
+- Gap antara logo dan nama tim menjadi 8px (gap-2) 
+- Nama tim tampil lengkap tanpa terpotong
+- Layout konsisten untuk semua liga di dropdown (Liga 1, Liga 2, Premier League, La Liga, dll)
+
+---
+
+## Detail Teknis
+
+### Kenapa `wrapperClassName` penting?
+Komponen LazyImage membungkus img dalam div dengan default `w-full h-full`. Tanpa override melalui `wrapperClassName`, wrapper akan mengisi seluruh parent cell (~600px), meskipun img hanya 28x28px.
+
+### Kenapa `shrink-0`?
+Mencegah logo menyusut saat flexbox container kekurangan ruang, memastikan ukuran logo selalu konsisten 24x24px.
