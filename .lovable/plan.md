@@ -1,90 +1,80 @@
 
+# Perbaikan Layout Tabel Klasemen
 
-# Plan: Implementasi Copywriting Aman untuk AI Companion
+## Masalah Utama
+Komponen `LazyImage` memiliki wrapper div dengan `w-full h-full` yang menyebabkan area logo melebar melebihi ukuran seharusnya (28x28px), menciptakan gap besar antara logo dan nama tim.
 
-## Ringkasan
-Mengubah teks di komponen AI Companion dari terminologi judi/betting menjadi fokus pada **analisis sepakbola murni** untuk menghindari pemblokiran Nawala Indonesia dan pelanggaran Google AdSense/Ads.
+## Solusi
 
----
+### 1. Perbaiki LazyImage di Klasemen.tsx
+Tambahkan prop `wrapperClassName` untuk mengontrol ukuran wrapper:
 
-## Masalah yang Diidentifikasi (dari Screenshot)
+**File:** `src/pages/Klasemen.tsx`
 
-| Lokasi | Teks Lama (Bermasalah) | Kata Kunci Judi |
-|--------|------------------------|-----------------|
-| Headline baris 1 | "Mau menang parlay?" | parlay |
-| Headline baris 2 | "Gue bantu lu analisa!" | - (aman) |
-| Subheadline | "Live score + alert odds drop! Waktunya cuan!" | odds, cuan |
-| Placeholder input | "Contoh: Analisa MU vs Arsenal, fokus BTTS + odds..." | BTTS, odds |
+**Perubahan pada team logo (sekitar baris 170-176):**
+- Tambahkan `wrapperClassName="w-6 h-6 shrink-0"` pada LazyImage
+- Ubah `className` menjadi `w-full h-full object-contain`
+- Kurangi `gap-3` menjadi `gap-2` untuk spacing lebih rapat
 
----
+**Kode sebelum:**
+```tsx
+<div className="flex items-center gap-3">
+  {team.teamLogo ? (
+    <LazyImage 
+      src={team.teamLogo} 
+      alt={team.teamName}
+      className="w-7 h-7 object-contain"
+      fallback="/placeholder.svg"
+    />
+```
 
-## Solusi: Copywriting Baru
+**Kode sesudah:**
+```tsx
+<div className="flex items-center gap-2">
+  {team.teamLogo ? (
+    <LazyImage 
+      src={team.teamLogo} 
+      alt={team.teamName}
+      wrapperClassName="w-6 h-6 shrink-0"
+      className="w-full h-full object-contain"
+      fallback="/placeholder.svg"
+    />
+```
 
-Akan menggunakan **Opsi A - Fokus Analisis & Statistik**:
+### 2. Perbaiki fallback icon (trophy placeholder)
+Samakan ukuran fallback dengan logo:
+- Ubah `w-7 h-7` menjadi `w-6 h-6 shrink-0`
 
-| Lokasi | Teks Lama | Teks Baru |
-|--------|-----------|-----------|
-| Headline baris 1 | "Mau menang parlay?" | **"Mau tahu siapa yang menang?"** |
-| Headline baris 2 | "Gue bantu lu analisa!" | **"Gue bantu lu analisa!"** (tetap) |
-| Subheadline | "Live score + alert odds drop! Waktunya cuan!" | **"Live score + statistik lengkap! Waktunya update!"** |
-| Placeholder | "Contoh: Analisa MU vs Arsenal, fokus BTTS + odds..." | **"Contoh: Analisa MU vs Arsenal, fokus head-to-head..."** |
+### 3. Perbaiki team name container
+Hapus `truncate` dan `max-w` agar nama tidak terpotong:
 
----
+**Sebelum:**
+```tsx
+<span className="font-medium text-sm truncate max-w-[140px] sm:max-w-none">
+```
 
-## Langkah Implementasi
+**Sesudah:**
+```tsx
+<span className="font-medium text-sm whitespace-nowrap">
+```
 
-### 1. Update AICompanion.tsx
-Mengubah 4 bagian teks statis:
-- Headline utama baris 1
-- Subheadline/deskripsi  
-- Placeholder input field
-
-### 2. Review AIChatSidebar.tsx
-Memastikan tidak ada terminologi judi di sidebar chat (jika ada).
-
-### 3. Verifikasi Prompt Chips
-Dari screenshot, chip-chip prompt sudah aman:
-- "Siapa pencetak gol terbanyak Liga 1?"
-- "Jadwal pertandingan Persebaya"
-- "Statistik pemain terbaik"
-
----
-
-## Detail Teknis
-
-**File yang akan diubah:**
-- `src/components/AICompanion.tsx`
-- `src/components/AIChatSidebar.tsx` (jika ada terminologi judi)
-
-**Jenis perubahan:**
-- Hanya string/teks statis
-- Tidak ada perubahan logika atau fungsi
-
-**Estimasi waktu:**
-- Perubahan minimal, sekitar 4-5 baris teks
-
----
-
-## Kata-Kata yang Dihindari vs Alternatif
-
-| Dilarang | Alternatif Aman |
-|----------|-----------------|
-| parlay | prediksi / analisa |
-| odds | statistik / peluang menang |
-| cuan | update / info |
-| BTTS | head-to-head / gol |
-| betting | pertandingan |
-| taruhan | jadwal |
-| handicap | performa |
+### 4. Kompres kolom statistik
+Untuk tampilan lebih compact:
+- Ubah header kolom TIM dari `min-w-[180px]` menjadi tanpa min-width
+- Kurangi padding kolom angka dari default ke `px-2`
 
 ---
 
-## Hasil Akhir
+## Ringkasan Perubahan
+| Lokasi | Sebelum | Sesudah |
+|--------|---------|---------|
+| LazyImage wrapper | tidak ada | `wrapperClassName="w-6 h-6 shrink-0"` |
+| Flex gap | `gap-3` | `gap-2` |
+| Team name | `truncate max-w-[140px]` | `whitespace-nowrap` |
+| Fallback icon | `w-7 h-7` | `w-6 h-6 shrink-0` |
 
-Setelah implementasi, AI Companion akan menampilkan:
-- **Headline**: "Mau tahu siapa yang menang? Gue bantu lu analisa!"
-- **Subheadline**: "Live score + statistik lengkap! Waktunya update!"
-- **Placeholder**: "Contoh: Analisa MU vs Arsenal, fokus head-to-head..."
-
-Perubahan ini memastikan komponen **100% aman** dari Nawala dan kebijakan Google.
-
+## Dampak
+- Logo dan nama tim akan rapat tanpa gap berlebih
+- Nama tim tidak terpotong
+- Layout konsisten untuk semua liga di dropdown
+- Responsive di mobile dan desktop
