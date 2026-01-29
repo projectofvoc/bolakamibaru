@@ -1,59 +1,52 @@
 
-# Plan: Mengubah Copywriting AI Companion agar Aman dari Nawala & Pelanggaran Google
+
+# Plan: Implementasi Copywriting Aman untuk AI Companion
 
 ## Ringkasan
-Mengubah semua teks di komponen AI Companion dari terminologi terkait judi/betting menjadi fokus pada **analisis sepakbola murni** untuk menghindari pemblokiran nawala Indonesia dan pelanggaran kebijakan Google AdSense/Ads.
+Mengubah teks di komponen AI Companion dari terminologi judi/betting menjadi fokus pada **analisis sepakbola murni** untuk menghindari pemblokiran Nawala Indonesia dan pelanggaran Google AdSense/Ads.
 
 ---
 
-## Masalah yang Diidentifikasi
-
-Berdasarkan screenshot, teks berikut mengandung terminologi judi:
+## Masalah yang Diidentifikasi (dari Screenshot)
 
 | Lokasi | Teks Lama (Bermasalah) | Kata Kunci Judi |
 |--------|------------------------|-----------------|
 | Headline baris 1 | "Mau menang parlay?" | parlay |
-| Headline baris 2 | "Gue bantu lu analisa!" | - |
+| Headline baris 2 | "Gue bantu lu analisa!" | - (aman) |
 | Subheadline | "Live score + alert odds drop! Waktunya cuan!" | odds, cuan |
-| Placeholder | "Contoh: Analisa MU vs Arsenal, fokus BTTS + odds..." | BTTS, odds |
+| Placeholder input | "Contoh: Analisa MU vs Arsenal, fokus BTTS + odds..." | BTTS, odds |
 
 ---
 
 ## Solusi: Copywriting Baru
 
-### Opsi A - Fokus Analisis & Statistik
+Akan menggunakan **Opsi A - Fokus Analisis & Statistik**:
 
-| Lokasi | Teks Baru |
-|--------|-----------|
-| Headline baris 1 | "Mau tahu siapa yang menang?" |
-| Headline baris 2 | "Gue bantu lu analisa!" |
-| Subheadline | "Live score + statistik lengkap! Waktunya update!" |
-| Placeholder | "Contoh: Analisa MU vs Arsenal, fokus head-to-head..." |
-
-### Opsi B - Fokus Prediksi Match
-
-| Lokasi | Teks Baru |
-|--------|-----------|
-| Headline baris 1 | "Mau prediksi pertandingan?" |
-| Headline baris 2 | "Gue bantu lu analisa!" |
-| Subheadline | "Live score + statistik pertandingan real-time!" |
-| Placeholder | "Contoh: Prediksi MU vs Arsenal, siapa lebih unggul?" |
+| Lokasi | Teks Lama | Teks Baru |
+|--------|-----------|-----------|
+| Headline baris 1 | "Mau menang parlay?" | **"Mau tahu siapa yang menang?"** |
+| Headline baris 2 | "Gue bantu lu analisa!" | **"Gue bantu lu analisa!"** (tetap) |
+| Subheadline | "Live score + alert odds drop! Waktunya cuan!" | **"Live score + statistik lengkap! Waktunya update!"** |
+| Placeholder | "Contoh: Analisa MU vs Arsenal, fokus BTTS + odds..." | **"Contoh: Analisa MU vs Arsenal, fokus head-to-head..."** |
 
 ---
 
 ## Langkah Implementasi
 
 ### 1. Update AICompanion.tsx
-Mengubah 4 bagian teks:
-- Headline utama (2 baris)
-- Subheadline/deskripsi
+Mengubah 4 bagian teks statis:
+- Headline utama baris 1
+- Subheadline/deskripsi  
 - Placeholder input field
 
-### 2. Review AIChatSidebar.tsx (jika ada)
-Memastikan tidak ada terminologi judi di sidebar chat
+### 2. Review AIChatSidebar.tsx
+Memastikan tidak ada terminologi judi di sidebar chat (jika ada).
 
-### 3. Review Prompt Chips
-Memastikan chip-chip prompt sudah aman (dari screenshot: "Siapa pencetak gol terbanyak Liga 1?", "Jadwal pertandingan Persebaya", "Statistik pemain terbaik" - ini sudah **AMAN**)
+### 3. Verifikasi Prompt Chips
+Dari screenshot, chip-chip prompt sudah aman:
+- "Siapa pencetak gol terbanyak Liga 1?"
+- "Jadwal pertandingan Persebaya"
+- "Statistik pemain terbaik"
 
 ---
 
@@ -61,20 +54,21 @@ Memastikan chip-chip prompt sudah aman (dari screenshot: "Siapa pencetak gol ter
 
 **File yang akan diubah:**
 - `src/components/AICompanion.tsx`
+- `src/components/AIChatSidebar.tsx` (jika ada terminologi judi)
 
 **Jenis perubahan:**
-- String/teks statis saja
+- Hanya string/teks statis
 - Tidak ada perubahan logika atau fungsi
 
-**Estimasi:**
-- Perubahan minimal, hanya 4-5 baris teks
+**Estimasi waktu:**
+- Perubahan minimal, sekitar 4-5 baris teks
 
 ---
 
-## Kata-Kata yang Harus Dihindari
+## Kata-Kata yang Dihindari vs Alternatif
 
-| Kata Terlarang | Alternatif Aman |
-|----------------|-----------------|
+| Dilarang | Alternatif Aman |
+|----------|-----------------|
 | parlay | prediksi / analisa |
 | odds | statistik / peluang menang |
 | cuan | update / info |
@@ -82,3 +76,15 @@ Memastikan chip-chip prompt sudah aman (dari screenshot: "Siapa pencetak gol ter
 | betting | pertandingan |
 | taruhan | jadwal |
 | handicap | performa |
+
+---
+
+## Hasil Akhir
+
+Setelah implementasi, AI Companion akan menampilkan:
+- **Headline**: "Mau tahu siapa yang menang? Gue bantu lu analisa!"
+- **Subheadline**: "Live score + statistik lengkap! Waktunya update!"
+- **Placeholder**: "Contoh: Analisa MU vs Arsenal, fokus head-to-head..."
+
+Perubahan ini memastikan komponen **100% aman** dari Nawala dan kebijakan Google.
+
