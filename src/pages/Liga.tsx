@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { LazyImage } from '@/components/ui/LazyImage';
 import { useUpcomingFixtures, UpcomingFixture } from '@/hooks/useUpcomingFixtures';
 
 // Import SVG logos
@@ -369,10 +370,11 @@ const Liga: React.FC = () => {
                         className="group cursor-pointer"
                       >
                         <div className="relative rounded-lg overflow-hidden bg-card aspect-[4/3]">
-                          <img
+                          <LazyImage
                             src={article.featured_image || '/placeholder.svg'}
                             alt={language === 'id' ? article.title_id : article.title_en}
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            fallback="/placeholder.svg"
                           />
                           <div className="absolute top-3 left-3">
                             <span className="px-2 py-1 text-xs font-semibold bg-primary/90 text-primary-foreground rounded-full">

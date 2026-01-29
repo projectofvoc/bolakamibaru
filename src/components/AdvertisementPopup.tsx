@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { X } from 'lucide-react';
+import { LazyImage } from '@/components/ui/LazyImage';
 
 interface Advertisement {
   id: string;
@@ -84,10 +85,11 @@ const AdvertisementPopup: React.FC = () => {
             onClick={handleMediaClick}
           >
             {ad.media_type === 'image' ? (
-              <img
+              <LazyImage
                 src={ad.media_url}
                 alt={ad.title}
                 className="w-full h-full object-cover"
+                fallback="/placeholder.svg"
               />
             ) : (
             <video
