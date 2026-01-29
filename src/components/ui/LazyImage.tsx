@@ -27,7 +27,7 @@ const LazyImage: React.FC<LazyImageProps> = ({
   };
 
   return (
-    <div className={cn('relative overflow-hidden', wrapperClassName)}>
+    <div className={cn('relative overflow-hidden w-full h-full', wrapperClassName)}>
       {/* Skeleton placeholder */}
       {!isLoaded && (
         <div className="absolute inset-0 bg-muted animate-pulse" />
