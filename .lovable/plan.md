@@ -1,95 +1,71 @@
 
-# Perbaikan Layout Tabel Klasemen
+# Perbaikan Copywriting AI Companion - Kebijakan Non-Judi
 
-## Masalah
-Gap besar antara logo dan nama tim disebabkan oleh:
-1. **LazyImage wrapper menggunakan `w-full h-full`** - membuat wrapper melebar ke seluruh cell, bukan mengikuti ukuran logo (w-7 h-7)
-2. **Prop `wrapperClassName` tidak digunakan** - sehingga ukuran wrapper tidak terkontrol
-3. **Team name menggunakan `truncate`** - menyebabkan nama terpotong dan layout tidak proporsional
+## Masalah yang Ditemukan
+Di file `src/contexts/LanguageContext.tsx`, terdapat **7 instance** kata-kata yang berpotensi terkena filter Nawala dan melanggar kebijakan Google Ads:
 
-## Solusi
+| Baris | Key | Kata Bermasalah |
+|-------|-----|-----------------|
+| 79 | `ai.headline1` | "parlay" |
+| 81 | `ai.subtitle` | "odds drop", "cuan" |
+| 82 | `ai.placeholder` | "BTTS", "odds" |
+| 87 | `ai.chatSubtitle` | "parlay" |
+| 107 | `footer.aboutText` | "parlay" |
 
-### Perubahan di `src/pages/Klasemen.tsx`
+## Solusi Copywriting
 
-#### 1. Perbaiki LazyImage dengan `wrapperClassName`
-Tambahkan prop `wrapperClassName` untuk mengunci ukuran wrapper logo:
+### Perubahan di `src/contexts/LanguageContext.tsx`
 
-**Lokasi:** Baris 200-205
-
+#### 1. AI Headline 1 (baris 79)
 | Sebelum | Sesudah |
 |---------|---------|
-| `className="w-7 h-7 object-contain"` | `wrapperClassName="w-6 h-6 shrink-0"` + `className="w-full h-full object-contain"` |
+| "Mau menang parlay?" | "Mau tahu siapa yang menang?" |
+| "Want to win parlay?" | "Want to know who wins?" |
 
-#### 2. Kurangi gap container
-**Lokasi:** Baris 198
-
+#### 2. AI Headline 2 (baris 80)
 | Sebelum | Sesudah |
 |---------|---------|
-| `gap-3` | `gap-2` |
+| "Gue bantu lu analisa!" | "Gue bantu lu analisa!" |
+| (tidak berubah) | (tidak berubah) |
 
-#### 3. Perbaiki team name agar tidak terpotong
-**Lokasi:** Baris 211
-
+#### 3. AI Subtitle (baris 81)
 | Sebelum | Sesudah |
 |---------|---------|
-| `truncate max-w-[140px] sm:max-w-none` | `whitespace-nowrap` |
+| "Live score + alert odds drop! Waktunya cuan!" | "Live score + statistik lengkap! Waktunya update!" |
+| "Live score + odds drop alerts! Time to win!" | "Live score + complete stats! Time to stay updated!" |
 
-#### 4. Samakan ukuran fallback icon
-**Lokasi:** Baris 207
-
+#### 4. AI Placeholder (baris 82)
 | Sebelum | Sesudah |
 |---------|---------|
-| `w-7 h-7` | `w-6 h-6 shrink-0` |
+| "Contoh: Analisa MU vs Arsenal, fokus BTTS + odds..." | "Contoh: Analisa MU vs Arsenal, fokus head-to-head..." |
+| "Example: Analyze MU vs Arsenal, focus on BTTS + odds..." | "Example: Analyze MU vs Arsenal, focus on head-to-head..." |
 
-#### 5. Hapus min-width kolom TIM
-**Lokasi:** Baris 156
-
+#### 5. AI Chat Subtitle (baris 87)
 | Sebelum | Sesudah |
 |---------|---------|
-| `min-w-[180px]` | (dihapus) |
+| "Siap bantu analisa parlay kamu" | "Siap bantu analisa pertandingan kamu" |
+| "Ready to help analyze your parlay" | "Ready to help analyze your matches" |
+
+#### 6. Footer About Text (baris 107)
+| Sebelum | Sesudah |
+|---------|---------|
+| "...plus prediksi parlay berbasis AI yang cerdas..." | "...plus analisa pertandingan berbasis AI yang cerdas..." |
+| "...plus smart AI-powered parlay predictions..." | "...plus smart AI-powered match analysis..." |
 
 ---
 
-## Kode Setelah Perbaikan
+## Ringkasan Perubahan
 
-```tsx
-{/* Table Cell untuk kolom TIM */}
-<TableCell>
-  <div className="flex items-center gap-2">
-    {team.teamLogo ? (
-      <LazyImage 
-        src={team.teamLogo} 
-        alt={team.teamName}
-        wrapperClassName="w-6 h-6 shrink-0"
-        className="w-full h-full object-contain"
-        fallback="/placeholder.svg"
-      />
-    ) : (
-      <div className="w-6 h-6 shrink-0 bg-muted rounded-full flex items-center justify-center">
-        <Trophy className="w-3 h-3 text-muted-foreground" />
-      </div>
-    )}
-    <span className="font-medium text-sm whitespace-nowrap">
-      {team.teamName}
-    </span>
-  </div>
-</TableCell>
-```
-
----
+| Key | Kata Dihapus | Pengganti |
+|-----|--------------|-----------|
+| `ai.headline1` | parlay | "siapa yang menang" |
+| `ai.subtitle` | odds drop, cuan | "statistik lengkap", "update" |
+| `ai.placeholder` | BTTS, odds | "head-to-head" |
+| `ai.chatSubtitle` | parlay | "pertandingan" |
+| `footer.aboutText` | parlay | "pertandingan" |
 
 ## Dampak
-- Logo akan memiliki ukuran fixed 24x24px (w-6 h-6) dan tidak akan melebar
-- Gap antara logo dan nama tim menjadi 8px (gap-2) 
-- Nama tim tampil lengkap tanpa terpotong
-- Layout konsisten untuk semua liga di dropdown (Liga 1, Liga 2, Premier League, La Liga, dll)
-
----
-
-## Detail Teknis
-
-### Kenapa `wrapperClassName` penting?
-Komponen LazyImage membungkus img dalam div dengan default `w-full h-full`. Tanpa override melalui `wrapperClassName`, wrapper akan mengisi seluruh parent cell (~600px), meskipun img hanya 28x28px.
-
-### Kenapa `shrink-0`?
-Mencegah logo menyusut saat flexbox container kekurangan ruang, memastikan ukuran logo selalu konsisten 24x24px.
+- Copywriting menjadi fokus pada **analisa pertandingan dan statistik** (bukan judi/taruhan)
+- Aman dari filter Nawala Indonesia
+- Comply dengan kebijakan Google Ads dan App Store
+- Messaging tetap menarik dan relevan untuk pengguna sepak bola
