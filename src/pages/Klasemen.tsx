@@ -153,7 +153,7 @@ const Klasemen: React.FC = () => {
                         <TableHead className="w-12 text-center font-semibold text-xs uppercase">
                           {language === 'id' ? 'Pos' : 'Pos'}
                         </TableHead>
-                        <TableHead className="font-semibold text-xs uppercase min-w-[180px]">
+                        <TableHead className="font-semibold text-xs uppercase">
                           {language === 'id' ? 'Tim' : 'Team'}
                         </TableHead>
                         <TableHead className="w-12 text-center font-semibold text-xs uppercase">
@@ -195,20 +195,21 @@ const Klasemen: React.FC = () => {
                             {team.position}
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
                               {team.teamLogo ? (
                                 <LazyImage 
                                   src={team.teamLogo} 
                                   alt={team.teamName}
-                                  className="w-7 h-7 object-contain"
+                                  wrapperClassName="w-6 h-6 shrink-0"
+                                  className="w-full h-full object-contain"
                                   fallback="/placeholder.svg"
                                 />
                               ) : (
-                                <div className="w-7 h-7 bg-muted rounded-full flex items-center justify-center">
-                                  <Trophy className="w-4 h-4 text-muted-foreground" />
+                                <div className="w-6 h-6 shrink-0 bg-muted rounded-full flex items-center justify-center">
+                                  <Trophy className="w-3 h-3 text-muted-foreground" />
                                 </div>
                               )}
-                              <span className="font-medium text-sm truncate max-w-[140px] sm:max-w-none">
+                              <span className="font-medium text-sm whitespace-nowrap">
                                 {team.teamName}
                               </span>
                             </div>
