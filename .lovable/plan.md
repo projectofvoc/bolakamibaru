@@ -1,98 +1,84 @@
 
-## Rencana Perbaikan: LazyImage Tidak Memuat Gambar dengan Benar
+# Plan: Mengubah Copywriting AI Companion agar Aman dari Nawala & Pelanggaran Google
 
-### Masalah yang Ditemukan
-
-Komponen `LazyImage` memiliki bug pada struktur CSS:
-
-| Masalah | Dampak |
-|---------|--------|
-| Wrapper `div` tidak memiliki `w-full h-full` | Gambar tidak mengisi container parent |
-| Skeleton placeholder tidak sinkron dengan ukuran gambar | Loading skeleton tidak sesuai ukuran |
-| Gambar dalam `opacity: 0` tapi parent tidak punya dimensi | Gambar tampak tidak dimuat |
+## Ringkasan
+Mengubah semua teks di komponen AI Companion dari terminologi terkait judi/betting menjadi fokus pada **analisis sepakbola murni** untuk menghindari pemblokiran nawala Indonesia dan pelanggaran kebijakan Google AdSense/Ads.
 
 ---
 
-### Solusi
+## Masalah yang Diidentifikasi
 
-#### 1. Perbaiki `LazyImage.tsx`
+Berdasarkan screenshot, teks berikut mengandung terminologi judi:
 
-Tambahkan `w-full h-full` pada wrapper div agar mewarisi dimensi dari parent container:
-
-**Sebelum:**
-```tsx
-<div className={cn('relative overflow-hidden', wrapperClassName)}>
-```
-
-**Sesudah:**
-```tsx
-<div className={cn('relative overflow-hidden w-full h-full', wrapperClassName)}>
-```
+| Lokasi | Teks Lama (Bermasalah) | Kata Kunci Judi |
+|--------|------------------------|-----------------|
+| Headline baris 1 | "Mau menang parlay?" | parlay |
+| Headline baris 2 | "Gue bantu lu analisa!" | - |
+| Subheadline | "Live score + alert odds drop! Waktunya cuan!" | odds, cuan |
+| Placeholder | "Contoh: Analisa MU vs Arsenal, fokus BTTS + odds..." | BTTS, odds |
 
 ---
 
-### File yang Akan Dimodifikasi
+## Solusi: Copywriting Baru
 
-| File | Perubahan |
-|------|-----------|
-| `src/components/ui/LazyImage.tsx` | Tambahkan `w-full h-full` pada wrapper div |
+### Opsi A - Fokus Analisis & Statistik
 
----
+| Lokasi | Teks Baru |
+|--------|-----------|
+| Headline baris 1 | "Mau tahu siapa yang menang?" |
+| Headline baris 2 | "Gue bantu lu analisa!" |
+| Subheadline | "Live score + statistik lengkap! Waktunya update!" |
+| Placeholder | "Contoh: Analisa MU vs Arsenal, fokus head-to-head..." |
 
-### Kode Lengkap Perbaikan
+### Opsi B - Fokus Prediksi Match
 
-```tsx
-// LazyImage.tsx - Perubahan pada line 30
-return (
-  <div className={cn('relative overflow-hidden w-full h-full', wrapperClassName)}>
-    {/* Skeleton placeholder */}
-    {!isLoaded && (
-      <div className="absolute inset-0 bg-muted animate-pulse" />
-    )}
-    
-    <img
-      src={hasError ? fallback : src}
-      alt={alt}
-      loading="lazy"
-      onLoad={handleLoad}
-      onError={handleError}
-      className={cn(
-        'transition-opacity duration-300',
-        isLoaded ? 'opacity-100' : 'opacity-0',
-        className
-      )}
-      {...props}
-    />
-  </div>
-);
-```
+| Lokasi | Teks Baru |
+|--------|-----------|
+| Headline baris 1 | "Mau prediksi pertandingan?" |
+| Headline baris 2 | "Gue bantu lu analisa!" |
+| Subheadline | "Live score + statistik pertandingan real-time!" |
+| Placeholder | "Contoh: Prediksi MU vs Arsenal, siapa lebih unggul?" |
 
 ---
 
-### Hasil yang Diharapkan
+## Langkah Implementasi
 
-| Aspek | Sebelum | Sesudah |
-|-------|---------|---------|
-| Gambar dalam container `aspect-[4/3]` | Tidak terlihat / partial | Tampil penuh |
-| Skeleton loading | Ukuran tidak konsisten | Sesuai container |
-| Fade-in effect | Gambar muncul terpotong | Smooth fade-in |
+### 1. Update AICompanion.tsx
+Mengubah 4 bagian teks:
+- Headline utama (2 baris)
+- Subheadline/deskripsi
+- Placeholder input field
 
----
+### 2. Review AIChatSidebar.tsx (jika ada)
+Memastikan tidak ada terminologi judi di sidebar chat
 
-### Langkah Verifikasi Setelah Perbaikan
-
-1. Scroll halaman beranda dan pastikan semua gambar artikel tampil penuh
-2. Cek section "Berita Populer" di sidebar kanan
-3. Cek section "Latest Updates" 
-4. Navigasi ke halaman `/berita` dan `/klasemen`
+### 3. Review Prompt Chips
+Memastikan chip-chip prompt sudah aman (dari screenshot: "Siapa pencetak gol terbanyak Liga 1?", "Jadwal pertandingan Persebaya", "Statistik pemain terbaik" - ini sudah **AMAN**)
 
 ---
 
-### Detail Teknis
+## Detail Teknis
 
-Perubahan ini **minimal** (hanya 1 file, 1 baris) tetapi **kritis** karena:
-- CSS `w-full h-full` memastikan wrapper mengambil 100% width dan height dari parent
-- Skeleton placeholder (`absolute inset-0`) akan bekerja dengan benar karena parent punya dimensi
-- Gambar dengan `w-full h-full object-cover` akan mengisi wrapper sepenuhnya
+**File yang akan diubah:**
+- `src/components/AICompanion.tsx`
 
-Tidak ada perubahan pada komponen lain yang sudah menggunakan `LazyImage` karena mereka sudah memiliki container dengan dimensi yang benar (seperti `aspect-[4/3]`).
+**Jenis perubahan:**
+- String/teks statis saja
+- Tidak ada perubahan logika atau fungsi
+
+**Estimasi:**
+- Perubahan minimal, hanya 4-5 baris teks
+
+---
+
+## Kata-Kata yang Harus Dihindari
+
+| Kata Terlarang | Alternatif Aman |
+|----------------|-----------------|
+| parlay | prediksi / analisa |
+| odds | statistik / peluang menang |
+| cuan | update / info |
+| BTTS | head-to-head / gol |
+| betting | pertandingan |
+| taruhan | jadwal |
+| handicap | performa |
