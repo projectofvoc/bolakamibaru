@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Newspaper, TrendingUp, Calendar, Target, CheckCircle, Bookmark, Clock, ChevronRight, Play } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import FooterBanners from '@/components/FooterBanners';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import heroImage from '@/assets/hero-stadium.jpg';
@@ -512,6 +513,7 @@ const Berita: React.FC = () => {
         </section>
       </main>
 
+      <FooterBanners />
       <Footer />
     </div>
   );

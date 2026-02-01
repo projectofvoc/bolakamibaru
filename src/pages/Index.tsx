@@ -1,6 +1,7 @@
 import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import FooterBanners from '@/components/FooterBanners';
 import HeroDashboard from '@/components/HeroDashboard';
 import BestMomentsCarousel from '@/components/BestMomentsCarousel';
 import NewsGrid from '@/components/NewsGrid';
@@ -22,6 +23,7 @@ const Index: React.FC = () => {
         <AICompanion />
         <MoreNewsGrid />
       </main>
+      <FooterBanners />
       <Footer />
     </div>
   );

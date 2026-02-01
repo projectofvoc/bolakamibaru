@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Radio, Loader2, RefreshCw } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import FooterBanners from '@/components/FooterBanners';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLiveScores } from '@/hooks/useLiveScores';
 import { matches as staticMatches } from '@/data/matchData';
@@ -184,6 +185,7 @@ const Live: React.FC = () => {
         </section>
       </main>
 
+      <FooterBanners />
       <Footer />
     </div>
   );

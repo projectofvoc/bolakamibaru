@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getOrCreateSessionId } from '@/lib/analytics';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import FooterBanners from '@/components/FooterBanners';
 import MoreNewsGrid from '@/components/MoreNewsGrid';
 import { motion } from 'framer-motion';
 import { ChevronRight, Facebook, Twitter, Clock, Loader2, Copy, Check, Share2 } from 'lucide-react';
@@ -414,6 +415,7 @@ const NewsDetail: React.FC = () => {
         </div>
       </main>
       
+      <FooterBanners />
       <Footer />
     </div>
   );

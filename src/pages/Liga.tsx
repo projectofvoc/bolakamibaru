@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Trophy, ChevronRight, CheckCircle, Bookmark, Clock } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import FooterBanners from '@/components/FooterBanners';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
@@ -436,6 +437,7 @@ const Liga: React.FC = () => {
         </section>
       </main>
 
+      <FooterBanners />
       <Footer />
     </div>
   );

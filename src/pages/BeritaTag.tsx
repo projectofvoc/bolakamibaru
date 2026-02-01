@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Tag, X, CheckCircle, Bookmark, Search } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import FooterBanners from '@/components/FooterBanners';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -127,6 +128,7 @@ const BeritaTag: React.FC = () => {
           )}
         </section>
       </main>
+      <FooterBanners />
       <Footer />
     </div>
   );
