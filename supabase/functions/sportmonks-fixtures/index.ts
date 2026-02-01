@@ -10,7 +10,7 @@ const corsHeaders = {
 const CACHE_TTL_SECONDS = 5 * 60;
 
 // Map internal league IDs to Sportmonks league IDs
-// Note: Liga 1 Indonesia is NOT available in Sportmonks - use API-Football instead
+// Note: Liga 1 & Liga 2 Indonesia are NOT available in Sportmonks - use API-Football instead
 const leagueIdMapping: Record<string, number> = {
   'premier-league': 8,     // English Premier League
   'la-liga': 564,         // Spanish La Liga
@@ -18,6 +18,9 @@ const leagueIdMapping: Record<string, number> = {
   'bundesliga': 82,       // German Bundesliga
   'champions-league': 2,  // UEFA Champions League
 };
+
+// Indonesian leagues - handled by API Football
+const indonesianLeagues = ['liga-1', 'liga-2'];
 
 // League colors for UI
 const leagueColors: Record<string, string> = {
@@ -89,12 +92,41 @@ interface CachedFixturesData {
   fixtures: TransformedFixture[];
 }
 
-// Cache helper function
+// Helper function to get API key from database with fallback to env
+async function getApiKey(supabase: any, configName: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('api_configurations')
+      .select('api_key')
+      .eq('name', configName)
+      .eq('is_active', true)
+      .single();
+
+    if (!error && data?.api_key) {
+      console.log(`Using API key from database for: ${configName}`);
+      return data.api_key;
+    }
+  } catch (e) {
+    console.log(`Error fetching API key from database: ${e}`);
+  }
+
+  // Fallback to environment variable
+  const envKey = Deno.env.get('SPORTMONKS_API_KEY');
+  if (envKey) {
+    console.log(`Using API key from environment variable`);
+    return envKey;
+  }
+
+  return null;
+}
+
+// Cache helper function with optional validation
 async function getCachedOrFetch<T>(
   supabase: any,
   cacheKey: string,
   ttlSeconds: number,
-  fetchFn: () => Promise<T>
+  fetchFn: () => Promise<T>,
+  isValidData?: (data: T) => boolean
 ): Promise<{ data: T; fromCache: boolean }> {
   try {
     // 1. Check cache
@@ -117,16 +149,22 @@ async function getCachedOrFetch<T>(
   console.log(`[Cache MISS] ${cacheKey}`);
   const freshData = await fetchFn();
   
-  // 3. Store in cache (upsert)
-  try {
-    await supabase.from('api_cache').upsert({
-      cache_key: cacheKey,
-      cache_value: freshData,
-      expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
-    }, { onConflict: 'cache_key' });
-    console.log(`[Cache] Stored: ${cacheKey}, TTL: ${ttlSeconds}s`);
-  } catch (e) {
-    console.log(`[Cache] Error storing cache: ${e}`);
+  // 3. Only store in cache if data is valid (prevents caching errors)
+  const shouldCache = isValidData ? isValidData(freshData) : true;
+  
+  if (shouldCache) {
+    try {
+      await supabase.from('api_cache').upsert({
+        cache_key: cacheKey,
+        cache_value: freshData,
+        expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
+      }, { onConflict: 'cache_key' });
+      console.log(`[Cache] Stored: ${cacheKey}, TTL: ${ttlSeconds}s`);
+    } catch (e) {
+      console.log(`[Cache] Error storing cache: ${e}`);
+    }
+  } else {
+    console.log(`[Cache] Skipped storing (invalid/empty data): ${cacheKey}`);
   }
   
   return { data: freshData, fromCache: false };
@@ -230,11 +268,6 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const apiKey = Deno.env.get('SPORTMONKS_API_KEY');
-    if (!apiKey) {
-      throw new Error('SPORTMONKS_API_KEY not configured');
-    }
-
     // Parse request body for optional league filter
     let leagueId: string | null = null;
     try {
@@ -242,6 +275,25 @@ serve(async (req) => {
       leagueId = body.leagueId || null;
     } catch {
       // No body or invalid JSON, use all leagues
+    }
+
+    // Handle Indonesian leagues - they use API Football, not Sportmonks
+    if (leagueId && indonesianLeagues.includes(leagueId)) {
+      console.log(`Liga Indonesia (${leagueId}) - use API Football instead`);
+      return new Response(
+        JSON.stringify({ 
+          fixtures: [], 
+          source: 'use-api-football',
+          message: `${leagueId} fixtures are provided by API Football`
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Get API key from database (with fallback to env)
+    const apiKey = await getApiKey(supabase, 'sportmonks');
+    if (!apiKey) {
+      throw new Error('Sportmonks API key not configured in database or environment');
     }
 
     // Calculate date range (today + 7 days)
@@ -264,13 +316,18 @@ serve(async (req) => {
     // Cache key includes league filter and date range
     const cacheKey = `fixtures:${leagueId || 'all'}:${startDate}`;
 
-    // Use cache helper
+    // Validator: only cache if we have fixtures
+    const hasValidData = (data: CachedFixturesData): boolean => {
+      return data.fixtures.length > 0;
+    };
+
+    // Use cache helper with validation
     const { data: cachedData, fromCache } = await getCachedOrFetch<CachedFixturesData>(
       supabase,
       cacheKey,
       CACHE_TTL_SECONDS,
       async () => {
-        // Fetch fixtures from Sportmonks (removed venue include - not available in current plan)
+        // Fetch fixtures from Sportmonks
         const url = `https://api.sportmonks.com/v3/football/fixtures/between/${startDate}/${endDate}?api_token=${apiKey}&include=participants;league&filters=fixtureLeagues:${leagueIds.join(',')}`;
         
         console.log(`Fetching fixtures from ${startDate} to ${endDate} for leagues: ${leagueIds.join(',')}`);
@@ -301,7 +358,8 @@ serve(async (req) => {
         console.log(`Transformed ${fixtures.length} fixtures`);
 
         return { fixtures };
-      }
+      },
+      hasValidData
     );
 
     return new Response(
