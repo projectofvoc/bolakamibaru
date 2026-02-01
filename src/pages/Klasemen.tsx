@@ -3,7 +3,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useStandings, availableLeagues } from '@/hooks/useStandings';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { 
+import FooterBanners from '@/components/FooterBanners';
+import {
   Select, 
   SelectContent, 
   SelectItem, 
@@ -265,6 +266,7 @@ const Klasemen: React.FC = () => {
         </section>
       </main>
 
+      <FooterBanners />
       <Footer />
     </div>
   );
