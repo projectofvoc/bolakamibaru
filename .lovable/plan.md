@@ -1,110 +1,115 @@
 
 
-# Perbaikan Line Height & Spacing Artikel - Audit CMS
+# Plan: Perbaikan API Football - Data Tidak Tampil
 
-## Masalah yang Ditemukan
+## Ringkasan Masalah
 
-Dari screenshot dan analisis kode di `src/index.css`, ditemukan **3 masalah utama** pada styling `.article-content`:
+Setelah audit mendalam, ditemukan bahwa data "Jadwal Terdekat", "Klasemen", dan "Liga" tidak tampil karena **API Football key bermasalah** dan **cache menyimpan data error**.
 
-| Lokasi | Property | Nilai Saat Ini | Masalah |
-|--------|----------|----------------|---------|
-| Baris 177 | `ul space-y` | `space-y-2` (8px) | Terlalu besar untuk list pendek |
-| Baris 185 | `li leading` | `leading-relaxed` (1.625) | Line-height terlalu tinggi |
-| Baris 173 | `p leading` | `leading-relaxed` (1.625) | Paragraf terlihat renggang |
+## Temuan Teknis
 
-### Dampak Visual
+### Status API Keys
 
-- List "Jadwal Live Streaming" memiliki gap **~50px** antar item
-- Paragraf artikel terlihat terlalu "sparse" dan tidak compact
-- Reading experience kurang optimal terutama untuk informasi ringkas
+| API | Status Key | Status Endpoint |
+|-----|------------|-----------------|
+| Sportmonks | Valid | Berfungsi |
+| API Football | Valid (test) | Error pada /fixtures |
 
----
+### Root Cause
+
+1. **API Key Subscription Issue**
+   - Test connection (`/status`) berhasil dengan response "Account: Active"
+   - Request ke `/fixtures` gagal dengan error: "Missing application key"
+   - Kemungkinan: quota habis, subscription expired, atau tier tidak mencakup endpoint fixtures
+
+2. **Caching Data Error**
+   - Cache `apifb-livescore:2026-02-01` menyimpan array kosong
+   - TTL 30 detik terus di-refresh dengan data kosong
+   - Data valid terakhir ada di cache tanggal 2026-01-31
 
 ## Solusi yang Direkomendasikan
 
-### Perubahan di `src/index.css`
+### Langkah 1: Clear Cache yang Bermasalah
 
-#### 1. Ubah spacing list (`ul`)
-**Baris 176-178**
+Hapus cache data yang berisi error agar sistem fetch data baru:
 
-| Sebelum | Sesudah |
-|---------|---------|
-| `@apply list-disc pl-6 mb-5 space-y-2;` | `@apply list-disc pl-6 mb-5 space-y-1;` |
-
-**Alasan**: `space-y-1` (4px) lebih proporsional untuk list item yang pendek seperti jadwal
-
-#### 2. Ubah line-height list item (`li`)
-**Baris 184-186**
-
-| Sebelum | Sesudah |
-|---------|---------|
-| `@apply text-lg leading-relaxed text-foreground/90;` | `@apply text-lg leading-normal text-foreground/90;` |
-
-**Alasan**: `leading-normal` (1.5) lebih compact namun tetap readable
-
-#### 3. Ubah line-height paragraf (`p`)
-**Baris 172-174**
-
-| Sebelum | Sesudah |
-|---------|---------|
-| `@apply text-lg leading-relaxed mb-5 text-foreground/90;` | `@apply text-lg leading-[1.75] mb-5 text-foreground/90;` |
-
-**Alasan**: `leading-[1.75]` memberikan keseimbangan antara readability dan density untuk teks panjang
-
-#### 4. Ubah margin bottom heading (`h2`)
-**Baris 164-166**
-
-| Sebelum | Sesudah |
-|---------|---------|
-| `@apply text-2xl md:text-3xl font-bold mb-4 mt-8 text-foreground leading-tight;` | `@apply text-2xl md:text-3xl font-bold mb-3 mt-8 text-foreground leading-tight;` |
-
-**Alasan**: Mengurangi jarak antara heading dan konten di bawahnya
-
----
-
-## Perbandingan Visual (Estimasi)
-
-### Sebelum
-```
-📺 Jadwal Live Streaming
-                                    ← 50px gap
-• Kompetisi: UEFA Europa League
-                                    ← 50px gap
-• Pertandingan: Panathinaikos vs Roma
-                                    ← 50px gap
-• Tempat: Olympiako Stadio...
+```sql
+DELETE FROM api_cache 
+WHERE cache_key LIKE 'apifb-livescore:2026-02-01%';
 ```
 
-### Sesudah
+### Langkah 2: Verifikasi API Football Subscription
+
+Anda perlu login ke dashboard API-Football (api-football.com) dan periksa:
+- **Quota harian** - Apakah sudah habis?
+- **Subscription status** - Apakah masih aktif?
+- **Plan tier** - Apakah mencakup endpoint fixtures?
+
+### Langkah 3: Update API Key (Jika Diperlukan)
+
+Jika key sudah expired atau quota habis:
+1. Generate API key baru dari dashboard API-Football
+2. Update di tabel `api_configurations`:
+
+```sql
+UPDATE api_configurations 
+SET api_key = 'NEW_API_KEY_HERE', updated_at = NOW()
+WHERE name = 'api_football_indo';
 ```
-📺 Jadwal Live Streaming
-                              ← 20px gap
-• Kompetisi: UEFA Europa League
-                              ← 20px gap
-• Pertandingan: Panathinaikos vs Roma
-                              ← 20px gap
-• Tempat: Olympiako Stadio...
+
+### Langkah 4: Perbaikan Kode (Pencegahan)
+
+Tambahkan logic untuk **tidak menyimpan cache jika data kosong/error**:
+
+```text
+File: supabase/functions/apifootball-livescore/index.ts
+
+Modifikasi: Jangan cache data jika semua array kosong
+- Tambahkan validasi sebelum menyimpan ke cache
+- Jika liveMatches, upcomingMatches, dan recentMatches semua kosong,
+  skip caching agar request berikutnya fetch ulang dari API
 ```
 
----
+## Diagram Alur Masalah
 
-## Ringkasan Perubahan File
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                     CURRENT FLOW (BROKEN)                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  User Request → Check Cache → HIT (empty data) → Return Empty  │
+│                      ↓                                          │
+│              Cache contains:                                    │
+│              { liveMatches: [], upcomingMatches: [] }          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 
-**File:** `src/index.css`
+┌─────────────────────────────────────────────────────────────────┐
+│                     EXPECTED FLOW (FIXED)                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  User Request → Check Cache → MISS → Fetch API → Valid Data    │
+│                                           ↓                     │
+│                                     Store in Cache              │
+│                                           ↓                     │
+│                                     Return Data                 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-| Baris | Class | Perubahan |
-|-------|-------|-----------|
-| 173 | `.article-content p` | `leading-relaxed` → `leading-[1.75]` |
-| 165 | `.article-content h2` | `mb-4` → `mb-3` |
-| 177 | `.article-content ul` | `space-y-2` → `space-y-1` |
-| 185 | `.article-content li` | `leading-relaxed` → `leading-normal` |
+## Tindakan Segera
 
----
+Setelah plan ini disetujui, saya akan:
 
-## Dampak
+1. **Clear cache** yang bermasalah via SQL
+2. **Update edge function** untuk tidak cache data kosong
+3. **Test ulang** API Football endpoint
+4. **Tambahkan fallback** jika API gagal (tampilkan pesan informatif)
 
-- Spacing antar bullet point berkurang ~50% (dari ~50px ke ~25px)
-- Section "Jadwal Live Streaming" tampil lebih compact dan profesional
-- Paragraf artikel tetap readable namun lebih dense
-- Konsisten dengan standar editorial modern (National Geographic, The Athletic, dll)
+## Catatan Penting
+
+- API Football (api-sports.io) **berbeda** dari Sportmonks
+- Liga 1 Indonesia (ID: 274) dan Liga 2 (ID: 275) menggunakan API Football
+- Liga internasional (EPL, La Liga, dll) menggunakan Sportmonks
+- Anda perlu memastikan subscription API Football masih aktif
 
