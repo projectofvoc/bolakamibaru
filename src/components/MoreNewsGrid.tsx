@@ -50,7 +50,7 @@ const MoreNewsGrid: React.FC = () => {
   if (!articles || articles.length === 0) {
     return null;
   }
-  return <section className="pb-16 py-[7px]">
+  return <section className="py-6">
       <div className="container mx-auto px-4">
 
         {/* Grid - 5 columns on desktop */}
@@ -126,7 +126,7 @@ const MoreNewsGrid: React.FC = () => {
         </div>
 
         {/* Load More Button */}
-        {hasMore && <div className="mt-10 text-center">
+        {hasMore && <div className="mt-8 text-center">
             <Button variant="outline" className="rounded-full px-8" onClick={() => setVisibleCount(prev => prev + 10)}>
               {t('section.seeMore')}
             </Button>
