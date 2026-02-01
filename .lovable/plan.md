@@ -1,121 +1,158 @@
 
+# Plan: Implementasi Banner Section di Atas Footer
 
-# Plan: Perbaikan Jadwal Mendatang - Semua Liga
+## Ringkasan
 
-## Ringkasan Masalah
+Membuat section banner yang dapat dikelola melalui CMS, ditempatkan di atas footer pada semua halaman. Banner mendukung format JPG, PNG, dan GIF dengan layout responsive (2 kolom di desktop, 1 kolom stacked di mobile).
 
-Audit menemukan bahwa "Jadwal Mendatang" tidak muncul karena:
+## Pendekatan Implementasi
 
-1. **API Key tidak sinkron**: `sportmonks-fixtures` menggunakan environment variable `SPORTMONKS_API_KEY` yang sudah expired, sementara `sportmonks-livescore` sudah diupdate untuk membaca dari database `api_configurations`
-2. **Liga Indonesia tidak di-mapping**: Liga 2 return "Invalid league ID" karena tidak ada di mapping function
+### 1. Database: Tabel Baru `footer_banners`
 
-## Bukti dari Logs
-
-```text
-[sportmonks-fixtures]
-Sportmonks API error: {"message":"Invalid token provided"}
-Error fetching fixtures: Sportmonks API error: 401
-
-[sportmonks-livescore]
-Using API key from database for: sportmonks ✅
-Sportmonks response: {"data":[...]} ✅
-```
-
-## Solusi
-
-### Langkah 1: Update sportmonks-fixtures untuk Baca API Key dari Database
-
-Ubah `supabase/functions/sportmonks-fixtures/index.ts` agar menggunakan pattern yang sama dengan `sportmonks-livescore`:
+Membuat tabel terpisah dari `advertisements` (yang digunakan untuk popup) agar pengelolaan lebih terorganisir:
 
 ```text
-SEBELUM:
-const apiKey = Deno.env.get('SPORTMONKS_API_KEY');
-
-SESUDAH:
-// Tambahkan function getApiKey() yang baca dari api_configurations
-// dengan fallback ke environment variable
-const apiKey = await getApiKey(supabase, 'sportmonks');
+footer_banners
+├── id (uuid, PK)
+├── title (text) - Judul internal untuk identifikasi
+├── position (text) - 'left' atau 'right' untuk desktop
+├── image_url (text) - URL gambar (JPG/PNG/GIF)
+├── link_url (text, nullable) - URL tujuan saat diklik
+├── is_active (boolean) - Status aktif/nonaktif
+├── sort_order (integer) - Urutan tampilan
+├── created_at (timestamptz)
+├── updated_at (timestamptz)
 ```
 
-Perubahan yang diperlukan:
-- Tambahkan function `getApiKey()` yang membaca dari tabel `api_configurations`
-- Panggil function ini untuk mendapatkan API key yang valid dari database
-
-### Langkah 2: Perbaiki Handling Liga Indonesia
-
-Liga 1 dan Liga 2 Indonesia menggunakan API Football (bukan Sportmonks). Saat ini function return error "Invalid league ID". 
+### 2. Komponen Baru: `FooterBanners.tsx`
 
 ```text
-SEBELUM:
-return new Response(
-  JSON.stringify({ fixtures: [], error: 'Invalid league ID' }),
-  ...
-);
-
-SESUDAH:
-// Return empty array tanpa error untuk Liga Indonesia
-// karena data diambil dari API Football terpisah
-if (leagueId === 'liga-1' || leagueId === 'liga-2') {
-  return new Response(
-    JSON.stringify({ fixtures: [], source: 'use-api-football' }),
-    ...
-  );
-}
+src/components/FooterBanners.tsx
+├── Fetch banner dari database (left & right)
+├── Layout: grid grid-cols-1 lg:grid-cols-2 gap-4
+├── Support GIF animation (menggunakan <img> tag langsung)
+├── Clickable dengan link_url (optional)
+├── Skeleton loading state
 ```
 
-### Langkah 3: Clear Cache yang Bermasalah
+Layout Visual:
+```text
+┌──────────────────────────────────────────────────────────┐
+│                    DESKTOP (lg+)                         │
+│  ┌─────────────────────┐  ┌─────────────────────────────┐│
+│  │    Banner Left      │  │       Banner Right          ││
+│  │   (aspect 3:1)      │  │       (aspect 3:1)          ││
+│  └─────────────────────┘  └─────────────────────────────┘│
+└──────────────────────────────────────────────────────────┘
 
-Hapus cache yang menyimpan error responses:
-
-```sql
-DELETE FROM api_cache 
-WHERE cache_key LIKE 'fixtures:%';
+┌─────────────────────────────┐
+│     MOBILE (< lg)           │
+│  ┌───────────────────────┐  │
+│  │     Banner Top        │  │
+│  │    (aspect 3:1)       │  │
+│  └───────────────────────┘  │
+│  ┌───────────────────────┐  │
+│  │     Banner Bottom     │  │
+│  │    (aspect 3:1)       │  │
+│  └───────────────────────┘  │
+└─────────────────────────────┘
 ```
 
-## Diagram Alur Fix
+### 3. Halaman CMS Baru: `CMSFooterBanners.tsx`
+
+Fitur pengelolaan:
+- List semua banner dengan preview
+- Form upload (drag & drop atau file picker)
+- Pilih posisi: Left / Right
+- Toggle aktif/nonaktif
+- Edit & hapus banner
+
+### 4. Integrasi ke Semua Halaman
+
+Menempatkan komponen `FooterBanners` di setiap halaman sebelum `Footer`:
 
 ```text
-┌────────────────────────────────────────────────────────────────┐
-│                       CURRENT STATE                            │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  sportmonks-fixtures                                           │
-│  └─> Deno.env.get('SPORTMONKS_API_KEY') ─> EXPIRED KEY ❌     │
-│                                                                │
-│  sportmonks-livescore                                          │
-│  └─> api_configurations.sportmonks ─────> VALID KEY ✅        │
-│                                                                │
-└────────────────────────────────────────────────────────────────┘
-
-┌────────────────────────────────────────────────────────────────┐
-│                       AFTER FIX                                │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  sportmonks-fixtures                                           │
-│  └─> api_configurations.sportmonks ─────> VALID KEY ✅        │
-│                                                                │
-│  sportmonks-livescore                                          │
-│  └─> api_configurations.sportmonks ─────> VALID KEY ✅        │
-│                                                                │
-│  [KONSISTEN - Kedua function pakai source yang sama]           │
-│                                                                │
-└────────────────────────────────────────────────────────────────┘
+<main>
+  ... content ...
+</main>
+<FooterBanners />  ← NEW
+<Footer />
 ```
 
-## File yang Akan Diubah
+Halaman yang akan diupdate:
+- `src/pages/Index.tsx`
+- `src/pages/Berita.tsx`
+- `src/pages/BeritaTag.tsx`
+- `src/pages/Liga.tsx`
+- `src/pages/Klasemen.tsx`
+- `src/pages/Live.tsx`
+- `src/pages/NewsDetail.tsx`
 
-| File | Perubahan |
-|------|-----------|
-| `supabase/functions/sportmonks-fixtures/index.ts` | Tambah `getApiKey()` function, handle Liga Indonesia |
+### 5. Routing CMS
+
+Menambahkan route baru:
+```text
+/cms/footer-banners → CMSFooterBanners
+```
+
+## Spesifikasi Teknis
+
+### Ratio & Ukuran Banner (Panduan untuk Desainer)
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                 BANNER SPECIFICATION                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Aspect Ratio: 3:1 (contoh: 1200×400 px)                    │
+│                                                             │
+│  Ukuran Rekomendasi:                                        │
+│  ├── Desktop: 1200 × 400 px (untuk banner penuh)            │
+│  ├── Single: 600 × 200 px (untuk satu sisi)                 │
+│  └── Mobile: 800 × 267 px (untuk tampilan mobile)           │
+│                                                             │
+│  Format: JPG, PNG, GIF (animated supported)                 │
+│  Max File Size: 2MB (untuk GIF: 5MB)                        │
+│                                                             │
+│  Safe Zone: Konten penting dalam 90% area tengah            │
+│  karena edge mungkin terpotong di beberapa ukuran layar     │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Storage Bucket
+
+Menggunakan bucket `advertisements` yang sudah ada (public) dengan path:
+```text
+advertisements/footer-banners/{timestamp}.{ext}
+```
+
+### RLS Policy
+
+Banner bersifat publik (read-only untuk semua, write hanya admin).
+
+## File yang Akan Dibuat/Diubah
+
+| File | Aksi | Deskripsi |
+|------|------|-----------|
+| `supabase/migrations/` | Create | Tabel `footer_banners` |
+| `src/components/FooterBanners.tsx` | Create | Komponen display banner |
+| `src/pages/cms/CMSFooterBanners.tsx` | Create | Halaman kelola banner |
+| `src/pages/cms/index.ts` | Update | Export komponen baru |
+| `src/App.tsx` | Update | Tambah route CMS |
+| `src/pages/Index.tsx` | Update | Tambah `FooterBanners` |
+| `src/pages/Berita.tsx` | Update | Tambah `FooterBanners` |
+| `src/pages/BeritaTag.tsx` | Update | Tambah `FooterBanners` |
+| `src/pages/Liga.tsx` | Update | Tambah `FooterBanners` |
+| `src/pages/Klasemen.tsx` | Update | Tambah `FooterBanners` |
+| `src/pages/Live.tsx` | Update | Tambah `FooterBanners` |
+| `src/pages/NewsDetail.tsx` | Update | Tambah `FooterBanners` |
 
 ## Hasil yang Diharapkan
 
-Setelah fix:
-- ✅ Premier League: Jadwal muncul (Sportmonks)
-- ✅ La Liga: Jadwal muncul (Sportmonks)
-- ✅ Serie A: Jadwal muncul (Sportmonks)
-- ✅ Bundesliga: Jadwal muncul (Sportmonks)
-- ✅ Champions League: Jadwal muncul (Sportmonks)
-- ✅ Liga 1 Indonesia: Jadwal dari API Football (sudah terpisah)
-- ✅ Liga 2 Indonesia: Jadwal dari API Football (sudah terpisah)
-
+Setelah implementasi:
+- Section banner muncul di atas footer pada semua halaman
+- Layout 2 kolom (kiri-kanan) di desktop, stacked di mobile
+- Banner dapat dikelola melalui CMS di `/cms/footer-banners`
+- Support format JPG, PNG, dan GIF (termasuk animasi)
+- Desainer memiliki panduan ratio yang jelas (3:1)
