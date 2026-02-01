@@ -50,7 +50,7 @@ const MoreNewsGrid: React.FC = () => {
   if (!articles || articles.length === 0) {
     return null;
   }
-  return <section className="pb-16 py-0">
+  return <section className="pb-16 py-[7px]">
       <div className="container mx-auto px-4">
 
         {/* Grid - 5 columns on desktop */}
