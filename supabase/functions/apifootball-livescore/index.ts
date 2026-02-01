@@ -83,12 +83,13 @@ async function getApiKey(supabase: any): Promise<string | null> {
   return Deno.env.get('API_FOOTBALL_KEY') || null;
 }
 
-// Cache helper function
+// Cache helper function with empty data validation
 async function getCachedOrFetch<T>(
   supabase: any,
   cacheKey: string,
   ttlSeconds: number,
-  fetchFn: () => Promise<T>
+  fetchFn: () => Promise<T>,
+  isValidData: (data: T) => boolean = () => true
 ): Promise<{ data: T; fromCache: boolean }> {
   try {
     // 1. Check cache
@@ -100,8 +101,14 @@ async function getCachedOrFetch<T>(
       .single();
     
     if (!cacheError && cached) {
-      console.log(`[Cache HIT] ${cacheKey}`);
-      return { data: cached.cache_value as T, fromCache: true };
+      // Validate cached data
+      if (!isValidData(cached.cache_value as T)) {
+        console.log(`[Cache] Invalid cached data (empty), deleting: ${cacheKey}`);
+        await supabase.from('api_cache').delete().eq('cache_key', cacheKey);
+      } else {
+        console.log(`[Cache HIT] ${cacheKey}`);
+        return { data: cached.cache_value as T, fromCache: true };
+      }
     }
   } catch (e) {
     console.log(`[Cache] Error checking cache: ${e}`);
@@ -111,16 +118,22 @@ async function getCachedOrFetch<T>(
   console.log(`[Cache MISS] ${cacheKey}`);
   const freshData = await fetchFn();
   
-  // 3. Store in cache (upsert)
-  try {
-    await supabase.from('api_cache').upsert({
-      cache_key: cacheKey,
-      cache_value: freshData,
-      expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
-    }, { onConflict: 'cache_key' });
-    console.log(`[Cache] Stored: ${cacheKey}, TTL: ${ttlSeconds}s`);
-  } catch (e) {
-    console.log(`[Cache] Error storing cache: ${e}`);
+  // 3. Only store in cache if data is valid (not empty)
+  const shouldCache = isValidData(freshData);
+  
+  if (shouldCache) {
+    try {
+      await supabase.from('api_cache').upsert({
+        cache_key: cacheKey,
+        cache_value: freshData,
+        expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
+      }, { onConflict: 'cache_key' });
+      console.log(`[Cache] Stored: ${cacheKey}, TTL: ${ttlSeconds}s`);
+    } catch (e) {
+      console.log(`[Cache] Error storing cache: ${e}`);
+    }
+  } else {
+    console.log(`[Cache] Skipping cache - data is empty or invalid`);
   }
   
   return { data: freshData, fromCache: false };
@@ -265,7 +278,20 @@ Deno.serve(async (req) => {
     const today = new Date().toISOString().split('T')[0];
     const cacheKey = `apifb-livescore:${today}`;
 
-    // Use cache helper
+    // Validator: only cache if we have at least some data
+    const hasValidData = (data: CachedData): boolean => {
+      const hasAnyData = 
+        data.liveMatches.length > 0 || 
+        data.upcomingMatches.length > 0 || 
+        data.recentMatches.length > 0;
+      
+      if (!hasAnyData) {
+        console.log('[Validator] All arrays empty - will not cache this response');
+      }
+      return hasAnyData;
+    };
+
+    // Use cache helper with validator
     const { data: cachedData, fromCache } = await getCachedOrFetch<CachedData>(
       supabase,
       cacheKey,
@@ -331,7 +357,8 @@ Deno.serve(async (req) => {
             leagues: [LIGA_1_ID, LIGA_2_ID],
           }
         };
-      }
+      },
+      hasValidData  // Pass validator to prevent caching empty data
     );
 
     return new Response(
