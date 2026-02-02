@@ -233,7 +233,7 @@ const NewsDetail: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SidebarBanners />
+      <SidebarBanners variant="article" />
       <Header />
       
       <main className="py-8">
