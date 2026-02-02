@@ -1,128 +1,91 @@
 
-# Plan: Implementasi Sidebar Banners (Banner Kiri & Kanan)
+# Plan: Optimasi Fadeout Sidebar Banners
 
-## Ringkasan
+## Masalah Saat Ini
 
-Membuat fitur sidebar banner yang muncul di sisi kiri dan kanan halaman (seperti pada gambar referensi). Banner ini akan terlihat di layar besar (desktop) dan tersembunyi di mobile. Banner dapat dikelola melalui CMS dengan aspect ratio 4:15 dan mendukung format JPG, PNG, GIF.
+Banner sidebar saat ini menggunakan threshold statis (`documentHeight - windowHeight - 400`) yang belum optimal untuk mendeteksi area "Berita Terkait". Banner perlu fadeout lebih awal agar tidak menutupi konten di bagian bawah.
 
-## Pendekatan Implementasi
+## Solusi
 
-### 1. Database: Tabel Baru `sidebar_banners`
+### 1. Perubahan di `SidebarBanners.tsx`
 
-```text
-sidebar_banners
-├── id (uuid, PK)
-├── title (text) - Judul internal untuk identifikasi
-├── position (text) - 'left' atau 'right'
-├── image_url (text) - URL gambar (JPG/PNG/GIF)
-├── link_url (text, nullable) - URL tujuan saat diklik
-├── is_active (boolean) - Status aktif/nonaktif
-├── sort_order (integer) - Urutan tampilan
-├── created_at (timestamptz)
-├── updated_at (timestamptz)
-```
-
-### 2. Layout Visual
+Menggunakan pendekatan yang lebih akurat dengan mendeteksi elemen "Berita Terkait" secara langsung:
 
 ```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                              DESKTOP VIEW                              │
-├──────────┬──────────────────────────────────────────────┬──────────────┤
-│          │                                              │              │
-│  ┌────┐  │            MAIN CONTENT AREA                 │   ┌────┐     │
-│  │    │  │                                              │   │    │     │
-│  │ L  │  │   ┌────────────────────────────────────┐     │   │ R  │     │
-│  │ E  │  │   │          Header                     │    │   │ I  │     │
-│  │ F  │  │   ├────────────────────────────────────┤    │   │ G  │     │
-│  │ T  │  │   │                                    │     │   │ H  │     │
-│  │    │  │   │        Page Content                │     │   │ T  │     │
-│  │ B  │  │   │                                    │     │   │    │     │
-│  │ A  │  │   │                                    │     │   │ B  │     │
-│  │ N  │  │   │                                    │     │   │ A  │     │
-│  │ N  │  │   └────────────────────────────────────┘     │   │ N  │     │
-│  │ E  │  │                                              │   │ N  │     │
-│  │ R  │  │   ┌────────────────────────────────────┐     │   │ E  │     │
-│  │    │  │   │          Footer                    │     │   │ R  │     │
-│  └────┘  │   └────────────────────────────────────┘     │   └────┘     │
-│          │                                              │              │
-│ 4:15     │                                              │   4:15       │
-│ ratio    │                                              │   ratio      │
-└──────────┴──────────────────────────────────────────────┴──────────────┘
-
-┌────────────────────────────────┐
-│        MOBILE VIEW             │
-│   (Sidebar banners hidden)     │
-│                                │
-│  ┌──────────────────────────┐  │
-│  │    MAIN CONTENT AREA     │  │
-│  │    (Full width)          │  │
-│  └──────────────────────────┘  │
-└────────────────────────────────┘
-```
-
-### 3. Komponen Baru: `SidebarBanners.tsx`
-
-Komponen wrapper yang menampilkan banner di sisi kiri dan kanan:
-- Menggunakan CSS `position: fixed` untuk sticky behavior
-- Hanya tampil di layar >= 1440px (untuk tidak mengganggu konten)
-- Animasi fade-in saat scroll
-
-### 4. Halaman CMS: `CMSSidebarBanners.tsx`
-
-Halaman terpisah untuk mengelola sidebar banners dengan fitur:
-- Upload gambar dengan validasi aspect ratio 4:15
-- Pilih posisi: Left / Right
-- Toggle aktif/nonaktif
-- Preview layout
-
-### 5. Spesifikasi Teknis Banner
-
-```text
+Logika Baru:
 ┌─────────────────────────────────────────────────────────────┐
-│                 SIDEBAR BANNER SPECIFICATION                │
-├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  Aspect Ratio: 4:15 (vertical/portrait)                     │
+│  1. Hitung posisi bawah banner (fixed top-24 + banner       │
+│     height 450px)                                           │
 │                                                             │
-│  Ukuran Rekomendasi:                                        │
-│  ├── Standard: 160 × 600 px (Wide Skyscraper)               │
-│  ├── Alternative: 120 × 600 px (Skyscraper)                 │
-│  └── Large: 300 × 1050 px (untuk layar besar)               │
+│  2. Cari elemen "Berita Terkait" section di halaman         │
 │                                                             │
-│  Format: JPG, PNG, GIF (animasi didukung)                   │
-│  Max File Size: 2MB (JPG/PNG) | 5MB (GIF)                   │
+│  3. Jika posisi bawah banner >= posisi atas "Berita         │
+│     Terkait" → fadeout banner                               │
 │                                                             │
-│  Visibility: Hanya tampil di layar >= 1440px                │
-│  Position: Fixed (sticky saat scroll)                       │
+│  4. Tambah buffer 100px untuk margin keamanan               │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## File yang Akan Dibuat/Diubah
+### 2. Perubahan Teknis
 
-| File | Aksi | Deskripsi |
-|------|------|-----------|
-| `supabase/migrations/` | Create | Tabel `sidebar_banners` |
-| `src/components/SidebarBanners.tsx` | Create | Komponen display sidebar banner |
-| `src/pages/cms/CMSSidebarBanners.tsx` | Create | Halaman CMS kelola sidebar banners |
-| `src/pages/cms/index.ts` | Update | Export komponen baru |
-| `src/pages/cms/CMSLayout.tsx` | Update | Tambah menu sidebar banners |
-| `src/App.tsx` | Update | Tambah route `/cms/sidebar-banners` |
-| `src/pages/Index.tsx` | Update | Tambah komponen `SidebarBanners` |
-| `src/pages/Berita.tsx` | Update | Tambah komponen `SidebarBanners` |
-| `src/pages/BeritaTag.tsx` | Update | Tambah komponen `SidebarBanners` |
-| `src/pages/Liga.tsx` | Update | Tambah komponen `SidebarBanners` |
-| `src/pages/Klasemen.tsx` | Update | Tambah komponen `SidebarBanners` |
-| `src/pages/Live.tsx` | Update | Tambah komponen `SidebarBanners` |
-| `src/pages/NewsDetail.tsx` | Update | Tambah komponen `SidebarBanners` |
+**File:** `src/components/SidebarBanners.tsx`
+
+```text
+Sebelum:
+  const hideThreshold = documentHeight - windowHeight - 400;
+  setIsVisible(scrollY < hideThreshold);
+
+Sesudah:
+  // Posisi bawah banner = scroll + top offset (96px) + banner height (450px)
+  const bannerBottom = scrollY + 96 + 450;
+  
+  // Cari section "Berita Terkait" atau gunakan fallback
+  const relatedSection = document.querySelector('[data-section="related-news"]') 
+    || document.querySelector('.related-news-section');
+  
+  if (relatedSection) {
+    const sectionTop = relatedSection.getBoundingClientRect().top + scrollY;
+    // Hide banner 100px sebelum mencapai section
+    setIsVisible(bannerBottom < sectionTop - 100);
+  } else {
+    // Fallback: hide pada 600px dari bawah
+    const hideThreshold = documentHeight - windowHeight - 600;
+    setIsVisible(scrollY < hideThreshold);
+  }
+```
+
+### 3. Penambahan Data Attribute di NewsDetail.tsx
+
+Menambahkan `data-section="related-news"` pada container "Berita Terkait" untuk deteksi yang akurat.
+
+**File:** `src/pages/NewsDetail.tsx` (baris ~407)
+
+```text
+Sebelum:
+  <div className="mt-16">
+
+Sesudah:
+  <div className="mt-16" data-section="related-news">
+```
+
+### 4. Konfirmasi Desktop-Only
+
+Sidebar banners sudah menggunakan `hidden min-[1440px]:block` yang memastikan:
+- **Mobile & Tablet (< 1440px):** Banner tersembunyi total
+- **Desktop Large (>= 1440px):** Banner tampil dengan fadeout behavior
+
+## File yang Akan Diubah
+
+| File | Perubahan |
+|------|-----------|
+| `src/components/SidebarBanners.tsx` | Optimalkan logika hideThreshold dengan deteksi elemen |
+| `src/pages/NewsDetail.tsx` | Tambah data-attribute pada section related news |
 
 ## Hasil yang Diharapkan
 
-Setelah implementasi:
-- Banner vertikal muncul di sisi kiri dan kanan layar (desktop >= 1440px)
-- Banner bersifat sticky (tetap terlihat saat scroll)
-- Tidak muncul di mobile/tablet untuk menjaga UX
-- Dapat dikelola melalui CMS di `/cms/sidebar-banners`
-- Support format JPG, PNG, dan GIF (termasuk animasi)
-- Aspect ratio 4:15 sesuai permintaan
-
+- Banner fadeout tepat sebelum section "Berita Terkait"
+- Tidak ada konten yang tertutupi oleh banner
+- Mobile/tablet tetap tidak menampilkan banner
+- Transisi smooth dengan opacity animation
