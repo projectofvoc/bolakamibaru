@@ -103,7 +103,7 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
                     }`}
                   >
                     {message.role === 'ai' ? (
-                      <div className="text-sm leading-relaxed prose prose-sm prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-strong:text-foreground prose-a:text-primary">
+                      <div className="text-sm leading-relaxed prose prose-sm prose-invert max-w-none prose-p:my-3 prose-ul:my-3 prose-ol:my-3 prose-li:my-1 prose-headings:my-4 prose-strong:text-foreground prose-a:text-primary [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                         <ReactMarkdown>{message.content}</ReactMarkdown>
                       </div>
                     ) : (
