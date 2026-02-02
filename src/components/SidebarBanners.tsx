@@ -11,7 +11,11 @@ interface SidebarBanner {
   sort_order: number;
 }
 
-const SidebarBanners = () => {
+interface SidebarBannersProps {
+  variant?: 'default' | 'article';
+}
+
+const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
   const { data: banners = [] } = useQuery({
     queryKey: ['sidebar-banners'],
     queryFn: async () => {
@@ -31,11 +35,30 @@ const SidebarBanners = () => {
 
   if (!leftBanner && !rightBanner) return null;
 
+  // Different positioning based on variant
+  // Default: aligned with max-w-7xl container (1280px / 2 = 640px from center + banner width + gap)
+  // Article: aligned with max-w-4xl container (896px / 2 = 448px from center + banner width + gap)
+  const getPositionStyle = (side: 'left' | 'right') => {
+    if (variant === 'article') {
+      // For article pages with max-w-4xl (896px)
+      return side === 'left' 
+        ? { left: 'calc(50% - 448px - 140px)' }
+        : { right: 'calc(50% - 448px - 140px)' };
+    }
+    // Default for homepage with max-w-7xl (1280px) + wider content area
+    return side === 'left'
+      ? { left: 'calc(50% - 720px - 130px)' }
+      : { right: 'calc(50% - 720px - 130px)' };
+  };
+
   return (
     <>
       {/* Left Banner - Fixed position, aligned with content edge */}
       {leftBanner && (
-        <div className="hidden min-[1440px]:block fixed top-24 z-40" style={{ left: 'calc(50% - 720px - 130px)' }}>
+        <div 
+          className="hidden min-[1440px]:block fixed top-24 z-40" 
+          style={getPositionStyle('left')}
+        >
           <a 
             href={leftBanner.link_url || '#'} 
             target={leftBanner.link_url ? '_blank' : undefined}
@@ -56,7 +79,10 @@ const SidebarBanners = () => {
 
       {/* Right Banner - Fixed position, aligned with content edge */}
       {rightBanner && (
-        <div className="hidden min-[1440px]:block fixed top-24 z-40" style={{ right: 'calc(50% - 720px - 130px)' }}>
+        <div 
+          className="hidden min-[1440px]:block fixed top-24 z-40" 
+          style={getPositionStyle('right')}
+        >
           <a 
             href={rightBanner.link_url || '#'} 
             target={rightBanner.link_url ? '_blank' : undefined}
