@@ -5,6 +5,7 @@ import { Tag, X, CheckCircle, Bookmark, Search } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import FooterBanners from '@/components/FooterBanners';
+import SidebarBanners from '@/components/SidebarBanners';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -73,6 +74,7 @@ const BeritaTag: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SidebarBanners />
       <Header />
       <main className="flex-1">
         <section className="bg-gradient-to-br from-primary/20 via-background to-background py-10">

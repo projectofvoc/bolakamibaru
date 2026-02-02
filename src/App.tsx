@@ -36,6 +36,7 @@ import {
   CMSSocialMedia,
   CMSOGPreview,
   CMSFooterBanners,
+  CMSSidebarBanners,
 } from "./pages/cms";
 
 // QueryClient imported from @/lib/queryClient
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="leagues" element={<CMSLeagues />} />
               <Route path="advertise" element={<CMSAdvertise />} />
               <Route path="footer-banners" element={<CMSFooterBanners />} />
+              <Route path="sidebar-banners" element={<CMSSidebarBanners />} />
               <Route path="navigation" element={<CMSNavigation />} />
               <Route path="social-media" element={<CMSSocialMedia />} />
               <Route path="og-preview" element={<CMSOGPreview />} />

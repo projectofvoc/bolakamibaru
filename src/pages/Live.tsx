@@ -4,6 +4,7 @@ import { Radio, Loader2, RefreshCw } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import FooterBanners from '@/components/FooterBanners';
+import SidebarBanners from '@/components/SidebarBanners';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLiveScores } from '@/hooks/useLiveScores';
 import { matches as staticMatches } from '@/data/matchData';
@@ -21,6 +22,7 @@ const Live: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SidebarBanners />
       <Header />
       
       <main className="flex-1">
