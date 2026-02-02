@@ -9,11 +9,13 @@ import UpcomingMatches from '@/components/UpcomingMatches';
 import AICompanion from '@/components/AICompanion';
 import MoreNewsGrid from '@/components/MoreNewsGrid';
 import AdvertisementPopup from '@/components/AdvertisementPopup';
+import SidebarBanners from '@/components/SidebarBanners';
 
 const Index: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <AdvertisementPopup />
+      <SidebarBanners />
       <Header />
       <main>
         <HeroDashboard />

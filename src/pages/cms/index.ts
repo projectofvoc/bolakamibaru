@@ -12,3 +12,4 @@ export { default as CMSAdvertise } from './CMSAdvertise';
 export { default as CMSSocialMedia } from './CMSSocialMedia';
 export { default as CMSOGPreview } from './CMSOGPreview';
 export { default as CMSFooterBanners } from './CMSFooterBanners';
+export { default as CMSSidebarBanners } from './CMSSidebarBanners';

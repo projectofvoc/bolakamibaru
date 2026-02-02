@@ -7,6 +7,7 @@ import { getOrCreateSessionId } from '@/lib/analytics';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import FooterBanners from '@/components/FooterBanners';
+import SidebarBanners from '@/components/SidebarBanners';
 import MoreNewsGrid from '@/components/MoreNewsGrid';
 import { motion } from 'framer-motion';
 import { ChevronRight, Facebook, Twitter, Clock, Loader2, Copy, Check, Share2 } from 'lucide-react';
@@ -232,6 +233,7 @@ const NewsDetail: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SidebarBanners />
       <Header />
       
       <main className="py-8">

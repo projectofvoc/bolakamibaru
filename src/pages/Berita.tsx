@@ -5,6 +5,7 @@ import { Newspaper, TrendingUp, Calendar, Target, CheckCircle, Bookmark, Clock, 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import FooterBanners from '@/components/FooterBanners';
+import SidebarBanners from '@/components/SidebarBanners';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import heroImage from '@/assets/hero-stadium.jpg';
@@ -154,6 +155,7 @@ const Berita: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SidebarBanners />
       <Header />
       
       <main className="flex-1">

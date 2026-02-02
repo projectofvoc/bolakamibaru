@@ -58,6 +58,7 @@ const CMSSidebar = ({ isAdmin }: { isAdmin: boolean }) => {
     { title: 'Liga', url: '/cms/leagues', icon: Trophy },
     { title: 'Advertise', url: '/cms/advertise', icon: Megaphone },
     { title: 'Footer Banners', url: '/cms/footer-banners', icon: Image },
+    { title: 'Sidebar Banners', url: '/cms/sidebar-banners', icon: Image },
     { title: 'Navigation', url: '/cms/navigation', icon: Link2 },
     { title: 'Social Media', url: '/cms/social-media', icon: Share2 },
     { title: 'OG Preview', url: '/cms/og-preview', icon: Eye },

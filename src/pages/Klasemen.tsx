@@ -4,6 +4,7 @@ import { useStandings, availableLeagues } from '@/hooks/useStandings';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import FooterBanners from '@/components/FooterBanners';
+import SidebarBanners from '@/components/SidebarBanners';
 import {
   Select, 
   SelectContent, 
@@ -58,6 +59,7 @@ const Klasemen: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SidebarBanners />
       <Header />
       
       <main className="flex-1">
