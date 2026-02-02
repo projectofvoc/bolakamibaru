@@ -33,9 +33,9 @@ const SidebarBanners = () => {
 
   return (
     <>
-      {/* Left Banner - Fixed position, only visible on large screens (>= 1440px) */}
+      {/* Left Banner - Fixed position, aligned with content edge */}
       {leftBanner && (
-        <div className="hidden min-[1440px]:block fixed left-4 top-24 z-40">
+        <div className="hidden min-[1440px]:block fixed top-24 z-40" style={{ left: 'calc(50% - 720px - 130px)' }}>
           <a 
             href={leftBanner.link_url || '#'} 
             target={leftBanner.link_url ? '_blank' : undefined}
@@ -54,9 +54,9 @@ const SidebarBanners = () => {
         </div>
       )}
 
-      {/* Right Banner - Fixed position, only visible on large screens (>= 1440px) */}
+      {/* Right Banner - Fixed position, aligned with content edge */}
       {rightBanner && (
-        <div className="hidden min-[1440px]:block fixed right-4 top-24 z-40">
+        <div className="hidden min-[1440px]:block fixed top-24 z-40" style={{ right: 'calc(50% - 720px - 130px)' }}>
           <a 
             href={rightBanner.link_url || '#'} 
             target={rightBanner.link_url ? '_blank' : undefined}
