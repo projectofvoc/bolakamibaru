@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.get-cms-users]
 verify_jwt = false
+
+[functions.openai-chat]
+verify_jwt = false
