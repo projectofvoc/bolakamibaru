@@ -5,9 +5,25 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+const LOVABLE_AI_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 
-const SYSTEM_PROMPT = `Kamu adalah Predicto AI, asisten sepak bola profesional untuk Bola Kami. Kemampuan utamamu:
+// Get current date in Indonesian format
+const getCurrentDate = () => {
+  const now = new Date();
+  const options: Intl.DateTimeFormatOptions = { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  };
+  return now.toLocaleDateString('id-ID', options);
+};
+
+const SYSTEM_PROMPT = `Kamu adalah Predicto AI, asisten sepak bola profesional untuk Bola Kami.
+
+📅 TANGGAL HARI INI: ${getCurrentDate()}
+
+Kemampuan utamamu:
 
 1. **Informasi Sepak Bola Umum**: Berikan informasi lengkap tentang pemain, klub, liga, sejarah, dan berita terbaru sepak bola dari seluruh dunia.
 
@@ -26,14 +42,17 @@ const SYSTEM_PROMPT = `Kamu adalah Predicto AI, asisten sepak bola profesional u
    - Performa pemain individu
    - Tren dan pola pertandingan
 
+⚠️ PENTING - KETERBATASAN PENGETAHUAN:
+- Untuk informasi yang berubah cepat seperti transfer pemain, klasemen terkini, jadwal pertandingan, atau berita terbaru, SELALU awali dengan: "Berdasarkan data terakhir yang saya miliki..."
+- Jika tidak yakin dengan informasi terkini, sarankan pengguna untuk mengecek sumber resmi seperti website klub atau liga
+- JANGAN pernah memberikan informasi yang outdated dengan kepastian tinggi - lebih baik akui keterbatasan
+
 Gaya komunikasi:
 - Gunakan bahasa Indonesia yang natural dan friendly
 - Sertakan emoji ⚽🔥📊 untuk membuat percakapan lebih hidup
 - Berikan analisis yang jelas dan terstruktur
 - Jika diminta prediksi, berikan dengan basis data dan disclaimer
-- Untuk parlay, berikan rekomendasi dengan tingkat kepercayaan
-
-Catatan: Selalu berikan informasi berdasarkan pengetahuan yang kamu miliki. Jika informasi sangat baru atau tidak pasti, sampaikan hal tersebut.`;
+- Untuk parlay, berikan rekomendasi dengan tingkat kepercayaan`;
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -47,14 +66,14 @@ serve(async (req) => {
   }
 
   try {
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
-    if (!OPENAI_API_KEY) {
-      console.error('OPENAI_API_KEY is not configured');
+    if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY is not configured');
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'OpenAI API key belum dikonfigurasi' 
+          error: 'Lovable API key belum dikonfigurasi' 
         }),
         { 
           status: 500, 
@@ -88,16 +107,16 @@ serve(async (req) => {
       { role: 'user', content: message }
     ];
 
-    console.log('Calling OpenAI API with model gpt-4');
+    console.log('Calling Lovable AI with model google/gemini-3-flash-preview');
 
-    const response = await fetch(OPENAI_API_URL, {
+    const response = await fetch(LOVABLE_AI_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'google/gemini-3-flash-preview',
         messages: messages,
         temperature: 0.7,
         max_tokens: 2000,
@@ -106,7 +125,7 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
+      console.error('Lovable AI error:', response.status, errorText);
       
       // Handle specific error cases
       if (response.status === 429) {
@@ -122,14 +141,14 @@ serve(async (req) => {
         );
       }
       
-      if (response.status === 401) {
+      if (response.status === 402) {
         return new Response(
           JSON.stringify({ 
             success: false, 
-            error: 'API key tidak valid. Silakan periksa konfigurasi.' 
+            error: 'Kredit habis. Silakan hubungi administrator.' 
           }),
           { 
-            status: 401, 
+            status: 402, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
           }
         );
@@ -138,7 +157,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `OpenAI API error: ${response.status}` 
+          error: `AI service error: ${response.status}` 
         }),
         { 
           status: 500, 
@@ -150,7 +169,7 @@ serve(async (req) => {
     const data = await response.json();
     const aiResponse = data.choices?.[0]?.message?.content || 'Maaf, tidak ada respons dari AI.';
 
-    console.log('OpenAI response received successfully');
+    console.log('Lovable AI response received successfully');
 
     return new Response(
       JSON.stringify({ 
