@@ -404,7 +404,7 @@ const NewsDetail: React.FC = () => {
         </div>
         
         {/* Related News Section */}
-        <div className="mt-16">
+        <div className="mt-16" data-section="related-news">
           <div className="container mx-auto px-4 mb-6">
             <h2 className="text-xl md:text-2xl font-bold text-foreground">
               {t('news.relatedNews')}

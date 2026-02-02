@@ -33,21 +33,29 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
     },
   });
 
-  // Hide banners when approaching footer/related content area
+  // Hide banners when approaching related news section or footer
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
       
-      // Calculate the banner height (aspect ratio 4:15, width 120px = height 450px)
-      const bannerHeight = 450;
+      // Banner position: fixed top-24 (96px) + banner height (450px)
+      const bannerBottom = scrollY + 96 + 450;
       
-      // Hide banner when the bottom of the visible banner would overlap
-      // with the last 500px of the page (footer/related news area)
-      const hideThreshold = documentHeight - windowHeight - 400;
+      // Find the related news section or fallback elements
+      const relatedSection = document.querySelector('[data-section="related-news"]');
       
-      setIsVisible(scrollY < hideThreshold);
+      if (relatedSection) {
+        // Get the absolute position of the related news section
+        const sectionTop = relatedSection.getBoundingClientRect().top + scrollY;
+        // Hide banner 100px before reaching the section
+        setIsVisible(bannerBottom < sectionTop - 100);
+      } else {
+        // Fallback: hide at 600px from bottom of page
+        const hideThreshold = documentHeight - windowHeight - 600;
+        setIsVisible(scrollY < hideThreshold);
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
