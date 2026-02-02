@@ -1,91 +1,78 @@
 
-# Plan: Optimasi Fadeout Sidebar Banners
 
-## Masalah Saat Ini
+# Plan: Perbaikan AI Companion dengan Informasi Real-Time
 
-Banner sidebar saat ini menggunakan threshold statis (`documentHeight - windowHeight - 400`) yang belum optimal untuk mendeteksi area "Berita Terkait". Banner perlu fadeout lebih awal agar tidak menutupi konten di bagian bawah.
+## Masalah yang Ditemukan
+AI Companion memberikan informasi **outdated/kadaluarsa** karena model GPT-4 memiliki knowledge cutoff date dan tidak memiliki akses ke informasi real-time dari internet.
 
-## Solusi
+**Contoh kasus:** Ronaldo sudah bermain untuk Al Nassr sejak Januari 2023, tapi AI menjawab Manchester United.
 
-### 1. Perubahan di `SidebarBanners.tsx`
+---
 
-Menggunakan pendekatan yang lebih akurat dengan mendeteksi elemen "Berita Terkait" secara langsung:
+## Solusi yang Direkomendasikan
 
-```text
-Logika Baru:
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│  1. Hitung posisi bawah banner (fixed top-24 + banner       │
-│     height 450px)                                           │
-│                                                             │
-│  2. Cari elemen "Berita Terkait" section di halaman         │
-│                                                             │
-│  3. Jika posisi bawah banner >= posisi atas "Berita         │
-│     Terkait" → fadeout banner                               │
-│                                                             │
-│  4. Tambah buffer 100px untuk margin keamanan               │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
+### Opsi 1: Upgrade ke Model Terbaru (Direkomendasikan - Cepat)
+- Ganti model dari `gpt-4` ke `gpt-4-turbo` atau `gpt-4o`
+- Model ini memiliki knowledge cutoff yang lebih baru (April 2024 untuk gpt-4-turbo)
+- **Kelebihan:** Mudah diimplementasi, hanya perlu ganti 1 baris kode
+- **Kekurangan:** Tetap ada batasan cutoff date, tidak real-time
 
-### 2. Perubahan Teknis
+### Opsi 2: Gunakan Lovable AI dengan Google Gemini (Direkomendasikan - Gratis)
+- Ganti OpenAI dengan Lovable AI menggunakan model `google/gemini-3-flash-preview`
+- **Kelebihan:** 
+  - Tidak perlu API key OpenAI
+  - Model lebih baru dengan pengetahuan lebih update
+  - Gratis hingga batas tertentu
+- **Kekurangan:** Masih ada batasan knowledge cutoff
 
-**File:** `src/components/SidebarBanners.tsx`
+### Opsi 3: Tambahkan Web Search Capability (Paling Akurat)
+- Integrasikan dengan API pencarian (seperti Serper, Tavily, atau Bing Search)
+- AI akan mencari informasi terbaru dari internet sebelum menjawab
+- **Kelebihan:** Informasi selalu real-time dan akurat
+- **Kekurangan:** Membutuhkan API key tambahan, sedikit lebih lambat
 
-```text
-Sebelum:
-  const hideThreshold = documentHeight - windowHeight - 400;
-  setIsVisible(scrollY < hideThreshold);
+---
 
-Sesudah:
-  // Posisi bawah banner = scroll + top offset (96px) + banner height (450px)
-  const bannerBottom = scrollY + 96 + 450;
-  
-  // Cari section "Berita Terkait" atau gunakan fallback
-  const relatedSection = document.querySelector('[data-section="related-news"]') 
-    || document.querySelector('.related-news-section');
-  
-  if (relatedSection) {
-    const sectionTop = relatedSection.getBoundingClientRect().top + scrollY;
-    // Hide banner 100px sebelum mencapai section
-    setIsVisible(bannerBottom < sectionTop - 100);
-  } else {
-    // Fallback: hide pada 600px dari bawah
-    const hideThreshold = documentHeight - windowHeight - 600;
-    setIsVisible(scrollY < hideThreshold);
-  }
-```
+## Implementasi Rekomendasi: Upgrade ke gpt-4-turbo + Perbaiki System Prompt
 
-### 3. Penambahan Data Attribute di NewsDetail.tsx
-
-Menambahkan `data-section="related-news"` pada container "Berita Terkait" untuk deteksi yang akurat.
-
-**File:** `src/pages/NewsDetail.tsx` (baris ~407)
+### Langkah 1: Update Model dan System Prompt
+**File:** `supabase/functions/openai-chat/index.ts`
 
 ```text
-Sebelum:
-  <div className="mt-16">
-
-Sesudah:
-  <div className="mt-16" data-section="related-news">
+Perubahan yang akan dilakukan:
+├── Ganti model dari "gpt-4" → "gpt-4-turbo" atau "gpt-4o"
+├── Tambahkan tanggal cutoff awareness di system prompt
+├── Instruksikan AI untuk mengakui keterbatasan pengetahuan
+└── Tambahkan disclaimer untuk informasi yang mungkin outdated
 ```
 
-### 4. Konfirmasi Desktop-Only
+### Langkah 2: Perbaikan System Prompt
+Tambahkan instruksi berikut di system prompt:
 
-Sidebar banners sudah menggunakan `hidden min-[1440px]:block` yang memastikan:
-- **Mobile & Tablet (< 1440px):** Banner tersembunyi total
-- **Desktop Large (>= 1440px):** Banner tampil dengan fadeout behavior
+```
+PENTING - KETERBATASAN PENGETAHUAN:
+- Pengetahuanmu memiliki batas waktu (cutoff date)
+- Untuk informasi yang berubah cepat seperti transfer pemain, 
+  klasemen terkini, atau berita terbaru, SELALU sampaikan bahwa:
+  "Berdasarkan data terakhir yang saya miliki..."
+- Jika tidak yakin dengan informasi terbaru, sarankan user 
+  untuk mengecek sumber resmi
+- Tanggal saat ini adalah: [dynamic date]
+```
 
-## File yang Akan Diubah
+### Langkah 3: Deploy Ulang Edge Function
+- Deploy function yang sudah diupdate
+- Test dengan pertanyaan tentang informasi terbaru
 
-| File | Perubahan |
-|------|-----------|
-| `src/components/SidebarBanners.tsx` | Optimalkan logika hideThreshold dengan deteksi elemen |
-| `src/pages/NewsDetail.tsx` | Tambah data-attribute pada section related news |
+---
 
-## Hasil yang Diharapkan
+## Estimasi Waktu
+- Implementasi: 5-10 menit
+- Testing: 5 menit
 
-- Banner fadeout tepat sebelum section "Berita Terkait"
-- Tidak ada konten yang tertutupi oleh banner
-- Mobile/tablet tetap tidak menampilkan banner
-- Transisi smooth dengan opacity animation
+## Pertanyaan untuk User
+Apakah Anda ingin:
+1. **Upgrade ke gpt-4-turbo/gpt-4o** (tetap pakai OpenAI, lebih cepat)
+2. **Ganti ke Lovable AI** (gratis, tidak perlu API key)
+3. **Tambahkan Web Search** (paling akurat, butuh API key tambahan)
+
