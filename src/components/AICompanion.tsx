@@ -1,13 +1,20 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Flag, Plus, Mic, ArrowUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AIChatSidebar, { ChatMessage } from './AIChatSidebar';
+import { toast } from 'sonner';
 
-const PREDICTO_API_URL = 'https://jfzjqdxqpqiayckjolpr.supabase.co/functions/v1/bolakami-chat';
+// Use Lovable Cloud edge function URL
+const OPENAI_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openai-chat`;
 
 // Helper function for delay between retries
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 const AICompanion: React.FC = () => {
   const { t } = useLanguage();
@@ -15,7 +22,8 @@ const AICompanion: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  // Store conversation history for OpenAI context
+  const conversationHistory = useRef<ConversationMessage[]>([]);
 
   const prompts = [
     t('ai.prompt1'),
@@ -23,29 +31,41 @@ const AICompanion: React.FC = () => {
     t('ai.prompt3'),
   ];
 
-  // Call Predicto AI API with retry logic
-  const callPredictorAPI = useCallback(async (message: string): Promise<string> => {
+  // Call OpenAI API with retry logic
+  const callOpenAI = useCallback(async (message: string): Promise<string> => {
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 1000; // 1 detik
     
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        console.log(`Predicto API - Attempt ${attempt}/${MAX_RETRIES}`);
+        console.log(`OpenAI API - Attempt ${attempt}/${MAX_RETRIES}`);
         
-        const response = await fetch(PREDICTO_API_URL, {
+        const response = await fetch(OPENAI_CHAT_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({ 
             message,
-            sessionId: sessionId || undefined,
-            mode: "lengkap"
+            conversationHistory: conversationHistory.current
           }),
         });
         
         if (!response.ok) {
-          throw new Error(`API request failed with status ${response.status}`);
+          const errorData = await response.json().catch(() => ({}));
+          
+          if (response.status === 429) {
+            toast.error('Rate limit tercapai. Coba lagi nanti.');
+            throw new Error('Rate limit exceeded');
+          }
+          
+          if (response.status === 401) {
+            toast.error('API key tidak valid.');
+            throw new Error('Invalid API key');
+          }
+          
+          throw new Error(errorData.error || `API request failed with status ${response.status}`);
         }
         
         const data = await response.json();
@@ -55,15 +75,22 @@ const AICompanion: React.FC = () => {
           throw new Error(data.error || 'API returned error');
         }
         
-        // Simpan sessionId untuk percakapan berkelanjutan
-        if (data.sessionId) {
-          setSessionId(data.sessionId);
+        // Update conversation history for context
+        conversationHistory.current = [
+          ...conversationHistory.current,
+          { role: 'user', content: message },
+          { role: 'assistant', content: data.response }
+        ];
+        
+        // Keep only last 10 messages for context window
+        if (conversationHistory.current.length > 20) {
+          conversationHistory.current = conversationHistory.current.slice(-20);
         }
         
         return data.response || 'Maaf, terjadi kesalahan. Silakan coba lagi.';
         
       } catch (error) {
-        console.error(`Predicto AI Error (Attempt ${attempt}):`, error);
+        console.error(`OpenAI Error (Attempt ${attempt}):`, error);
         
         // Jika belum mencapai max retry, tunggu lalu coba lagi
         if (attempt < MAX_RETRIES) {
@@ -75,7 +102,7 @@ const AICompanion: React.FC = () => {
     
     // Semua retry gagal
     return 'Maaf, saya sedang tidak bisa merespons setelah beberapa percobaan. Silakan coba lagi dalam beberapa saat. 🙏';
-  }, [sessionId]);
+  }, []);
 
   // Handle sending message
   const handleSend = useCallback(async () => {
@@ -93,8 +120,8 @@ const AICompanion: React.FC = () => {
     setIsOpen(true);
     setIsTyping(true);
 
-    // Call real API
-    const aiResponseText = await callPredictorAPI(userMessage.content);
+    // Call OpenAI API
+    const aiResponseText = await callOpenAI(userMessage.content);
     
     const aiResponse: ChatMessage = {
       id: `msg_${Date.now()}`,
@@ -104,7 +131,7 @@ const AICompanion: React.FC = () => {
     };
     setMessages(prev => [...prev, aiResponse]);
     setIsTyping(false);
-  }, [inputValue, callPredictorAPI]);
+  }, [inputValue, callOpenAI]);
 
   // Handle prompt chip click
   const handlePromptClick = async (prompt: string) => {
@@ -120,8 +147,8 @@ const AICompanion: React.FC = () => {
     setIsOpen(true);
     setIsTyping(true);
 
-    // Call real API
-    const aiResponseText = await callPredictorAPI(prompt);
+    // Call OpenAI API
+    const aiResponseText = await callOpenAI(prompt);
     
     const aiResponse: ChatMessage = {
       id: `msg_${Date.now()}`,
