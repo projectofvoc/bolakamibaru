@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Flag, Plus, Mic, ArrowUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AIChatSidebar, { ChatMessage } from './AIChatSidebar';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 // Use Lovable Cloud edge function URL
 const OPENAI_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openai-chat`;
@@ -22,14 +23,40 @@ const AICompanion: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  // Store conversation history for OpenAI context
-  const conversationHistory = useRef<ConversationMessage[]>([]);
-
-  const prompts = [
+  const [prompts, setPrompts] = useState<string[]>([
     t('ai.prompt1'),
     t('ai.prompt2'),
     t('ai.prompt3'),
-  ];
+  ]);
+  // Store conversation history for OpenAI context
+  const conversationHistory = useRef<ConversationMessage[]>([]);
+
+  // Fetch dynamic prompts from database
+  useEffect(() => {
+    const fetchPrompts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('ai_prompts')
+          .select('prompt_text')
+          .eq('is_active', true)
+          .order('prompt_order', { ascending: true })
+          .limit(3);
+
+        if (error) {
+          console.error('Error fetching prompts:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          setPrompts(data.map(p => p.prompt_text));
+        }
+      } catch (err) {
+        console.error('Failed to fetch prompts:', err);
+      }
+    };
+
+    fetchPrompts();
+  }, []);
 
   // Call OpenAI API with retry logic
   const callOpenAI = useCallback(async (message: string): Promise<string> => {
