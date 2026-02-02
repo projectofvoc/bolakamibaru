@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
 
 interface SidebarBanner {
   id: string;
@@ -16,6 +17,8 @@ interface SidebarBannersProps {
 }
 
 const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
+  const [isVisible, setIsVisible] = useState(true);
+
   const { data: banners = [] } = useQuery({
     queryKey: ['sidebar-banners'],
     queryFn: async () => {
@@ -29,6 +32,29 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
       return data as SidebarBanner[];
     },
   });
+
+  // Hide banners when approaching footer/related content area
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      
+      // Calculate the banner height (aspect ratio 4:15, width 120px = height 450px)
+      const bannerHeight = 450;
+      
+      // Hide banner when the bottom of the visible banner would overlap
+      // with the last 500px of the page (footer/related news area)
+      const hideThreshold = documentHeight - windowHeight - 400;
+      
+      setIsVisible(scrollY < hideThreshold);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Check initial state
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const leftBanner = banners.find(b => b.position === 'left');
   const rightBanner = banners.find(b => b.position === 'right');
@@ -56,7 +82,9 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
       {/* Left Banner - Fixed position, aligned with content edge */}
       {leftBanner && (
         <div 
-          className="hidden min-[1440px]:block fixed top-24 z-40" 
+          className={`hidden min-[1440px]:block fixed top-24 z-40 transition-opacity duration-300 ${
+            isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
           style={getPositionStyle('left')}
         >
           <a 
@@ -80,7 +108,9 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
       {/* Right Banner - Fixed position, aligned with content edge */}
       {rightBanner && (
         <div 
-          className="hidden min-[1440px]:block fixed top-24 z-40" 
+          className={`hidden min-[1440px]:block fixed top-24 z-40 transition-opacity duration-300 ${
+            isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
           style={getPositionStyle('right')}
         >
           <a 
