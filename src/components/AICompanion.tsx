@@ -6,8 +6,8 @@ import AIChatSidebar, { ChatMessage } from './AIChatSidebar';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
-// Use Lovable Cloud edge function URL
-const OPENAI_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openai-chat`;
+// Use external Predicto Widget endpoint
+const PREDICTO_API_URL = 'https://jfzjqdxqpqiayckjolpr.supabase.co/functions/v1/predicto-widget';
 
 // Helper function for delay between retries
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -67,11 +67,10 @@ const AICompanion: React.FC = () => {
       try {
         console.log(`OpenAI API - Attempt ${attempt}/${MAX_RETRIES}`);
         
-        const response = await fetch(OPENAI_CHAT_URL, {
+        const response = await fetch(PREDICTO_API_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({ 
             message,
