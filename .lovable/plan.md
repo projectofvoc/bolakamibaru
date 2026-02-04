@@ -1,58 +1,45 @@
 
+# Plan: Ganti Endpoint AI ke Predicto Widget
 
-# Plan: Render Markdown pada Respons AI
-
-## Masalah
-Respons AI menampilkan simbol markdown mentah seperti `**` karena model AI (Gemini/GPT) secara natural menggunakan format markdown untuk output mereka, tetapi komponen chat tidak me-render markdown tersebut.
-
-## Solusi
-Tambahkan library `react-markdown` untuk merender respons AI dengan proper markdown formatting sehingga `**teks**` menjadi **teks tebal**, lists terformat rapi, dll.
+## Ringkasan
+Mengganti endpoint AI Companion dari edge function lokal (`openai-chat`) ke endpoint eksternal Predicto di `https://jfzjqdxqpqiayckjolpr.supabase.co/functions/v1/predicto-widget`.
 
 ---
 
-## Langkah Implementasi
+## Perubahan yang Dilakukan
 
-### Langkah 1: Install Library
-Tambahkan package `react-markdown` ke project.
+### File: `src/components/AICompanion.tsx`
 
-### Langkah 2: Update AIChatSidebar.tsx
-Update komponen untuk merender respons AI menggunakan ReactMarkdown.
-
-**File:** `src/components/AIChatSidebar.tsx`
-
-```text
-Perubahan yang akan dilakukan:
-├── Import ReactMarkdown dari 'react-markdown'
-├── Ganti <p>{message.content}</p> dengan <ReactMarkdown>
-├── Tambahkan styling untuk prose/markdown content
-└── Hanya apply untuk message role 'ai' (user tetap plain text)
-```
+**Lokasi perubahan:** Baris 9-10
 
 **Sebelum:**
-```tsx
-<p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+```typescript
+// Use Lovable Cloud edge function URL
+const OPENAI_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openai-chat`;
 ```
 
 **Sesudah:**
-```tsx
-{message.role === 'ai' ? (
-  <div className="text-sm leading-relaxed prose prose-sm prose-invert max-w-none">
-    <ReactMarkdown>{message.content}</ReactMarkdown>
-  </div>
-) : (
-  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-)}
+```typescript
+// Use external Predicto Widget endpoint
+const PREDICTO_API_URL = 'https://jfzjqdxqpqiayckjolpr.supabase.co/functions/v1/predicto-widget';
 ```
+
+### Perubahan Tambahan
+1. Update nama variabel dari `OPENAI_CHAT_URL` ke `PREDICTO_API_URL` agar lebih deskriptif
+2. Update referensi di function `callOpenAI` (baris 70) untuk menggunakan `PREDICTO_API_URL`
+3. Hapus Authorization header karena endpoint eksternal mungkin tidak memerlukan token lokal
 
 ---
 
-## Hasil yang Diharapkan
-- `**BRI Liga 1 2024/2025**` akan menjadi **BRI Liga 1 2024/2025** (bold)
-- `*teks*` akan menjadi *teks* (italic)
-- Lists akan terformat dengan proper bullet/numbering
-- Links akan clickable
+## Catatan Teknis
+
+- Endpoint baru adalah server eksternal terpisah dari project ini
+- Request format tetap sama (message + conversationHistory)
+- Response diharapkan memiliki format yang sama ({ response: string } atau { success: boolean, error: string })
+- Retry logic tetap dipertahankan untuk handle intermittent failures
+
+---
 
 ## Estimasi Waktu
-- Implementasi: 3-5 menit
+- Implementasi: 2-3 menit
 - Testing: 2 menit
-
