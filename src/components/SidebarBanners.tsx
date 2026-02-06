@@ -40,8 +40,8 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
       
-      // Banner position: fixed top-24 (96px) + banner height (450px)
-      const bannerBottom = scrollY + 96 + 450;
+      // Banner position: fixed top-24 (96px) + banner height (600px for 160px width)
+      const bannerBottom = scrollY + 96 + 600;
       
       // Find the related news section or fallback elements
       const relatedSection = document.querySelector('[data-section="related-news"]');
@@ -76,13 +76,13 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
     if (variant === 'article') {
       // For article pages with max-w-4xl (896px)
       return side === 'left' 
-        ? { left: 'calc(50% - 448px - 140px)' }
-        : { right: 'calc(50% - 448px - 140px)' };
+        ? { left: 'calc(50% - 448px - 180px)' }
+        : { right: 'calc(50% - 448px - 180px)' };
     }
     // Default for homepage with max-w-7xl (1280px) + wider content area
     return side === 'left'
-      ? { left: 'calc(50% - 720px - 130px)' }
-      : { right: 'calc(50% - 720px - 130px)' };
+      ? { left: 'calc(50% - 720px - 180px)' }
+      : { right: 'calc(50% - 720px - 180px)' };
   };
 
   return (
@@ -101,7 +101,7 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
             rel={leftBanner.link_url ? 'noopener noreferrer' : undefined}
             className="block transition-opacity hover:opacity-90"
           >
-            <div className="w-[120px] aspect-[4/15] rounded-lg overflow-hidden shadow-lg bg-muted">
+            <div className="w-[160px] aspect-[4/15] rounded-lg overflow-hidden shadow-lg bg-muted">
               <img
                 src={leftBanner.image_url}
                 alt={leftBanner.title}
@@ -127,7 +127,7 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
             rel={rightBanner.link_url ? 'noopener noreferrer' : undefined}
             className="block transition-opacity hover:opacity-90"
           >
-            <div className="w-[120px] aspect-[4/15] rounded-lg overflow-hidden shadow-lg bg-muted">
+            <div className="w-[160px] aspect-[4/15] rounded-lg overflow-hidden shadow-lg bg-muted">
               <img
                 src={rightBanner.image_url}
                 alt={rightBanner.title}
