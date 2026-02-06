@@ -52,8 +52,8 @@ interface TransformedMatch {
   time: string;
 }
 
-// Cache TTL in seconds (30 seconds for live data)
-const CACHE_TTL_SECONDS = 30;
+// Cache TTL in seconds (2 minutes to reduce API calls and avoid rate limiting)
+const CACHE_TTL_SECONDS = 120;
 
 // Function to get API key from database with fallback to env
 async function getApiKey(supabase: any, apiName: string): Promise<string | null> {
@@ -78,47 +78,70 @@ async function getApiKey(supabase: any, apiName: string): Promise<string | null>
   return Deno.env.get('SPORTMONKS_API_KEY') || null;
 }
 
-// Cache helper function
+// Cache helper function with rate limit fallback
 async function getCachedOrFetch<T>(
   supabase: any,
   cacheKey: string,
   ttlSeconds: number,
-  fetchFn: () => Promise<T>
-): Promise<{ data: T; fromCache: boolean }> {
+  fetchFn: () => Promise<T>,
+  defaultValue: T
+): Promise<{ data: T; fromCache: boolean; rateLimited?: boolean }> {
+  let expiredCache: T | null = null;
+  
   try {
-    // 1. Check cache
+    // 1. Check valid cache first
     const { data: cached, error: cacheError } = await supabase
       .from('api_cache')
-      .select('cache_value')
+      .select('cache_value, expires_at')
       .eq('cache_key', cacheKey)
-      .gt('expires_at', new Date().toISOString())
       .single();
     
     if (!cacheError && cached) {
-      console.log(`[Cache HIT] ${cacheKey}`);
-      return { data: cached.cache_value as T, fromCache: true };
+      const isExpired = new Date(cached.expires_at) < new Date();
+      if (!isExpired) {
+        console.log(`[Cache HIT] ${cacheKey}`);
+        return { data: cached.cache_value as T, fromCache: true };
+      } else {
+        // Store expired cache as fallback
+        expiredCache = cached.cache_value as T;
+        console.log(`[Cache EXPIRED] ${cacheKey} - will try fresh fetch`);
+      }
     }
   } catch (e) {
     console.log(`[Cache] Error checking cache: ${e}`);
   }
   
-  // 2. Fetch fresh data
+  // 2. Try to fetch fresh data
   console.log(`[Cache MISS] ${cacheKey}`);
-  const freshData = await fetchFn();
-  
-  // 3. Store in cache (upsert)
   try {
-    await supabase.from('api_cache').upsert({
-      cache_key: cacheKey,
-      cache_value: freshData,
-      expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
-    }, { onConflict: 'cache_key' });
-    console.log(`[Cache] Stored: ${cacheKey}, TTL: ${ttlSeconds}s`);
-  } catch (e) {
-    console.log(`[Cache] Error storing cache: ${e}`);
+    const freshData = await fetchFn();
+    
+    // 3. Store in cache (upsert)
+    try {
+      await supabase.from('api_cache').upsert({
+        cache_key: cacheKey,
+        cache_value: freshData,
+        expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
+      }, { onConflict: 'cache_key' });
+      console.log(`[Cache] Stored: ${cacheKey}, TTL: ${ttlSeconds}s`);
+    } catch (e) {
+      console.log(`[Cache] Error storing cache: ${e}`);
+    }
+    
+    return { data: freshData, fromCache: false };
+  } catch (fetchError) {
+    // Check if it's a rate limit error
+    const errorMsg = fetchError instanceof Error ? fetchError.message : '';
+    if (errorMsg.includes('429')) {
+      console.log(`[Rate Limited] Falling back to expired cache or default`);
+      if (expiredCache !== null) {
+        return { data: expiredCache, fromCache: true, rateLimited: true };
+      }
+    }
+    // Re-throw other errors, but return default if we have no fallback
+    console.log(`[Fetch Error] ${errorMsg}`);
+    return { data: defaultValue, fromCache: false, rateLimited: errorMsg.includes('429') };
   }
-  
-  return { data: freshData, fromCache: false };
 }
 
 serve(async (req) => {
@@ -144,8 +167,8 @@ serve(async (req) => {
     const today = new Date().toISOString().split('T')[0];
     const cacheKey = `livescore:${today}`;
 
-    // Use cache helper
-    const { data: transformedMatches, fromCache } = await getCachedOrFetch<TransformedMatch[]>(
+    // Use cache helper with rate limit fallback
+    const { data: transformedMatches, fromCache, rateLimited } = await getCachedOrFetch<TransformedMatch[]>(
       supabase,
       cacheKey,
       CACHE_TTL_SECONDS,
@@ -204,12 +227,14 @@ serve(async (req) => {
         }
 
         return matches;
-      }
+      },
+      [] // Default empty array if rate limited and no cache
     );
 
     return new Response(JSON.stringify({ 
       matches: transformedMatches,
       fromCache,
+      rateLimited,
       cacheKey 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

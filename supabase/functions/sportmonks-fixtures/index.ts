@@ -6,8 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Cache TTL: 5 minutes for fixtures (jadwal cukup stabil)
-const CACHE_TTL_SECONDS = 5 * 60;
+// Cache TTL: 15 minutes for fixtures to reduce API calls
+const CACHE_TTL_SECONDS = 15 * 60;
 
 // Map internal league IDs to Sportmonks league IDs
 // Note: Liga 1 & Liga 2 Indonesia are NOT available in Sportmonks - use API-Football instead
@@ -120,54 +120,77 @@ async function getApiKey(supabase: any, configName: string): Promise<string | nu
   return null;
 }
 
-// Cache helper function with optional validation
+// Cache helper function with rate limit fallback
 async function getCachedOrFetch<T>(
   supabase: any,
   cacheKey: string,
   ttlSeconds: number,
   fetchFn: () => Promise<T>,
-  isValidData?: (data: T) => boolean
-): Promise<{ data: T; fromCache: boolean }> {
+  isValidData?: (data: T) => boolean,
+  defaultValue?: T
+): Promise<{ data: T; fromCache: boolean; rateLimited?: boolean }> {
+  let expiredCache: T | null = null;
+  
   try {
-    // 1. Check cache
+    // 1. Check cache (including expired for fallback)
     const { data: cached, error: cacheError } = await supabase
       .from('api_cache')
-      .select('cache_value')
+      .select('cache_value, expires_at')
       .eq('cache_key', cacheKey)
-      .gt('expires_at', new Date().toISOString())
       .single();
     
     if (!cacheError && cached) {
-      console.log(`[Cache HIT] ${cacheKey}`);
-      return { data: cached.cache_value as T, fromCache: true };
+      const isExpired = new Date(cached.expires_at) < new Date();
+      if (!isExpired) {
+        console.log(`[Cache HIT] ${cacheKey}`);
+        return { data: cached.cache_value as T, fromCache: true };
+      } else {
+        expiredCache = cached.cache_value as T;
+        console.log(`[Cache EXPIRED] ${cacheKey} - will try fresh fetch`);
+      }
     }
   } catch (e) {
     console.log(`[Cache] Error checking cache: ${e}`);
   }
   
-  // 2. Fetch fresh data
+  // 2. Try to fetch fresh data
   console.log(`[Cache MISS] ${cacheKey}`);
-  const freshData = await fetchFn();
-  
-  // 3. Only store in cache if data is valid (prevents caching errors)
-  const shouldCache = isValidData ? isValidData(freshData) : true;
-  
-  if (shouldCache) {
-    try {
-      await supabase.from('api_cache').upsert({
-        cache_key: cacheKey,
-        cache_value: freshData,
-        expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
-      }, { onConflict: 'cache_key' });
-      console.log(`[Cache] Stored: ${cacheKey}, TTL: ${ttlSeconds}s`);
-    } catch (e) {
-      console.log(`[Cache] Error storing cache: ${e}`);
+  try {
+    const freshData = await fetchFn();
+    
+    // 3. Only store in cache if data is valid
+    const shouldCache = isValidData ? isValidData(freshData) : true;
+    
+    if (shouldCache) {
+      try {
+        await supabase.from('api_cache').upsert({
+          cache_key: cacheKey,
+          cache_value: freshData,
+          expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
+        }, { onConflict: 'cache_key' });
+        console.log(`[Cache] Stored: ${cacheKey}, TTL: ${ttlSeconds}s`);
+      } catch (e) {
+        console.log(`[Cache] Error storing cache: ${e}`);
+      }
+    } else {
+      console.log(`[Cache] Skipped storing (invalid/empty data): ${cacheKey}`);
     }
-  } else {
-    console.log(`[Cache] Skipped storing (invalid/empty data): ${cacheKey}`);
+    
+    return { data: freshData, fromCache: false };
+  } catch (fetchError) {
+    const errorMsg = fetchError instanceof Error ? fetchError.message : '';
+    if (errorMsg.includes('429')) {
+      console.log(`[Rate Limited] Falling back to expired cache or default`);
+      if (expiredCache !== null) {
+        return { data: expiredCache, fromCache: true, rateLimited: true };
+      }
+    }
+    console.log(`[Fetch Error] ${errorMsg}`);
+    if (defaultValue !== undefined) {
+      return { data: defaultValue, fromCache: false, rateLimited: errorMsg.includes('429') };
+    }
+    throw fetchError;
   }
-  
-  return { data: freshData, fromCache: false };
 }
 
 function getDateLabel(date: Date, now: Date): { id: string; en: string } {
@@ -321,8 +344,8 @@ serve(async (req) => {
       return data.fixtures.length > 0;
     };
 
-    // Use cache helper with validation
-    const { data: cachedData, fromCache } = await getCachedOrFetch<CachedFixturesData>(
+    // Use cache helper with rate limit fallback
+    const { data: cachedData, fromCache, rateLimited } = await getCachedOrFetch<CachedFixturesData>(
       supabase,
       cacheKey,
       CACHE_TTL_SECONDS,
@@ -359,21 +382,28 @@ serve(async (req) => {
 
         return { fixtures };
       },
-      hasValidData
+      hasValidData,
+      { fixtures: [] } // Default value if rate limited
     );
 
     return new Response(
-      JSON.stringify({ ...cachedData, fromCache }),
+      JSON.stringify({ ...cachedData, fromCache, rateLimited }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error fetching fixtures:', errorMessage);
+    
+    // Return graceful response instead of 500
     return new Response(
-      JSON.stringify({ error: errorMessage, fixtures: [] }),
+      JSON.stringify({ 
+        fixtures: [], 
+        error: errorMessage,
+        rateLimited: errorMessage.includes('429')
+      }),
       { 
-        status: 500,
+        status: errorMessage.includes('429') ? 200 : 500, // Return 200 for rate limit
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
