@@ -1,105 +1,74 @@
 
-# Plan: Perbesar Ukuran Sidebar Banner
+# Plan: Fix Publishing dan Translation Issues
 
-## Ringkasan
-Memperbesar ukuran sidebar banner kiri dan kanan yang saat ini menggunakan lebar 120px menjadi ukuran yang lebih besar (160px) agar lebih terlihat dan proporsional dengan konten halaman.
+## Masalah yang Ditemukan
 
----
+### 1. Edge Function `translate-article` Tidak Ter-Deploy
+Dari analisis logs dan testing:
+- Request ke `/translate-article` mengembalikan **404 Not Found**
+- Edge function tidak ter-deploy ke Supabase
+- Setelah saya deploy ulang, function sudah berfungsi dengan baik (status 200)
 
-## Analisis Kondisi Saat Ini
-
-### File: `src/components/SidebarBanners.tsx`
-
-**Ukuran saat ini:**
-- Width: `w-[120px]`
-- Aspect ratio: `aspect-[4/15]` (menghasilkan tinggi sekitar 450px)
-- Banner height dalam scroll calculation: 450px (baris 44)
-
-**Positioning saat ini:**
-- Left: `calc(50% - 720px - 130px)`
-- Right: `calc(50% - 720px - 130px)`
-
----
-
-## Perubahan yang Akan Dilakukan
-
-### 1. Perbesar Width Banner (baris 104 dan 130)
-
-**Sebelum:**
-```tsx
-<div className="w-[120px] aspect-[4/15] rounded-lg overflow-hidden shadow-lg bg-muted">
-```
-
-**Sesudah:**
-```tsx
-<div className="w-[160px] aspect-[4/15] rounded-lg overflow-hidden shadow-lg bg-muted">
-```
-
-### 2. Update Scroll Calculation (baris 44)
-
-**Sebelum:**
-```tsx
-const bannerBottom = scrollY + 96 + 450;
-```
-
-**Sesudah:**
-```tsx
-const bannerBottom = scrollY + 96 + 600; // 160px * 15/4 = 600px height
-```
-
-### 3. Sesuaikan Positioning untuk Accommodating Ukuran Baru (baris 79-85)
-
-**Sebelum:**
-```tsx
-// Article variant
-? { left: 'calc(50% - 448px - 140px)' }
-: { right: 'calc(50% - 448px - 140px)' };
-
-// Default variant
-? { left: 'calc(50% - 720px - 130px)' }
-: { right: 'calc(50% - 720px - 130px)' };
-```
-
-**Sesudah:**
-```tsx
-// Article variant
-? { left: 'calc(50% - 448px - 180px)' }
-: { right: 'calc(50% - 448px - 180px)' };
-
-// Default variant
-? { left: 'calc(50% - 720px - 180px)' }
-: { right: 'calc(50% - 720px - 180px)' };
-```
-
----
-
-## Perbandingan Visual
+### 2. CORS Headers Belum Lengkap
+CORS headers saat ini kurang lengkap yang dapat menyebabkan preflight request gagal di browser:
 
 ```text
-SEBELUM:                          SESUDAH:
-┌────────┐                       ┌──────────┐
-│        │                       │          │
-│  120px │  → Height ~450px      │  160px   │  → Height ~600px
-│        │                       │          │
-│        │                       │          │
-│        │                       │          │
-│        │                       │          │
-│        │                       │          │
-│        │                       │          │
-│        │                       │          │
-│        │                       │          │
-└────────┘                       └──────────┘
+SEBELUM:
+'authorization, x-client-info, apikey, content-type'
+
+SESUDAH:
+'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version'
 ```
 
 ---
 
-## Ringkasan Perubahan
-1. **Width:** 120px → 160px (33% lebih besar)
-2. **Height:** ~450px → ~600px (proporsional dengan aspect ratio 4:15)
-3. **Positioning:** Disesuaikan untuk memastikan tidak overlap dengan konten
+## Solusi
+
+### File: `supabase/functions/translate-article/index.ts`
+
+**Perubahan baris 3-6:**
+
+```typescript
+// SEBELUM
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+// SESUDAH
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+};
+```
+
+---
+
+## Status Saat Ini
+
+Saya sudah:
+1. **Deploy ulang** edge function `translate-article`
+2. **Test** function dengan curl - hasilnya **200 OK** dan terjemahan berhasil
+
+Hasil test:
+```json
+{
+  "content_en": "<p>Test news content regarding a football match</p>",
+  "excerpt_en": "News summary test",
+  "title_en": "Football news title test"
+}
+```
+
+---
+
+## Langkah Implementasi
+
+1. Update CORS headers di `supabase/functions/translate-article/index.ts`
+2. Re-deploy edge function
+3. Test publish artikel dari CMS
 
 ---
 
 ## Estimasi Waktu
-- Implementasi: 2-3 menit
+- Implementasi: 1-2 menit
 - Testing: 1 menit
