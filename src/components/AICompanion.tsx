@@ -1,10 +1,12 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Flag, Plus, Mic, ArrowUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AIChatSidebar, { ChatMessage } from './AIChatSidebar';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useLiveScores } from '@/hooks/useLiveScores';
+import { useUpcomingFixtures } from '@/hooks/useUpcomingFixtures';
 
 // Use external Predicto Widget endpoint
 const PREDICTO_API_URL = 'https://jfzjqdxqpqiayckjolpr.supabase.co/functions/v1/predicto-widget';
@@ -18,7 +20,7 @@ interface ConversationMessage {
 }
 
 const AICompanion: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -30,6 +32,41 @@ const AICompanion: React.FC = () => {
   ]);
   // Store conversation history for OpenAI context
   const conversationHistory = useRef<ConversationMessage[]>([]);
+
+  // Fetch live and upcoming matches for dynamic placeholder
+  const { matches: liveMatches } = useLiveScores();
+  const { data: upcomingMatches } = useUpcomingFixtures();
+
+  // Generate dynamic placeholder from random live/upcoming match
+  const dynamicPlaceholder = useMemo(() => {
+    const allMatches: { homeTeam: string; awayTeam: string }[] = [];
+
+    // Add live matches
+    liveMatches.forEach(match => {
+      allMatches.push({
+        homeTeam: match.homeTeam,
+        awayTeam: match.awayTeam
+      });
+    });
+
+    // Add upcoming matches
+    upcomingMatches?.forEach(fixture => {
+      allMatches.push({
+        homeTeam: fixture.homeTeam.name,
+        awayTeam: fixture.awayTeam.name
+      });
+    });
+
+    // Pick random match
+    if (allMatches.length > 0) {
+      const randomMatch = allMatches[Math.floor(Math.random() * allMatches.length)];
+      return language === 'id'
+        ? `Analisa pertandingan ${randomMatch.homeTeam} vs ${randomMatch.awayTeam}`
+        : `Analyze ${randomMatch.homeTeam} vs ${randomMatch.awayTeam} match`;
+    }
+
+    return t('ai.placeholder');
+  }, [liveMatches, upcomingMatches, language, t]);
 
   // Fetch dynamic prompts from database
   useEffect(() => {
@@ -240,7 +277,7 @@ const AICompanion: React.FC = () => {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={t('ai.placeholder')}
+                  placeholder={dynamicPlaceholder}
                   className="flex-1 bg-transparent border-none text-foreground placeholder:text-muted-foreground focus:outline-none text-sm"
                 />
                 
