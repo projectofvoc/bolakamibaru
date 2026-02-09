@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useUserPoints } from '@/hooks/useUserPoints';
 import { useActivityTracker } from '@/hooks/useActivityTracker';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import logoBolakami from '@/assets/logo-bolakami.png';
+import paviconBolakami from '@/assets/pavicon-bolakami.svg';
 
 const PointsWidget: React.FC = () => {
   const navigate = useNavigate();
@@ -101,10 +101,14 @@ const PointsWidget: React.FC = () => {
           />
         </svg>
 
-        {/* Inner content */}
+        {/* Inner content - BOLAKAMI icon with points */}
         <div className="relative flex flex-col items-center justify-center z-10">
-          <Trophy className="w-4 h-4 text-primary mb-0.5" />
-          <span className="text-xs font-bold text-foreground leading-none">
+          <img 
+            src={paviconBolakami} 
+            alt="BOLAKAMI" 
+            className="w-6 h-6 object-contain"
+          />
+          <span className="text-[10px] font-bold text-foreground leading-none mt-0.5">
             {totalPoints}
           </span>
         </div>
