@@ -661,6 +661,143 @@ export type Database = {
           },
         ]
       }
+      point_history: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          points: number
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          points: number
+          source: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          points?: number
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reward_redemptions: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          points_spent: number
+          reward_id: string
+          status: string
+          updated_at: string
+          user_email: string | null
+          user_id: string
+          user_name: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          points_spent: number
+          reward_id: string
+          status?: string
+          updated_at?: string
+          user_email?: string | null
+          user_id: string
+          user_name?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          points_spent?: number
+          reward_id?: string
+          status?: string
+          updated_at?: string
+          user_email?: string | null
+          user_id?: string
+          user_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rewards: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          points_required: number
+          sort_order: number
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          points_required?: number
+          sort_order?: number
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          points_required?: number
+          sort_order?: number
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rte_settings: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       sidebar_banners: {
         Row: {
           created_at: string
@@ -733,6 +870,84 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity: {
+        Row: {
+          active_minutes: number
+          created_at: string
+          id: string
+          last_activity_at: string
+          points_awarded: number
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          active_minutes?: number
+          created_at?: string
+          id?: string
+          last_activity_at?: string
+          points_awarded?: number
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          active_minutes?: number
+          created_at?: string
+          id?: string
+          last_activity_at?: string
+          points_awarded?: number
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_checkins: {
+        Row: {
+          checkin_date: string
+          created_at: string
+          id: string
+          points_earned: number
+          user_id: string
+        }
+        Insert: {
+          checkin_date?: string
+          created_at?: string
+          id?: string
+          points_earned?: number
+          user_id: string
+        }
+        Update: {
+          checkin_date?: string
+          created_at?: string
+          id?: string
+          points_earned?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_points: {
+        Row: {
+          created_at: string
+          id: string
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -759,6 +974,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_read_time_points: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: Json
+      }
+      claim_daily_checkin: { Args: { p_user_id: string }; Returns: Json }
       cleanup_expired_cache: { Args: never; Returns: number }
       has_role: {
         Args: {
@@ -774,6 +994,15 @@ export type Database = {
       increment_article_views_with_session: {
         Args: { p_article_id: string; p_session_id: string }
         Returns: boolean
+      }
+      redeem_reward: {
+        Args: {
+          p_reward_id: string
+          p_user_email?: string
+          p_user_id: string
+          p_user_name?: string
+        }
+        Returns: Json
       }
     }
     Enums: {
