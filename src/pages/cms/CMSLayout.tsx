@@ -34,7 +34,8 @@ import {
   Megaphone,
   Share2,
   Eye,
-  Image
+  Image,
+  Gift
 } from 'lucide-react';
 import logoBolakami from '@/assets/logo-bolakami.png';
 
@@ -56,6 +57,7 @@ const CMSSidebar = ({ isAdmin }: { isAdmin: boolean }) => {
 
   const adminItems = [
     { title: 'Liga', url: '/cms/leagues', icon: Trophy },
+    { title: 'Read to Earn', url: '/cms/read-to-earn', icon: Gift },
     { title: 'Advertise', url: '/cms/advertise', icon: Megaphone },
     { title: 'Footer Banners', url: '/cms/footer-banners', icon: Image },
     { title: 'Sidebar Banners', url: '/cms/sidebar-banners', icon: Image },

@@ -37,7 +37,9 @@ import {
   CMSOGPreview,
   CMSFooterBanners,
   CMSSidebarBanners,
+  CMSReadToEarn,
 } from "./pages/cms";
+import Rewards from "./pages/Rewards";
 
 // QueryClient imported from @/lib/queryClient
 
@@ -63,6 +65,7 @@ const App = () => (
             <Route path="/berita/:filter" element={<Berita />} />
             <Route path="/berita" element={<BeritaTag />} />
             <Route path="/klasemen" element={<Klasemen />} />
+            <Route path="/rewards" element={<Rewards />} />
             
             {/* CMS Routes */}
             <Route path="/cms" element={<CMSLayout />}>
@@ -81,6 +84,7 @@ const App = () => (
               <Route path="og-preview" element={<CMSOGPreview />} />
               <Route path="api" element={<CMSApi />} />
               <Route path="users" element={<CMSUsers />} />
+              <Route path="read-to-earn" element={<CMSReadToEarn />} />
             </Route>
             
             {/* Legacy route redirect */}

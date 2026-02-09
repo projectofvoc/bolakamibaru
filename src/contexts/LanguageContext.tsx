@@ -155,6 +155,21 @@ const translations: Record<string, Record<Language, string>> = {
   'news.by': { id: 'Oleh', en: 'By' },
   'news.relatedNews': { id: 'Berita Terkait', en: 'Related News' },
   'news.relatedNewsSubtitle': { id: 'Artikel lain yang mungkin kamu suka', en: 'Other articles you might like' },
+  
+  // Read to Earn
+  'rte.title': { id: 'Read to Earn', en: 'Read to Earn' },
+  'rte.subtitle': { id: 'Kumpulkan poin dan tukarkan dengan hadiah menarik!', en: 'Collect points and redeem exciting rewards!' },
+  'rte.totalPoints': { id: 'Total Poin', en: 'Total Points' },
+  'rte.streak': { id: 'Streak', en: 'Streak' },
+  'rte.activeTime': { id: 'Waktu Aktif', en: 'Active Time' },
+  'rte.redeemed': { id: 'Ditukar', en: 'Redeemed' },
+  'rte.rewards': { id: 'Hadiah', en: 'Rewards' },
+  'rte.redemptions': { id: 'Penukaran', en: 'Redemptions' },
+  'rte.pointHistory': { id: 'Riwayat Poin', en: 'Point History' },
+  'rte.claim': { id: 'Klaim', en: 'Claim' },
+  'rte.redeem': { id: 'Tukar', en: 'Redeem' },
+  'rte.dailyCheckin': { id: 'Daily Check-in', en: 'Daily Check-in' },
+  'rte.claimPoint': { id: 'Klaim +1 poin hari ini', en: 'Claim +1 point today' },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
