@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Trophy,
@@ -15,7 +15,10 @@ import {
   Package,
   Clock,
   Save,
-  Search
+  Search,
+  Upload,
+  Image as ImageIcon,
+  X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,6 +52,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useRewardsAdmin } from '@/hooks/useRewards';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface RewardFormData {
@@ -70,6 +74,8 @@ const initialFormData: RewardFormData = {
   is_active: true,
   sort_order: 0,
 };
+
+const MAX_FILE_SIZE = 1.5 * 1024 * 1024; // 1.5 MB
 
 const CMSReadToEarn: React.FC = () => {
   const {
@@ -93,10 +99,90 @@ const CMSReadToEarn: React.FC = () => {
   const [formData, setFormData] = useState<RewardFormData>(initialFormData);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  
+  // Image upload states
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const validateImageAspectRatio = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const aspectRatio = img.width / img.height;
+        // Allow 1:1 with a small tolerance (0.95 to 1.05)
+        const isSquare = aspectRatio >= 0.95 && aspectRatio <= 1.05;
+        URL.revokeObjectURL(img.src);
+        resolve(isSquare);
+      };
+      img.onerror = () => resolve(false);
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('File harus berupa gambar');
+      return;
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error('Ukuran gambar maksimal 1.5 MB');
+      return;
+    }
+
+    // Validate aspect ratio
+    const isSquare = await validateImageAspectRatio(file);
+    if (!isSquare) {
+      toast.error('Gambar harus memiliki rasio 1:1 (persegi)');
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `rewards/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('rewards')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      throw new Error('Gagal mengupload gambar');
+    }
+
+    const { data } = supabase.storage
+      .from('rewards')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setFormData({ ...formData, image_url: '' });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleCreateReward = () => {
     setEditingReward(null);
     setFormData(initialFormData);
+    setImageFile(null);
+    setImagePreview(null);
     setShowRewardDialog(true);
   };
 
@@ -111,21 +197,40 @@ const CMSReadToEarn: React.FC = () => {
       is_active: reward.is_active,
       sort_order: reward.sort_order,
     });
+    setImageFile(null);
+    setImagePreview(reward.image_url || null);
     setShowRewardDialog(true);
   };
 
   const handleSaveReward = async () => {
     try {
+      setIsUploading(true);
+      let imageUrl = formData.image_url;
+
+      // Upload image if new file is selected
+      if (imageFile) {
+        const uploadedUrl = await uploadImage(imageFile);
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+        }
+      }
+
+      const dataToSave = { ...formData, image_url: imageUrl };
+
       if (editingReward) {
-        await updateReward({ id: editingReward.id, ...formData });
+        await updateReward({ id: editingReward.id, ...dataToSave });
         toast.success('Reward berhasil diupdate');
       } else {
-        await createReward(formData);
+        await createReward(dataToSave);
         toast.success('Reward berhasil dibuat');
       }
       setShowRewardDialog(false);
+      setImageFile(null);
+      setImagePreview(null);
     } catch (error) {
       toast.error('Gagal menyimpan reward');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -571,12 +676,56 @@ const CMSReadToEarn: React.FC = () => {
               />
             </div>
             <div>
-              <Label>URL Gambar</Label>
-              <Input
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                placeholder="https://..."
-              />
+              <Label>Gambar Reward (1:1, max 1.5MB)</Label>
+              <div className="mt-2">
+                {(imagePreview || formData.image_url) ? (
+                  <div className="relative w-32 h-32 mx-auto">
+                    <img 
+                      src={imagePreview || formData.image_url} 
+                      alt="Preview"
+                      className="w-full h-full object-cover rounded-lg border border-border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full"
+                      onClick={removeImage}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div
+                    className="w-32 h-32 mx-auto border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
+                    <span className="text-xs text-muted-foreground text-center px-2">
+                      Klik untuk upload
+                    </span>
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageSelect}
+                />
+                {(imagePreview || formData.image_url) && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Ganti Gambar
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -620,11 +769,11 @@ const CMSReadToEarn: React.FC = () => {
             </Button>
             <Button 
               onClick={handleSaveReward} 
-              disabled={isCreating || isUpdating || !formData.name}
+              disabled={isCreating || isUpdating || isUploading || !formData.name}
             >
-              {(isCreating || isUpdating) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {(isCreating || isUpdating || isUploading) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               <Save className="w-4 h-4 mr-2" />
-              Simpan
+              {isUploading ? 'Mengupload...' : 'Simpan'}
             </Button>
           </DialogFooter>
         </DialogContent>
