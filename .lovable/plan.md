@@ -1,42 +1,38 @@
 
 
-# Fix: Sidebar Banners Hilang di Desktop
+# Fix: Sidebar Banners Overlap dengan Konten
 
 ## Masalah
-Breakpoint dinaikkan ke `min-[2100px]` yang terlalu tinggi -- hampir tidak ada monitor konsumer yang selebar itu. Akibatnya banner hilang di semua layar termasuk monitor Full HD 1920px.
+Container utama menggunakan `max-width: 1400px` (dari Tailwind config), bukan 1280px seperti yang diasumsikan sebelumnya. Akibatnya:
 
-## Akar Masalah Sebelumnya
-Offset positioning menggunakan `720px` (bukan `640px` yang merupakan setengah dari max-w-7xl 1280px), sehingga banner butuh viewport sangat lebar. Perhitungan: `calc(50% - 720px - 180px)` = butuh 1800px+ agar posisi positif.
+- Setengah konten = **700px** dari center (bukan 640px)
+- Offset saat ini `calc(50% - 820px)` menempatkan sisi kanan banner di posisi `calc(50% - 820px + 160px)` = `calc(50% - 660px)`
+- Sisi kiri konten dimulai di `calc(50% - 700px)`
+- Jadi banner **overlap 40px** ke dalam area konten
 
 ## Solusi
 
 ### `src/components/SidebarBanners.tsx`
 
-1. **Turunkan breakpoint ke `min-[1800px]`** -- cukup untuk menampung banner 160px di sisi kiri/kanan konten 1280px dengan gap wajar.
+Perbaiki kalkulasi offset berdasarkan container width yang benar (1400px):
 
-2. **Perbaiki offset positioning** -- gunakan `640px` (setengah dari 1280px max-w-7xl) + `20px` gap + `160px` banner = `820px` dari center. Formula baru:
-   - Home: `calc(50% - 820px)` -- pada 1920px: posisi = 960 - 820 = **140px** dari edge (aman)
-   - Home: `calc(50% - 820px)` -- pada 1800px: posisi = 900 - 820 = **80px** dari edge (aman)
-   - Article: `calc(50% - 628px)` -- (448px + 20px gap + 160px banner)
+- **Home variant**: `700px + 20px gap + 160px banner = 880px`
+  - Baru: `max(16px, calc(50% - 880px))`
+  - Pada 1920px: posisi = 960 - 880 = 80px (aman, tidak overlap)
+  
+- **Article variant**: `448px + 20px gap + 160px banner = 628px` (tetap sama, article pakai max-w-4xl = 896px)
 
-3. **Pertahankan `max(16px, ...)` clamping** sebagai safety net.
+Karena offset home sekarang lebih besar (880px), breakpoint `min-[1800px]` masih cukup:
+- Pada 1800px: 900 - 880 = 20px, tapi `max(16px, ...)` memastikan minimal 16px
 
-Perubahan konkret:
-- Breakpoint: `min-[2100px]:block` menjadi `min-[1800px]:block`
-- Home left: `max(16px, calc(50% - 820px))`
-- Home right: `max(16px, calc(50% - 820px))`
-- Article left: `max(16px, calc(50% - 628px))`
-- Article right: `max(16px, calc(50% - 628px))`
+| Viewport | Home Position | Overlap? |
+|----------|--------------|----------|
+| 1800px   | max(16px, 20px) = 20px | Tidak |
+| 1920px   | 80px | Tidak |
+| 2560px   | 400px | Tidak |
 
-## Perhitungan Verifikasi
-
-| Viewport | Home Position | Article Position | Status |
-|----------|--------------|-----------------|--------|
-| 1800px   | 80px         | 272px           | Aman   |
-| 1920px   | 140px        | 332px           | Aman   |
-| 2560px   | 460px        | 652px           | Aman   |
-
-## Dampak
-- Banner kembali tampil di monitor 1800px ke atas
-- Tidak akan pernah terpotong berkat clamping `max(16px, ...)`
-- MacBook standar (1440px-1728px) tetap tidak menampilkan banner (breakpoint 1800px)
+### Perubahan Konkret
+- Home left: `max(16px, calc(50% - 820px))` menjadi `max(16px, calc(50% - 880px))`
+- Home right: `max(16px, calc(50% - 820px))` menjadi `max(16px, calc(50% - 880px))`
+- Article variant: tidak berubah (sudah benar)
+- Breakpoint: tetap `min-[1800px]`
