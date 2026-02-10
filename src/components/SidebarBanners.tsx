@@ -83,7 +83,7 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
     
     if (variant === 'article') {
       // Article max-w-4xl (896px): half = 448px
-      const offset = isLargeScreen ? 628 : 538; // 448+10+80=538 small, 448+20+160=628 large
+      const offset = isLargeScreen ? 628 : 598; // 448+10+140=598 small, 448+20+160=628 large
       return side === 'left' 
         ? { left: `max(16px, calc(50% - ${offset}px))` }
         : { right: `max(16px, calc(50% - ${offset}px))` };
@@ -97,10 +97,10 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
         : { right: `max(16px, calc(50% - ${offset}px))` };
     }
     
-    // 1440-1799px: container = min(1400, vw-200), banner 80px, gap 10px
-    const containerWidth = Math.min(1400, windowWidth - 200);
+    // 1440-1799px: container = min(1400, vw-320), banner 140px, gap 10px
+    const containerWidth = Math.min(1400, windowWidth - 320);
     const halfContainer = containerWidth / 2;
-    const offset = halfContainer + 10 + 80;
+    const offset = halfContainer + 10 + 140;
     
     return side === 'left'
       ? { left: `max(16px, calc(50% - ${offset}px))` }
@@ -123,7 +123,7 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
             rel={leftBanner.link_url ? 'noopener noreferrer' : undefined}
             className="block transition-opacity hover:opacity-90"
           >
-            <div className="w-[80px] min-[1800px]:w-[160px] aspect-[4/15] rounded-lg overflow-hidden shadow-lg bg-muted">
+            <div className="w-[140px] min-[1800px]:w-[160px] aspect-[4/15] rounded-lg overflow-hidden shadow-lg bg-muted">
               <img
                 src={leftBanner.image_url}
                 alt={leftBanner.title}
@@ -149,7 +149,7 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
             rel={rightBanner.link_url ? 'noopener noreferrer' : undefined}
             className="block transition-opacity hover:opacity-90"
           >
-            <div className="w-[80px] min-[1800px]:w-[160px] aspect-[4/15] rounded-lg overflow-hidden shadow-lg bg-muted">
+            <div className="w-[140px] min-[1800px]:w-[160px] aspect-[4/15] rounded-lg overflow-hidden shadow-lg bg-muted">
               <img
                 src={rightBanner.image_url}
                 alt={rightBanner.title}
