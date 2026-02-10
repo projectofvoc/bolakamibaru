@@ -11,9 +11,13 @@ interface ActivityState {
 export const useActivityTracker = () => {
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
-  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [sessionId] = useState(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return `daily_${today}`;
+  });
   const [isVisible, setIsVisible] = useState(true);
   const [localActiveMinutes, setLocalActiveMinutes] = useState(0);
+  const [initialLoaded, setInitialLoaded] = useState(false);
   const lastUpdateRef = useRef<number>(Date.now());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -75,6 +79,14 @@ export const useActivityTracker = () => {
     },
     enabled: !!userId,
   });
+
+  // Sync local state from DB on initial load
+  useEffect(() => {
+    if (activityState && !initialLoaded) {
+      setLocalActiveMinutes(activityState.activeMinutes);
+      setInitialLoaded(true);
+    }
+  }, [activityState, initialLoaded]);
 
   // Update activity mutation
   const updateActivityMutation = useMutation({
