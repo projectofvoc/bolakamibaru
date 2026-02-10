@@ -1,78 +1,73 @@
 
-# Fix: Sidebar Banners Tampil di Mac Tanpa Zoom Out
 
-## Masalah
-Breakpoint `min-[1800px]` terlalu besar untuk Mac. Layar Mac:
-- MacBook Air: 1440px
-- MacBook Pro 14": 1512px  
-- MacBook Pro 16": 1728px
+# Fix: Sidebar Banners Terpotong di Mac
 
-Dengan container 1400px dan banner 160px, secara matematis **tidak mungkin** menempatkan banner 160px di luar container pada layar 1440-1728px tanpa overlap.
+## Akar Masalah
 
-## Solusi: Responsive Banner Size
+Perhitungan sebelumnya salah. Pada layar Mac, ruang di sisi konten sangat terbatas:
 
-Gunakan **dua tier ukuran banner**:
+| Layar | Viewport | Ruang per sisi | Banner 120px | Hasil |
+|-------|----------|----------------|-------------|-------|
+| MacBook Pro 14" | 1512px | 56px | 120px | OVERLAP 64px |
+| MacBook Pro 16" | 1728px | 164px | 120px | Muat (sisa 44px) |
+| Desktop | 1920px | 260px | 160px | Muat (sisa 100px) |
 
-| Viewport | Banner Width | Breakpoint | Offset |
-|----------|-------------|------------|--------|
-| 1536px - 1799px | **120px** (lebih kecil) | `min-[1536px]` | 730px |
-| 1800px+ | **160px** (normal) | `min-[1800px]` | 880px |
+Rumus: `(viewport - 1400px container) / 2 = ruang per sisi`
 
-### Perhitungan Tier Kecil (120px banner)
-- Container 1400px, half = 700px
-- Gap = 10px, banner = 120px
-- Offset = 700 + 10 + 120 = **730px**
-- Pada 1536px: 768 - 730 = **38px** dari edge (aman)
-- Pada 1728px (Mac Pro 16"): 864 - 730 = **134px** dari edge (aman)
+Banner 120px + 10px gap = **130px minimum** per sisi. Jadi viewport minimum = 1400 + 260 = **1660px**.
+
+## Solusi: Naikkan Breakpoint + Sesuaikan Ukuran
 
 ### Perubahan di `src/components/SidebarBanners.tsx`
 
-1. **Breakpoint diturunkan ke `min-[1536px]`** -- mencakup semua Mac kecuali Air 13" (1440px)
+**Dua tier yang benar:**
 
-2. **Banner div menggunakan responsive width**:
-   - `w-[120px] min-[1800px]:w-[160px]`
-   - `aspect-[4/15]` tetap sama
+| Tier | Breakpoint | Banner Width | Offset | Gap | Viewport Min |
+|------|-----------|-------------|--------|-----|-------------|
+| Kecil | `min-[1700px]` | 100px | 810px | 10px | 1700px |
+| Besar | `min-[1800px]` | 160px | 880px | 20px | 1800px |
 
-3. **Positioning menggunakan CSS variable atau responsive style**:
-   - 1536-1799px: `max(16px, calc(50% - 730px))`
-   - 1800px+: `max(16px, calc(50% - 880px))`
-   - Implementasi via JavaScript: deteksi `window.innerWidth` untuk memilih offset, atau gunakan dua div dengan `hidden`/`block` breakpoint
+### Verifikasi Matematika
 
-4. **Pendekatan implementasi**: Gunakan `window.innerWidth` di `getPositionStyle` untuk menentukan offset yang tepat berdasarkan viewport, plus `resize` event listener untuk update saat resize.
+**Tier Kecil (100px banner, offset 810):**
+- `left = max(16px, calc(50% - 810px))`
+- Banner right edge = `calc(50% - 810px + 100px)` = `calc(50% - 710px)`
+- Container left edge = `calc(50% - 700px)`
+- Gap = 10px (aman)
+
+| Viewport | Banner Left | Banner Right | Container Left | Gap |
+|----------|------------|-------------|---------------|-----|
+| 1700px | 40px | 140px | 150px | 10px |
+| 1728px (Mac 16") | 54px | 154px | 164px | 10px |
+| 1799px | 89.5px | 189.5px | 199.5px | 10px |
+
+**Tier Besar (160px banner, offset 880):**
+
+| Viewport | Banner Left | Banner Right | Container Left | Gap |
+|----------|------------|-------------|---------------|-----|
+| 1800px | 20px | 180px | 200px | 20px |
+| 1920px | 80px | 240px | 260px | 20px |
+
+**Article Variant (max-w-4xl = 896px, half = 448px):**
+- Tier kecil: offset = 448 + 10 + 100 = 558px
+- Tier besar: offset = 448 + 20 + 160 = 628px (tidak berubah)
 
 ### Perubahan Konkret
 
-```tsx
-// getPositionStyle updated
-const getPositionStyle = (side: 'left' | 'right') => {
-  const isLargeScreen = windowWidth >= 1800;
-  
-  if (variant === 'article') {
-    const offset = isLargeScreen ? 628 : 538; // 448+10+80 for small
-    return side === 'left' 
-      ? { left: `max(16px, calc(50% - ${offset}px))` }
-      : { right: `max(16px, calc(50% - ${offset}px))` };
-  }
-  
-  const offset = isLargeScreen ? 880 : 730;
-  return side === 'left'
-    ? { left: `max(16px, calc(50% - ${offset}px))` }
-    : { right: `max(16px, calc(50% - ${offset}px))` };
-};
-```
+1. Breakpoint visibility: `hidden min-[1536px]:block` menjadi `hidden min-[1700px]:block`
 
-- Banner width: `w-[120px] min-[1800px]:w-[160px]`
-- Breakpoint visibility: `hidden min-[1536px]:block`
-- Tambah `windowWidth` state dengan `resize` listener
+2. Banner width: `w-[120px] min-[1800px]:w-[160px]` menjadi `w-[100px] min-[1800px]:w-[160px]`
 
-### Article Variant (Tier Kecil)
-- max-w-4xl = 896px, half = 448px
-- Gap 10px + banner 120px = offset **578px**
-- Pada 1536px: 768 - 578 = 190px (aman)
+3. `getPositionStyle` offset:
+   - Home kecil: 730 menjadi **810**
+   - Home besar: 880 (tetap)
+   - Article kecil: 578 menjadi **558**
+   - Article besar: 628 (tetap)
 
 ## Dampak
-- MacBook Pro 14" (1512px): **belum tampil** (breakpoint 1536px)
-- MacBook Pro 16" (1728px): **tampil** dengan banner 120px
-- Monitor 1920px+: **tampil** dengan banner 120px  
-- Monitor 1800px+: **upgrade** ke banner 160px
-- Tidak ada overlap karena offset dihitung per tier
+
+- MacBook Pro 14" (1512px): tidak tampil (ruang tidak cukup, ini benar)
+- MacBook Pro 16" (1728px): **tampil** dengan banner 100px, gap 10px, tidak terpotong
+- Desktop 1800px+: tampil dengan banner 160px penuh
+- Tidak ada overlap karena offset dihitung dengan benar dari container width
+
