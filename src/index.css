@@ -295,6 +295,6 @@
 /* Shrink container on Mac-sized screens to make room for sidebar banners */
 @media (min-width: 1440px) and (max-width: 1799px) {
   .container {
-    max-width: min(1400px, calc(100vw - 200px)) !important;
+    max-width: min(1400px, calc(100vw - 320px)) !important;
   }
 }
