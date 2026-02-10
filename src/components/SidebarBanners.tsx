@@ -79,10 +79,10 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
         ? { left: 'max(16px, calc(50% - 628px))' }
         : { right: 'max(16px, calc(50% - 628px))' };
     }
-    // Default for homepage with max-w-7xl (1280px): 640px + 20px gap + 160px banner = 820px
+    // Default for homepage with container (1400px): 700px + 20px gap + 160px banner = 880px
     return side === 'left'
-      ? { left: 'max(16px, calc(50% - 820px))' }
-      : { right: 'max(16px, calc(50% - 820px))' };
+      ? { left: 'max(16px, calc(50% - 880px))' }
+      : { right: 'max(16px, calc(50% - 880px))' };
   };
 
   return (
