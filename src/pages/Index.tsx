@@ -11,7 +11,7 @@ import MoreNewsGrid from '@/components/MoreNewsGrid';
 import AdvertisementPopup from '@/components/AdvertisementPopup';
 import SidebarBanners from '@/components/SidebarBanners';
 import DailyCheckinPopup from '@/components/DailyCheckinPopup';
-import PointsWidget from '@/components/PointsWidget';
+
 
 const Index: React.FC = () => {
   return (
@@ -19,7 +19,7 @@ const Index: React.FC = () => {
       <AdvertisementPopup />
       <DailyCheckinPopup />
       <SidebarBanners />
-      <PointsWidget />
+      
       <Header />
       <main>
         <HeroDashboard />

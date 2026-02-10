@@ -7,6 +7,7 @@ import { queryClient } from "@/lib/queryClient";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import PointsWidget from "@/components/PointsWidget";
 import Index from "./pages/Index";
 
 import Auth from "./pages/Auth";
@@ -51,6 +52,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AnalyticsTracker />
+          <PointsWidget />
           <Routes>
             <Route path="/" element={<Index />} />
             
