@@ -90,7 +90,7 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
       {/* Left Banner - Fixed position, aligned with content edge */}
       {leftBanner && (
         <div 
-          className={`hidden min-[1440px]:block fixed top-24 z-40 transition-opacity duration-300 ${
+          className={`hidden min-[1920px]:block fixed top-24 z-40 transition-opacity duration-300 ${
             isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
           style={getPositionStyle('left')}
@@ -116,7 +116,7 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
       {/* Right Banner - Fixed position, aligned with content edge */}
       {rightBanner && (
         <div 
-          className={`hidden min-[1440px]:block fixed top-24 z-40 transition-opacity duration-300 ${
+          className={`hidden min-[1920px]:block fixed top-24 z-40 transition-opacity duration-300 ${
             isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
           style={getPositionStyle('right')}
