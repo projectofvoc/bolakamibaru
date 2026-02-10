@@ -82,14 +82,26 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
     const isLargeScreen = windowWidth >= 1800;
     
     if (variant === 'article') {
-      // Article max-w-4xl (896px): 448 + 10 + banner
-      const offset = isLargeScreen ? 628 : 558; // 448+10+100=558 for small, 448+20+160=628 for large
+      // Article max-w-4xl (896px): half = 448px
+      const offset = isLargeScreen ? 628 : 538; // 448+10+80=538 small, 448+20+160=628 large
       return side === 'left' 
         ? { left: `max(16px, calc(50% - ${offset}px))` }
         : { right: `max(16px, calc(50% - ${offset}px))` };
     }
-    // Home container (1400px): 700 + 10 + banner
-    const offset = isLargeScreen ? 880 : 810; // 700+10+100=810 for small, 700+20+160=880 for large
+    
+    if (isLargeScreen) {
+      // 1800px+: container 1400px, banner 160px, gap 20px
+      const offset = 880;
+      return side === 'left'
+        ? { left: `max(16px, calc(50% - ${offset}px))` }
+        : { right: `max(16px, calc(50% - ${offset}px))` };
+    }
+    
+    // 1440-1799px: container = min(1400, vw-200), banner 80px, gap 10px
+    const containerWidth = Math.min(1400, windowWidth - 200);
+    const halfContainer = containerWidth / 2;
+    const offset = halfContainer + 10 + 80;
+    
     return side === 'left'
       ? { left: `max(16px, calc(50% - ${offset}px))` }
       : { right: `max(16px, calc(50% - ${offset}px))` };
@@ -100,7 +112,7 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
       {/* Left Banner */}
       {leftBanner && (
         <div 
-          className={`hidden min-[1700px]:block fixed top-24 z-40 transition-opacity duration-300 ${
+          className={`hidden min-[1440px]:block fixed top-24 z-40 transition-opacity duration-300 ${
             isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
           style={getPositionStyle('left')}
@@ -111,7 +123,7 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
             rel={leftBanner.link_url ? 'noopener noreferrer' : undefined}
             className="block transition-opacity hover:opacity-90"
           >
-            <div className="w-[100px] min-[1800px]:w-[160px] aspect-[4/15] rounded-lg overflow-hidden shadow-lg bg-muted">
+            <div className="w-[80px] min-[1800px]:w-[160px] aspect-[4/15] rounded-lg overflow-hidden shadow-lg bg-muted">
               <img
                 src={leftBanner.image_url}
                 alt={leftBanner.title}
@@ -126,7 +138,7 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
       {/* Right Banner */}
       {rightBanner && (
         <div 
-          className={`hidden min-[1700px]:block fixed top-24 z-40 transition-opacity duration-300 ${
+          className={`hidden min-[1440px]:block fixed top-24 z-40 transition-opacity duration-300 ${
             isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
           style={getPositionStyle('right')}
@@ -137,7 +149,7 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
             rel={rightBanner.link_url ? 'noopener noreferrer' : undefined}
             className="block transition-opacity hover:opacity-90"
           >
-            <div className="w-[100px] min-[1800px]:w-[160px] aspect-[4/15] rounded-lg overflow-hidden shadow-lg bg-muted">
+            <div className="w-[80px] min-[1800px]:w-[160px] aspect-[4/15] rounded-lg overflow-hidden shadow-lg bg-muted">
               <img
                 src={rightBanner.image_url}
                 alt={rightBanner.title}
