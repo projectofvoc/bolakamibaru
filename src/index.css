@@ -133,6 +133,11 @@
     50% { opacity: 0.6; }
   }
 
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
   .gradient-overlay {
     background: var(--gradient-hero);
   }

@@ -96,8 +96,14 @@ const PointsWidget: React.FC = () => {
             strokeLinecap="round"
             strokeDasharray={circumference}
             initial={{ strokeDashoffset: circumference }}
-            animate={{ strokeDashoffset }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
+            animate={{ 
+              strokeDashoffset,
+              opacity: isTracking ? [0.7, 1, 0.7] : 1,
+            }}
+            transition={{ 
+              strokeDashoffset: { duration: 0.7, ease: 'easeOut' },
+              opacity: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+            }}
           />
         </svg>
 
