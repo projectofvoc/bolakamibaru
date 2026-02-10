@@ -76,13 +76,13 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
     if (variant === 'article') {
       // For article pages with max-w-4xl (896px)
       return side === 'left' 
-        ? { left: 'calc(50% - 448px - 180px)' }
-        : { right: 'calc(50% - 448px - 180px)' };
+        ? { left: 'max(16px, calc(50% - 448px - 180px))' }
+        : { right: 'max(16px, calc(50% - 448px - 180px))' };
     }
     // Default for homepage with max-w-7xl (1280px) + wider content area
     return side === 'left'
-      ? { left: 'calc(50% - 720px - 180px)' }
-      : { right: 'calc(50% - 720px - 180px)' };
+      ? { left: 'max(16px, calc(50% - 720px - 180px))' }
+      : { right: 'max(16px, calc(50% - 720px - 180px))' };
   };
 
   return (
@@ -90,7 +90,7 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
       {/* Left Banner - Fixed position, aligned with content edge */}
       {leftBanner && (
         <div 
-          className={`hidden min-[1920px]:block fixed top-24 z-40 transition-opacity duration-300 ${
+          className={`hidden min-[2100px]:block fixed top-24 z-40 transition-opacity duration-300 ${
             isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
           style={getPositionStyle('left')}
@@ -116,7 +116,7 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
       {/* Right Banner - Fixed position, aligned with content edge */}
       {rightBanner && (
         <div 
-          className={`hidden min-[1920px]:block fixed top-24 z-40 transition-opacity duration-300 ${
+          className={`hidden min-[2100px]:block fixed top-24 z-40 transition-opacity duration-300 ${
             isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
           style={getPositionStyle('right')}
