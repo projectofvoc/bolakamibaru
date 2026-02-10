@@ -93,6 +93,7 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Circular Std', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
   }
 
   /* Custom scrollbar */
