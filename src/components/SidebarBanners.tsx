@@ -74,15 +74,15 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
   // Article: aligned with max-w-4xl container (896px / 2 = 448px from center + banner width + gap)
   const getPositionStyle = (side: 'left' | 'right') => {
     if (variant === 'article') {
-      // For article pages with max-w-4xl (896px)
+      // For article pages with max-w-4xl (896px): 448px + 20px gap + 160px banner = 628px
       return side === 'left' 
-        ? { left: 'max(16px, calc(50% - 448px - 180px))' }
-        : { right: 'max(16px, calc(50% - 448px - 180px))' };
+        ? { left: 'max(16px, calc(50% - 628px))' }
+        : { right: 'max(16px, calc(50% - 628px))' };
     }
-    // Default for homepage with max-w-7xl (1280px) + wider content area
+    // Default for homepage with max-w-7xl (1280px): 640px + 20px gap + 160px banner = 820px
     return side === 'left'
-      ? { left: 'max(16px, calc(50% - 720px - 180px))' }
-      : { right: 'max(16px, calc(50% - 720px - 180px))' };
+      ? { left: 'max(16px, calc(50% - 820px))' }
+      : { right: 'max(16px, calc(50% - 820px))' };
   };
 
   return (
@@ -90,7 +90,7 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
       {/* Left Banner - Fixed position, aligned with content edge */}
       {leftBanner && (
         <div 
-          className={`hidden min-[2100px]:block fixed top-24 z-40 transition-opacity duration-300 ${
+          className={`hidden min-[1800px]:block fixed top-24 z-40 transition-opacity duration-300 ${
             isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
           style={getPositionStyle('left')}
@@ -116,7 +116,7 @@ const SidebarBanners = ({ variant = 'default' }: SidebarBannersProps) => {
       {/* Right Banner - Fixed position, aligned with content edge */}
       {rightBanner && (
         <div 
-          className={`hidden min-[2100px]:block fixed top-24 z-40 transition-opacity duration-300 ${
+          className={`hidden min-[1800px]:block fixed top-24 z-40 transition-opacity duration-300 ${
             isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
           style={getPositionStyle('right')}
