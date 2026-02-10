@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { useUserPoints } from '@/hooks/useUserPoints';
 import { useActivityTracker } from '@/hooks/useActivityTracker';
@@ -10,6 +10,7 @@ import paviconBolakami from '@/assets/pavicon-bolakami.svg';
 
 const PointsWidget: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { language } = useLanguage();
   const { totalPoints, userId } = useUserPoints();
   const { progressPercentage, minutesUntilNextPoint, isTracking } = useActivityTracker();
@@ -41,7 +42,8 @@ const PointsWidget: React.FC = () => {
     setPreviousPoints(totalPoints);
   }, [totalPoints]);
 
-  // Don't show if not logged in
+  // Don't show on CMS pages or if not logged in
+  if (location.pathname.startsWith('/cms')) return null;
   if (!isLoggedIn) return null;
 
   // Calculate SVG circle properties
