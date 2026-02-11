@@ -82,7 +82,7 @@ serve(async (req) => {
       );
     }
 
-    const { message, conversationHistory = [] } = await req.json();
+    const { message, conversationHistory = [], fixture_id, match_data } = await req.json();
 
     if (!message) {
       return new Response(
@@ -97,9 +97,21 @@ serve(async (req) => {
       );
     }
 
+    // Build match context string if match_data is provided
+    let matchContext = '';
+    if (match_data) {
+      matchContext = `\n\n📋 KONTEKS PERTANDINGAN SAAT INI:
+- Home Team: ${match_data.homeTeam || 'N/A'}
+- Away Team: ${match_data.awayTeam || 'N/A'}
+- Liga: ${match_data.league || 'N/A'}
+${fixture_id ? `- Fixture ID: ${fixture_id}` : ''}
+${match_data.startingAt ? `- Kickoff: ${match_data.startingAt}` : ''}
+${match_data.venue ? `- Venue: ${match_data.venue}` : ''}`;
+    }
+
     // Build messages array with system prompt and conversation history
     const messages: ChatMessage[] = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: SYSTEM_PROMPT + matchContext },
       ...conversationHistory.map((msg: { role: string; content: string }) => ({
         role: msg.role as 'user' | 'assistant',
         content: msg.content
@@ -107,7 +119,7 @@ serve(async (req) => {
       { role: 'user', content: message }
     ];
 
-    console.log('Calling Lovable AI with model google/gemini-3-flash-preview');
+    console.log('Calling Lovable AI with model google/gemini-3-flash-preview', match_data ? `(match: ${match_data.homeTeam} vs ${match_data.awayTeam})` : '');
 
     const response = await fetch(LOVABLE_AI_URL, {
       method: 'POST',
@@ -120,6 +132,13 @@ serve(async (req) => {
         messages: messages,
         temperature: 0.7,
         max_tokens: 2000,
+        ...(match_data && {
+          modeSettings: {
+            home_team: match_data.homeTeam,
+            away_team: match_data.awayTeam,
+            league: match_data.league,
+          }
+        })
       }),
     });
 
