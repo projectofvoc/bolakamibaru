@@ -72,7 +72,7 @@ const Footer: React.FC = () => {
     { label: { id: 'Berita Terbaru', en: 'Latest News' }, path: '/berita', isExternal: false },
     { label: { id: 'Jadwal Pertandingan', en: 'Match Schedule' }, path: 'https://bolakamitv.up.railway.app/', isExternal: true },
     { label: { id: 'Skor Live', en: 'Live Scores' }, path: 'https://bolakamitv.up.railway.app/', isExternal: true },
-    { label: { id: 'Prediksi AI', en: 'AI Predictions' }, path: 'https://vocparlay.com/', isExternal: true },
+    { label: { id: 'Prediksi AI', en: 'AI Predictions' }, path: 'https://preview--parlay-predictor-pal.lovable.app/chat', isExternal: true },
   ];
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
