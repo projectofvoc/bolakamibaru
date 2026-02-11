@@ -1,105 +1,83 @@
 
 
-# Update Widget Predicto: Kirim fixture_id & match_data
+# Perbaiki Edge Function `openai-chat`: Kirim home_team/away_team/league
 
-## Tujuan
-Menambahkan parameter `fixture_id` dan `match_data` pada request body widget Predicto agar Match Guard di backend bisa di-bypass untuk tim yang tidak dikenali.
+## Masalah
+Edge function `openai-chat` (endpoint bolakami-chat) tidak meng-extract atau meneruskan `fixture_id`, `match_data`, atau `modeSettings` yang berisi `home_team`, `away_team`, `league` dari request body. Akibatnya, Match Guard di backend tidak bisa di-bypass untuk tim yang tidak dikenali.
 
-## Cara Kerja
+## Perubahan
 
-Widget akan mencocokkan pesan pengguna dengan daftar pertandingan yang tersedia (live + upcoming). Jika ditemukan kecocokan nama tim, data pertandingan tersebut akan dikirim bersama request.
+### File: `supabase/functions/openai-chat/index.ts`
 
-## Detail Teknis
+**1. Extract parameter tambahan dari request body (baris 85)**
 
-### File: `src/components/AICompanion.tsx`
+Dari:
+```typescript
+const { message, conversationHistory = [] } = await req.json();
+```
 
-**1. Buat fungsi pencocokan pertandingan**
+Menjadi:
+```typescript
+const { message, conversationHistory = [], fixture_id, match_data } = await req.json();
+```
 
-Fungsi `findMatchingFixture` akan:
-- Mengambil pesan pengguna
-- Mencocokkan dengan daftar pertandingan dari `liveMatches` dan `upcomingMatches`
-- Mengembalikan `fixture_id` dan `match_data` jika ditemukan
+**2. Tambahkan konteks pertandingan ke system prompt atau user message**
+
+Jika `match_data` tersedia, inject informasi pertandingan ke dalam pesan agar AI memiliki konteks:
 
 ```typescript
-const findMatchingFixture = (message: string) => {
-  const msgLower = message.toLowerCase();
-  
-  // Cek dari upcoming fixtures
-  for (const fixture of (upcomingMatches || [])) {
-    const homeName = fixture.homeTeam.name.toLowerCase();
-    const awayName = fixture.awayTeam.name.toLowerCase();
-    if (msgLower.includes(homeName) || msgLower.includes(awayName)) {
-      return {
-        fixture_id: fixture.id,
-        match_data: {
-          homeTeam: fixture.homeTeam.name,
-          awayTeam: fixture.awayTeam.name,
-          league: fixture.league.name,
-          startingAt: fixture.startingAt,
-          venue: fixture.venue,
-        }
-      };
+// Build match context string
+let matchContext = '';
+if (match_data) {
+  matchContext = `\n\n📋 KONTEKS PERTANDINGAN SAAT INI:
+- Home Team: ${match_data.homeTeam || 'N/A'}
+- Away Team: ${match_data.awayTeam || 'N/A'}
+- Liga: ${match_data.league || 'N/A'}
+${fixture_id ? `- Fixture ID: ${fixture_id}` : ''}
+${match_data.startingAt ? `- Kickoff: ${match_data.startingAt}` : ''}
+${match_data.venue ? `- Venue: ${match_data.venue}` : ''}`;
+}
+```
+
+**3. Sertakan konteks di messages array**
+
+Tambahkan `matchContext` ke system prompt saat memanggil AI:
+
+```typescript
+const messages: ChatMessage[] = [
+  { role: 'system', content: SYSTEM_PROMPT + matchContext },
+  ...conversationHistory.map(...),
+  { role: 'user', content: message }
+];
+```
+
+**4. Tambahkan `modeSettings` di request ke AI gateway (opsional)**
+
+Jika backend Predicto memerlukan `modeSettings` secara eksplisit:
+
+```typescript
+body: JSON.stringify({
+  model: 'google/gemini-3-flash-preview',
+  messages: messages,
+  temperature: 0.7,
+  max_tokens: 2000,
+  ...(match_data && {
+    modeSettings: {
+      home_team: match_data.homeTeam,
+      away_team: match_data.awayTeam,
+      league: match_data.league,
     }
-  }
-  
-  // Cek dari live matches
-  for (const match of liveMatches) {
-    const homeName = match.homeTeam.toLowerCase();
-    const awayName = match.awayTeam.toLowerCase();
-    if (msgLower.includes(homeName) || msgLower.includes(awayName)) {
-      return {
-        fixture_id: match.id,
-        match_data: {
-          homeTeam: match.homeTeam,
-          awayTeam: match.awayTeam,
-          league: match.league,
-        }
-      };
-    }
-  }
-  
-  return null;
-};
+  })
+})
 ```
 
-**2. Update fungsi `callOpenAI`**
-
-- Tambahkan parameter `matchContext` opsional
-- Sertakan `fixture_id` dan `match_data` di request body jika tersedia
-
-```typescript
-const callOpenAI = useCallback(async (
-  message: string, 
-  matchContext?: { fixture_id: string | number; match_data: any }
-): Promise<string> => {
-  // ...existing retry logic...
-  body: JSON.stringify({ 
-    message,
-    conversationHistory: conversationHistory.current,
-    ...(matchContext && {
-      fixture_id: matchContext.fixture_id,
-      match_data: matchContext.match_data,
-    })
-  }),
-  // ...
-```
-
-**3. Update `handleSend` dan `handlePromptClick`**
-
-Panggil `findMatchingFixture` sebelum memanggil API:
-
-```typescript
-const matchContext = findMatchingFixture(userMessage.content);
-const aiResponseText = await callOpenAI(userMessage.content, matchContext);
-```
-
-### Ringkasan Perubahan
+## Ringkasan
 
 | Komponen | Perubahan |
 |----------|-----------|
-| `findMatchingFixture` | Fungsi baru untuk mencocokkan pesan dengan pertandingan |
-| `callOpenAI` | Tambah parameter `matchContext`, kirim `fixture_id` & `match_data` di body |
-| `handleSend` | Panggil `findMatchingFixture` sebelum API call |
-| `handlePromptClick` | Panggil `findMatchingFixture` sebelum API call |
+| Request parsing | Extract `fixture_id` dan `match_data` dari body |
+| System prompt | Inject konteks pertandingan jika tersedia |
+| AI gateway call | Sertakan `modeSettings` dengan `home_team`, `away_team`, `league` |
 
-Tidak ada perubahan database atau edge function yang diperlukan -- semua perubahan hanya di frontend.
+Hanya satu file yang perlu diubah: `supabase/functions/openai-chat/index.ts`.
+
