@@ -95,8 +95,52 @@ const AICompanion: React.FC = () => {
     fetchPrompts();
   }, []);
 
+  // Find matching fixture from user message
+  const findMatchingFixture = useCallback((message: string) => {
+    const msgLower = message.toLowerCase();
+
+    // Check upcoming fixtures
+    for (const fixture of (upcomingMatches || [])) {
+      const homeName = fixture.homeTeam.name.toLowerCase();
+      const awayName = fixture.awayTeam.name.toLowerCase();
+      if (msgLower.includes(homeName) || msgLower.includes(awayName)) {
+        return {
+          fixture_id: fixture.id,
+          match_data: {
+            homeTeam: fixture.homeTeam.name,
+            awayTeam: fixture.awayTeam.name,
+            league: fixture.league.name,
+            startingAt: fixture.startingAt,
+            venue: fixture.venue,
+          }
+        };
+      }
+    }
+
+    // Check live matches
+    for (const match of liveMatches) {
+      const homeName = match.homeTeam.toLowerCase();
+      const awayName = match.awayTeam.toLowerCase();
+      if (msgLower.includes(homeName) || msgLower.includes(awayName)) {
+        return {
+          fixture_id: match.id,
+          match_data: {
+            homeTeam: match.homeTeam,
+            awayTeam: match.awayTeam,
+            league: match.league,
+          }
+        };
+      }
+    }
+
+    return null;
+  }, [liveMatches, upcomingMatches]);
+
   // Call OpenAI API with retry logic
-  const callOpenAI = useCallback(async (message: string): Promise<string> => {
+  const callOpenAI = useCallback(async (
+    message: string,
+    matchContext?: { fixture_id: string | number; match_data: any }
+  ): Promise<string> => {
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 1000; // 1 detik
     
@@ -111,7 +155,11 @@ const AICompanion: React.FC = () => {
           },
           body: JSON.stringify({ 
             message,
-            conversationHistory: conversationHistory.current
+            conversationHistory: conversationHistory.current,
+            ...(matchContext && {
+              fixture_id: matchContext.fixture_id,
+              match_data: matchContext.match_data,
+            })
           }),
         });
         
@@ -184,7 +232,8 @@ const AICompanion: React.FC = () => {
     setIsTyping(true);
 
     // Call OpenAI API
-    const aiResponseText = await callOpenAI(userMessage.content);
+    const matchContext = findMatchingFixture(userMessage.content);
+    const aiResponseText = await callOpenAI(userMessage.content, matchContext);
     
     const aiResponse: ChatMessage = {
       id: `msg_${Date.now()}`,
@@ -194,7 +243,7 @@ const AICompanion: React.FC = () => {
     };
     setMessages(prev => [...prev, aiResponse]);
     setIsTyping(false);
-  }, [inputValue, callOpenAI]);
+  }, [inputValue, callOpenAI, findMatchingFixture]);
 
   // Handle prompt chip click
   const handlePromptClick = async (prompt: string) => {
@@ -211,7 +260,8 @@ const AICompanion: React.FC = () => {
     setIsTyping(true);
 
     // Call OpenAI API
-    const aiResponseText = await callOpenAI(prompt);
+    const matchContext = findMatchingFixture(prompt);
+    const aiResponseText = await callOpenAI(prompt, matchContext);
     
     const aiResponse: ChatMessage = {
       id: `msg_${Date.now()}`,
