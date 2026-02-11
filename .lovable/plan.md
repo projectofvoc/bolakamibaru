@@ -1,25 +1,27 @@
 
-# Update URL Prediksi AI
+
+# Perbaiki URL Prediksi AI
 
 ## Perubahan
 
-Ganti semua URL Prediksi AI ke `https://preview--parlay-predictor-pal.lovable.app/chat`.
+Kembalikan URL Prediksi AI ke `https://parlay-predictor-pal.lovable.app` di kedua lokasi.
 
 ## Detail Teknis
 
-### 1. Database: Tabel `nav_items`
-Record dengan label "Prediksi AI" saat ini mengarah ke `https://parlay-predictor-pal.lovable.app`. Update path-nya via SQL migration:
+### 1. Footer: `src/components/Footer.tsx`
+Ganti `https://preview--parlay-predictor-pal.lovable.app/chat` menjadi `https://parlay-predictor-pal.lovable.app` pada link "Prediksi AI" di baris 75.
+
+### 2. Database: Tabel `nav_items`
+Update record navigasi header:
 
 ```sql
 UPDATE nav_items 
-SET path = 'https://preview--parlay-predictor-pal.lovable.app/chat'
+SET path = 'https://parlay-predictor-pal.lovable.app'
 WHERE id = '333e5cae-86d2-49af-9697-0f8496305798';
 ```
 
-### 2. Footer: `src/components/Footer.tsx`
-Ganti `https://vocparlay.com/` menjadi `https://preview--parlay-predictor-pal.lovable.app/chat` pada link "Prediksi AI" di bagian Tautan Cepat.
+| Lokasi | URL Saat Ini | URL Benar |
+|--------|-------------|-----------|
+| `src/components/Footer.tsx` | `https://preview--parlay-predictor-pal.lovable.app/chat` | `https://parlay-predictor-pal.lovable.app` |
+| DB `nav_items` | `https://preview--parlay-predictor-pal.lovable.app/chat` | `https://parlay-predictor-pal.lovable.app` |
 
-| File / Lokasi | URL Lama | URL Baru |
-|---------------|----------|----------|
-| DB `nav_items` (Header navigasi) | `https://parlay-predictor-pal.lovable.app` | `https://preview--parlay-predictor-pal.lovable.app/chat` |
-| `src/components/Footer.tsx` (Tautan Cepat) | `https://vocparlay.com/` | `https://preview--parlay-predictor-pal.lovable.app/chat` |
