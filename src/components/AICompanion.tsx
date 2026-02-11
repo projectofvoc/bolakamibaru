@@ -99,6 +99,23 @@ const AICompanion: React.FC = () => {
   const findMatchingFixture = useCallback((message: string) => {
     const msgLower = message.toLowerCase();
 
+    // Check live matches first (priority for is_live flag)
+    for (const match of liveMatches) {
+      const homeName = match.homeTeam.toLowerCase();
+      const awayName = match.awayTeam.toLowerCase();
+      if (msgLower.includes(homeName) || msgLower.includes(awayName)) {
+        return {
+          fixture_id: match.id,
+          match_data: {
+            home_team: match.homeTeam,
+            away_team: match.awayTeam,
+            league: match.league,
+          },
+          is_live: true,
+        };
+      }
+    }
+
     // Check upcoming fixtures
     for (const fixture of (upcomingMatches || [])) {
       const homeName = fixture.homeTeam.name.toLowerCase();
@@ -107,28 +124,11 @@ const AICompanion: React.FC = () => {
         return {
           fixture_id: fixture.id,
           match_data: {
-            homeTeam: fixture.homeTeam.name,
-            awayTeam: fixture.awayTeam.name,
+            home_team: fixture.homeTeam.name,
+            away_team: fixture.awayTeam.name,
             league: fixture.league.name,
-            startingAt: fixture.startingAt,
-            venue: fixture.venue,
-          }
-        };
-      }
-    }
-
-    // Check live matches
-    for (const match of liveMatches) {
-      const homeName = match.homeTeam.toLowerCase();
-      const awayName = match.awayTeam.toLowerCase();
-      if (msgLower.includes(homeName) || msgLower.includes(awayName)) {
-        return {
-          fixture_id: match.id,
-          match_data: {
-            homeTeam: match.homeTeam,
-            awayTeam: match.awayTeam,
-            league: match.league,
-          }
+          },
+          is_live: false,
         };
       }
     }
@@ -139,7 +139,7 @@ const AICompanion: React.FC = () => {
   // Call OpenAI API with retry logic
   const callOpenAI = useCallback(async (
     message: string,
-    matchContext?: { fixture_id: string | number; match_data: any }
+    matchContext?: { fixture_id: string | number; match_data: any; is_live: boolean }
   ): Promise<string> => {
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 1000; // 1 detik
@@ -159,6 +159,8 @@ const AICompanion: React.FC = () => {
             ...(matchContext && {
               fixture_id: matchContext.fixture_id,
               match_data: matchContext.match_data,
+              is_live_analysis: matchContext.is_live,
+              mode: 'analisa',
             })
           }),
         });
