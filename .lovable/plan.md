@@ -1,24 +1,25 @@
 
-# Sembunyikan Widget di Halaman CMS
+# Update URL Prediksi AI
 
 ## Perubahan
 
-Di `src/components/PointsWidget.tsx`, tambahkan pengecekan `useLocation()` dari `react-router-dom`. Jika path dimulai dengan `/cms`, return `null` sehingga widget tidak di-render.
+Ganti semua URL Prediksi AI ke `https://preview--parlay-predictor-pal.lovable.app/chat`.
 
 ## Detail Teknis
 
-| File | Perubahan |
-|------|----------|
-| `src/components/PointsWidget.tsx` | Import `useLocation`, tambahkan early return jika `pathname.startsWith('/cms')` |
+### 1. Database: Tabel `nav_items`
+Record dengan label "Prediksi AI" saat ini mengarah ke `https://parlay-predictor-pal.lovable.app`. Update path-nya via SQL migration:
 
-Kode yang ditambahkan di awal komponen:
-
-```typescript
-import { useNavigate, useLocation } from 'react-router-dom';
-
-// Di dalam komponen:
-const location = useLocation();
-if (location.pathname.startsWith('/cms')) return null;
+```sql
+UPDATE nav_items 
+SET path = 'https://preview--parlay-predictor-pal.lovable.app/chat'
+WHERE id = '333e5cae-86d2-49af-9697-0f8496305798';
 ```
 
-Sederhana dan efektif -- widget tetap muncul di semua halaman publik (home, artikel, liga, klasemen, rewards) tapi tersembunyi di seluruh area admin CMS.
+### 2. Footer: `src/components/Footer.tsx`
+Ganti `https://vocparlay.com/` menjadi `https://preview--parlay-predictor-pal.lovable.app/chat` pada link "Prediksi AI" di bagian Tautan Cepat.
+
+| File / Lokasi | URL Lama | URL Baru |
+|---------------|----------|----------|
+| DB `nav_items` (Header navigasi) | `https://parlay-predictor-pal.lovable.app` | `https://preview--parlay-predictor-pal.lovable.app/chat` |
+| `src/components/Footer.tsx` (Tautan Cepat) | `https://vocparlay.com/` | `https://preview--parlay-predictor-pal.lovable.app/chat` |
