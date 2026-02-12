@@ -1,48 +1,40 @@
 
-
-# Update Request Body ke Predicto Widget
+# Tambah Session ID pada Widget Predicto
 
 ## Ringkasan
-Mengubah format request body yang dikirim ke endpoint Predicto Widget agar menyertakan metadata pertandingan secara eksplisit (`match_data`, `is_live_analysis`, `mode`).
+Generate `sessionId` unik sekali saat user pertama kali membuka chat Predicto. Session ID disimpan di `localStorage` agar persist antar refresh, dan dikirim di setiap request ke endpoint Predicto Widget.
 
 ## Perubahan
 
 ### File: `src/components/AICompanion.tsx`
 
-**1. Update `findMatchingFixture` -- ubah format output ke snake_case dan tambahkan `is_live`**
+**1. Generate dan simpan sessionId**
 
-Fungsi ini sekarang mengembalikan data dalam format yang sesuai dengan ekspektasi backend Predicto:
+Saat komponen pertama kali mount, cek apakah sudah ada `sessionId` di `localStorage`. Jika belum, generate UUID baru dan simpan.
 
-- `match_data.home_team` (bukan `homeTeam`)
-- `match_data.away_team` (bukan `awayTeam`)  
-- `match_data.league`
-- `is_live` flag untuk menentukan apakah pertandingan sedang berlangsung
-
-**2. Update `callOpenAI` -- kirim `match_data`, `is_live_analysis`, dan `mode`**
-
-Request body berubah dari:
-
-```json
-{
-  "message": "...",
-  "conversationHistory": [...],
-  "fixture_id": "...",
-  "match_data": { "homeTeam": "...", "awayTeam": "...", "league": "..." }
-}
+```typescript
+const [sessionId] = useState<string>(() => {
+  const STORAGE_KEY = 'predicto_session_id';
+  const existing = localStorage.getItem(STORAGE_KEY);
+  if (existing) return existing;
+  const newId = crypto.randomUUID();
+  localStorage.setItem(STORAGE_KEY, newId);
+  return newId;
+});
 ```
 
-Menjadi:
+Setiap user/browser akan mendapat `sessionId` unik yang berbeda dan persist selama `localStorage` tidak dihapus.
+
+**2. Kirim sessionId di setiap request**
+
+Tambahkan `sessionId` ke request body di fungsi `callOpenAI`:
 
 ```json
 {
   "message": "...",
+  "sessionId": "a1b2c3d4-...",
   "conversationHistory": [...],
-  "fixture_id": "...",
-  "match_data": {
-    "home_team": "Manila Digger",
-    "away_team": "Mendiola",
-    "league": "PFL"
-  },
+  "match_data": { ... },
   "is_live_analysis": true,
   "mode": "analisa"
 }
@@ -50,12 +42,11 @@ Menjadi:
 
 ## Detail Teknis
 
-| Field | Sumber | Keterangan |
-|-------|--------|------------|
-| `match_data.home_team` | `findMatchingFixture` | Snake_case, sesuai format backend |
-| `match_data.away_team` | `findMatchingFixture` | Snake_case, sesuai format backend |
-| `match_data.league` | `findMatchingFixture` | Nama liga/kompetisi |
-| `is_live_analysis` | Cek apakah match ditemukan di `liveMatches` | `true` jika live, `false` jika upcoming |
-| `mode` | Hardcode `"analisa"` | Mode analisa pertandingan |
+| Komponen | Perubahan |
+|----------|-----------|
+| State initialization | `useState` dengan lazy init dari `localStorage` |
+| `localStorage` key | `predicto_session_id` |
+| ID format | UUID v4 via `crypto.randomUUID()` |
+| `callOpenAI` body | Tambah field `sessionId` |
 
-Hanya satu file yang perlu diubah. Tidak ada perubahan edge function atau database.
+Hanya satu file yang perlu diubah: `src/components/AICompanion.tsx`.
