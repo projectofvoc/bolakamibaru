@@ -21,6 +21,14 @@ interface ConversationMessage {
 
 const AICompanion: React.FC = () => {
   const { t, language } = useLanguage();
+  const [sessionId] = useState<string>(() => {
+    const STORAGE_KEY = 'predicto_session_id';
+    const existing = localStorage.getItem(STORAGE_KEY);
+    if (existing) return existing;
+    const newId = crypto.randomUUID();
+    localStorage.setItem(STORAGE_KEY, newId);
+    return newId;
+  });
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -155,6 +163,7 @@ const AICompanion: React.FC = () => {
           },
           body: JSON.stringify({ 
             message,
+            sessionId,
             conversationHistory: conversationHistory.current,
             ...(matchContext && {
               fixture_id: matchContext.fixture_id,
@@ -215,7 +224,7 @@ const AICompanion: React.FC = () => {
     
     // Semua retry gagal
     return 'Maaf, saya sedang tidak bisa merespons setelah beberapa percobaan. Silakan coba lagi dalam beberapa saat. 🙏';
-  }, []);
+  }, [sessionId]);
 
   // Handle sending message
   const handleSend = useCallback(async () => {
