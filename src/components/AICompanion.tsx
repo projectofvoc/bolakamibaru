@@ -25,7 +25,7 @@ const AICompanion: React.FC = () => {
     const STORAGE_KEY = 'predicto_session_id';
     const existing = localStorage.getItem(STORAGE_KEY);
     if (existing) return existing;
-    const newId = crypto.randomUUID();
+    const newId = `bok-${Date.now()}`;
     localStorage.setItem(STORAGE_KEY, newId);
     return newId;
   });
