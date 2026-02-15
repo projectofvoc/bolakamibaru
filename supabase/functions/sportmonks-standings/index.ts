@@ -400,39 +400,72 @@ serve(async (req) => {
         throw new Error('API_FOOTBALL_KEY not configured');
       }
 
-      // Use cache helper
-      const { data: cachedData, fromCache } = await getCachedOrFetch<CachedStandingsData>(
-        supabase,
-        cacheKey,
-        CACHE_TTL_SECONDS,
-        async () => {
-          const result = await fetchApiFootballStandings(apiFootballId, seasonStartYear, apiKey);
-
-          if (!result || result.standings.length === 0) {
-            return {
-              standings: [],
-              league: leagueSlug,
-              leagueName,
-              seasonLabel,
-              seasonId: null,
-              totalTeams: 0,
-              source: 'api_football',
-            };
+      // Check cache first
+      try {
+        const { data: cached } = await supabase
+          .from('api_cache')
+          .select('cache_value')
+          .eq('cache_key', cacheKey)
+          .gt('expires_at', new Date().toISOString())
+          .maybeSingle();
+        
+        if (cached?.cache_value) {
+          const cachedData = cached.cache_value as CachedStandingsData;
+          // Only use cache if it has actual standings data
+          if (cachedData.standings && cachedData.standings.length > 0) {
+            console.log(`[Cache HIT] ${cacheKey} (${cachedData.standings.length} teams)`);
+            return new Response(JSON.stringify({ ...cachedData, fromCache: true }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          } else {
+            console.log(`[Cache SKIP] ${cacheKey} has empty standings, fetching fresh`);
           }
-
-          return {
-            standings: result.standings,
-            league: leagueSlug,
-            leagueName,
-            seasonLabel: result.seasonLabel,
-            seasonId: null,
-            totalTeams: result.standings.length,
-            source: 'api_football',
-          };
         }
-      );
+      } catch (e) {
+        console.log(`[Cache] Error: ${e}`);
+      }
 
-      return new Response(JSON.stringify({ ...cachedData, fromCache }), {
+      // Fetch fresh data with season fallback
+      let result = await fetchApiFootballStandings(apiFootballId, seasonStartYear, apiKey);
+      let usedSeason = seasonStartYear;
+
+      // Fallback: if current season fails, try previous season
+      if ((!result || result.standings.length === 0) && seasonStartYear > 2022) {
+        const fallbackSeason = seasonStartYear - 1;
+        console.log(`Season ${seasonStartYear} empty/failed, trying fallback season ${fallbackSeason}`);
+        result = await fetchApiFootballStandings(apiFootballId, fallbackSeason, apiKey);
+        if (result && result.standings.length > 0) {
+          usedSeason = fallbackSeason;
+        }
+      }
+
+      const responseData: CachedStandingsData = {
+        standings: result?.standings || [],
+        league: leagueSlug,
+        leagueName,
+        seasonLabel: result?.seasonLabel || `${usedSeason}/${(usedSeason + 1).toString().slice(-2)}`,
+        seasonId: null,
+        totalTeams: result?.standings?.length || 0,
+        source: 'api_football',
+      };
+
+      // Only cache if we have valid data
+      if (responseData.standings.length > 0) {
+        try {
+          await supabase.from('api_cache').upsert({
+            cache_key: cacheKey,
+            cache_value: responseData,
+            expires_at: new Date(Date.now() + CACHE_TTL_SECONDS * 1000).toISOString(),
+          }, { onConflict: 'cache_key' });
+          console.log(`[Cache] Stored: ${cacheKey} (${responseData.standings.length} teams)`);
+        } catch (e) {
+          console.log(`[Cache] Error storing: ${e}`);
+        }
+      } else {
+        console.log(`[Cache SKIP] Not caching empty standings for ${cacheKey}`);
+      }
+
+      return new Response(JSON.stringify({ ...responseData, fromCache: false }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

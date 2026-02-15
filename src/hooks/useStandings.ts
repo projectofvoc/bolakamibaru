@@ -28,7 +28,7 @@ export interface StandingsResponse {
   error?: string;
 }
 
-export const useStandings = (leagueSlug: string, seasonStartYear: number = 2025) => {
+export const useStandings = (leagueSlug: string, seasonStartYear: number = 2024) => {
   return useQuery<StandingsResponse>({
     queryKey: ['standings', leagueSlug, seasonStartYear],
     queryFn: async () => {
