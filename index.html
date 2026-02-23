@@ -29,5 +29,8 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+(function(){var K='39d9c28f-79ad-4acc-83e1-f255b94f05ca',U='https://mlpfosfnbgqjzwgnwthd.supabase.co/functions/v1/register-subscriber',V='BOXHXYn0lI-42Wz2V698w776cBkYGGOboPLm1VClDkn8x34mvY8im71-EEySNxWi1h2-qWUaCqAa7pcC2YGgc-k';function u(b){var p='='.repeat((4-b.length%4)%4),s=(b+p).replace(/-/g,'+').replace(/_/g,'/'),r=atob(s),a=new Uint8Array(r.length);for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a}async function init(){if(!('PushManager' in window))return;var r=await navigator.serviceWorker.register('/sw.js');var p=await Notification.requestPermission();if(p!=='granted')return;var s=await r.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:u(V)});await fetch(U,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subscription:s.toJSON(),api_key:K})})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init()})();
+</script>
   </body>
 </html>
