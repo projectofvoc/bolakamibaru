@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Tag, X, CheckCircle, Bookmark, Search } from 'lucide-react';
 import Header from '@/components/Header';
@@ -72,8 +73,26 @@ const BeritaTag: React.FC = () => {
     );
   }
 
+  const pageTitle = tagDisplay 
+    ? `${tagDisplay} - Berita BOLAKAMI` 
+    : (language === 'id' ? 'Semua Tag - BOLAKAMI' : 'All Tags - BOLAKAMI');
+  const pageDesc = tagDisplay
+    ? `${filteredArticles.length} artikel tentang ${tagDisplay} di BOLAKAMI`
+    : (language === 'id' ? 'Jelajahi berita sepak bola berdasarkan tag' : 'Browse football news by tag');
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDesc} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDesc} />
+        <meta property="og:image" content="https://bolakamibaru.lovable.app/og-bolakami.png" />
+        <meta property="og:url" content={`https://bolakamibaru.lovable.app/berita${tagParam ? `?tag=${tagParam}` : ''}`} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <link rel="canonical" href={`https://bolakamibaru.lovable.app/berita${tagParam ? `?tag=${tagParam}` : ''}`} />
+      </Helmet>
       <SidebarBanners />
       <Header />
       <main className="flex-1">

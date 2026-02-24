@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useStandings, availableLeagues } from '@/hooks/useStandings';
 import Header from '@/components/Header';
@@ -57,8 +58,27 @@ const Klasemen: React.FC = () => {
     return 'border-l-4 border-l-transparent';
   };
 
+  const leagueName = getLeagueName(selectedLeague) || 'Premier League';
+  const pageTitle = language === 'id' ? `Klasemen ${leagueName} - BOLAKAMI` : `${leagueName} Standings - BOLAKAMI`;
+  const pageDesc = language === 'id' 
+    ? `Klasemen terbaru ${leagueName} musim ${data?.seasonLabel || '2025/26'}. Lihat posisi, poin, dan statistik tim.`
+    : `Latest ${leagueName} standings for ${data?.seasonLabel || '2025/26'} season.`;
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDesc} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDesc} />
+        <meta property="og:image" content="https://bolakamibaru.lovable.app/og-bolakami.png" />
+        <meta property="og:url" content="https://bolakamibaru.lovable.app/klasemen" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDesc} />
+        <link rel="canonical" href="https://bolakamibaru.lovable.app/klasemen" />
+      </Helmet>
       <SidebarBanners />
       <Header />
       
