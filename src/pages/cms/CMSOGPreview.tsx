@@ -25,7 +25,7 @@ const CMSOGPreview = () => {
   const { toast } = useToast();
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const siteUrl = 'https://bolakamibaru.lovable.app';
+  const siteUrl = 'https://bolakami.com';
 
   const fetchPreview = async () => {
     if (!slug.trim()) {
@@ -166,7 +166,7 @@ const CMSOGPreview = () => {
                 )}
                 <div className="p-4 space-y-2">
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                    bolakamibaru.lovable.app
+                    bolakami.com
                   </p>
                   <h3 className="font-semibold text-foreground line-clamp-2">{previewData.title}</h3>
                   <p className="text-sm text-muted-foreground line-clamp-2">{previewData.description}</p>

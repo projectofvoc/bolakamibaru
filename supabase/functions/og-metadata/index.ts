@@ -22,7 +22,7 @@ function generateDefaultOGHtml(siteUrl: string): string {
   <title>BOLAKAMI - Portal Berita Sepak Bola Indonesia</title>
   <meta property="og:title" content="BOLAKAMI - Portal Berita Sepak Bola Indonesia">
   <meta property="og:description" content="Portal berita sepak bola terlengkap di Indonesia">
-  <meta property="og:image" content="${siteUrl}/og-default.png">
+  <meta property="og:image" content="${siteUrl}/og-bolakami.png">
   <meta property="og:type" content="website">
 </head>
 <body></body>
@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const siteUrl = 'https://bolakamibaru.lovable.app'
+    const siteUrl = 'https://bolakami.com'
 
     console.log(`OG Metadata request - Slug: ${slug}`)
 
@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
 
     // Use /news/ path to match SPA route
     const articleUrl = `${siteUrl}/news/${article.slug}`
-    const ogImage = article.featured_image || `${siteUrl}/og-default.png`
+    const ogImage = article.featured_image || `${siteUrl}/og-bolakami.png`
     const title = article.title_id || article.title_en
     const description = (article.excerpt_id || article.excerpt_en || 'Baca berita terbaru di BOLAKAMI').substring(0, 200)
 

@@ -22,15 +22,15 @@ const Index: React.FC = () => {
         <meta name="description" content="Berita sepak bola terbaru, live score, klasemen, dan jadwal pertandingan Liga 1 Indonesia, Premier League, La Liga, Serie A, Bundesliga, dan Liga Champions." />
         <meta property="og:title" content="BOLAKAMI - Portal Berita Sepak Bola Indonesia" />
         <meta property="og:description" content="Berita sepak bola terbaru, live score, klasemen, dan jadwal pertandingan dari liga-liga top dunia." />
-        <meta property="og:image" content="https://bolakamibaru.lovable.app/og-bolakami.png" />
-        <meta property="og:url" content="https://bolakamibaru.lovable.app/" />
+        <meta property="og:image" content="https://bolakami.com/og-bolakami.png" />
+        <meta property="og:url" content="https://bolakami.com/" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="BOLAKAMI" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="BOLAKAMI - Portal Berita Sepak Bola Indonesia" />
         <meta name="twitter:description" content="Berita sepak bola terbaru, live score, klasemen, dan jadwal pertandingan." />
-        <meta name="twitter:image" content="https://bolakamibaru.lovable.app/og-bolakami.png" />
-        <link rel="canonical" href="https://bolakamibaru.lovable.app/" />
+        <meta name="twitter:image" content="https://bolakami.com/og-bolakami.png" />
+        <link rel="canonical" href="https://bolakami.com/" />
       </Helmet>
       <AdvertisementPopup />
       <DailyCheckinPopup />
