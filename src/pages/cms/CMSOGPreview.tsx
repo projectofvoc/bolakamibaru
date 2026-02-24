@@ -24,7 +24,7 @@ const CMSOGPreview = () => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseUrl = 'https://zmbawgfnrtspgdiqywzc.supabase.co';
   const siteUrl = 'https://bolakami.com';
 
   const fetchPreview = async () => {

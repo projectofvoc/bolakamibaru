@@ -10,7 +10,7 @@ const ShareRedirect: React.FC = () => {
       // Redirect langsung ke Edge Function untuk OG metadata
       // Edge Function akan generate HTML dengan OG tags yang benar untuk crawler
       // kemudian redirect browser ke halaman artikel sebenarnya
-      const edgeFunctionUrl = `https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=${encodeURIComponent(slug)}`;
+      const edgeFunctionUrl = `https://zmbawgfnrtspgdiqywzc.supabase.co/functions/v1/og-metadata?slug=${encodeURIComponent(slug)}`;
       window.location.replace(edgeFunctionUrl);
     }
   }, [slug]);
