@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getOrCreateSessionId } from '@/lib/analytics';
@@ -23,49 +24,6 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 
-// Helper to update meta tags for SEO (client-side)
-const updateMetaTags = (article: { title_id: string; title_en: string; excerpt_id?: string | null; excerpt_en?: string | null; featured_image?: string | null; slug: string }, language: string) => {
-  const title = language === 'id' ? article.title_id : article.title_en;
-  const description = (language === 'id' ? article.excerpt_id : article.excerpt_en) || 'Baca berita terbaru di BOLAKAMI';
-  const ogImage = article.featured_image || 'https://bolakamibaru.lovable.app/og-default.png';
-  const articleUrl = `https://bolakamibaru.lovable.app/berita/${article.slug}`;
-
-  // Update document title
-  document.title = `${title} | BOLAKAMI`;
-
-  // Helper to set or create meta tag
-  const setMetaTag = (property: string, content: string, isName = false) => {
-    const selector = isName ? `meta[name="${property}"]` : `meta[property="${property}"]`;
-    let meta = document.querySelector(selector) as HTMLMetaElement | null;
-    if (!meta) {
-      meta = document.createElement('meta');
-      if (isName) {
-        meta.setAttribute('name', property);
-      } else {
-        meta.setAttribute('property', property);
-      }
-      document.head.appendChild(meta);
-    }
-    meta.setAttribute('content', content);
-  };
-
-  // Update Open Graph meta tags
-  setMetaTag('og:title', title);
-  setMetaTag('og:description', description);
-  setMetaTag('og:image', ogImage);
-  setMetaTag('og:url', articleUrl);
-  setMetaTag('og:type', 'article');
-  setMetaTag('og:site_name', 'BOLAKAMI');
-
-  // Update Twitter Card meta tags
-  setMetaTag('twitter:card', 'summary_large_image', true);
-  setMetaTag('twitter:title', title, true);
-  setMetaTag('twitter:description', description, true);
-  setMetaTag('twitter:image', ogImage, true);
-
-  // Update description meta tag
-  setMetaTag('description', description, true);
-};
 
 const NewsDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -124,17 +82,6 @@ const NewsDetail: React.FC = () => {
     trackView();
   }, [article?.id]);
 
-  // Update meta tags when article loads
-  useEffect(() => {
-    if (article) {
-      updateMetaTags(article, language);
-    }
-    
-    return () => {
-      // Reset to default on unmount
-      document.title = 'BOLAKAMI - Portal Berita Sepak Bola Indonesia';
-    };
-  }, [article, language]);
 
   if (isLoading) {
     return (
@@ -151,8 +98,11 @@ const NewsDetail: React.FC = () => {
 
   const title = language === 'id' ? article.title_id : article.title_en;
   const excerpt = language === 'id' ? article.excerpt_id : article.excerpt_en;
+  const description = excerpt || 'Baca berita terbaru di BOLAKAMI';
   const content = language === 'id' ? article.content_id : article.content_en;
   const authorName = article.author_name || 'BOLAKAMI';
+  const ogImage = article.featured_image || 'https://bolakamibaru.lovable.app/og-bolakami.png';
+  const articleUrl = `https://bolakamibaru.lovable.app/news/${article.slug}`;
   const publishedDate = article.published_at 
     ? format(new Date(article.published_at), 'dd MMMM yyyy')
     : format(new Date(article.created_at || new Date()), 'dd MMMM yyyy');
@@ -233,6 +183,21 @@ const NewsDetail: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{`${title} | BOLAKAMI`}</title>
+        <meta name="description" content={description} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:url" content={articleUrl} />
+        <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="BOLAKAMI" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={ogImage} />
+        <link rel="canonical" href={articleUrl} />
+      </Helmet>
       <SidebarBanners variant="article" />
       <Header />
       
