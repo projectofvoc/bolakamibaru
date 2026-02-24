@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Newspaper, TrendingUp, Calendar, Target, CheckCircle, Bookmark, Clock, ChevronRight, Play } from 'lucide-react';
 import Header from '@/components/Header';
@@ -153,8 +154,28 @@ const Berita: React.FC = () => {
     );
   }
 
+  const pageTitle = currentFilter 
+    ? `${currentFilter.name[language]} - Berita BOLAKAMI` 
+    : 'Berita - BOLAKAMI';
+  const pageDesc = currentFilter 
+    ? currentFilter.description[language] 
+    : (language === 'id' ? 'Semua berita dan artikel sepak bola terkini' : 'All the latest football news and articles');
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDesc} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDesc} />
+        <meta property="og:image" content="https://bolakamibaru.lovable.app/og-bolakami.png" />
+        <meta property="og:url" content={`https://bolakamibaru.lovable.app/berita${filter ? `/${filter}` : ''}`} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDesc} />
+        <link rel="canonical" href={`https://bolakamibaru.lovable.app/berita${filter ? `/${filter}` : ''}`} />
+      </Helmet>
       <SidebarBanners />
       <Header />
       

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Trophy, ChevronRight, CheckCircle, Bookmark, Clock } from 'lucide-react';
 import Header from '@/components/Header';
@@ -139,8 +140,28 @@ const Liga: React.FC = () => {
     );
   };
 
+  const pageTitle = currentLeague 
+    ? `${currentLeague.name[language]} - BOLAKAMI` 
+    : (language === 'id' ? 'Semua Liga - BOLAKAMI' : 'All Leagues - BOLAKAMI');
+  const pageDesc = currentLeague
+    ? (language === 'id' ? `Berita, jadwal, dan update terbaru ${currentLeague.name[language]}` : `Latest news, fixtures, and updates for ${currentLeague.name[language]}`)
+    : (language === 'id' ? 'Berita dan update terbaru dari semua liga sepak bola' : 'Latest news and updates from all football leagues');
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDesc} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDesc} />
+        <meta property="og:image" content="https://bolakamibaru.lovable.app/og-bolakami.png" />
+        <meta property="og:url" content={`https://bolakamibaru.lovable.app/liga${league ? `/${league}` : ''}`} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDesc} />
+        <link rel="canonical" href={`https://bolakamibaru.lovable.app/liga${league ? `/${league}` : ''}`} />
+      </Helmet>
       <SidebarBanners />
       <Header />
       
