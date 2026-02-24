@@ -1,59 +1,50 @@
 
-# Fix: Klasemen Liga 1 dan Liga 2 Kosong
 
-## Akar Masalah
+## Plan: Ganti `bolakamibaru.lovable.app` → `bolakami.com`
 
-API Football yang digunakan untuk liga Indonesia menggunakan **paket gratis** yang hanya mendukung data season **2022-2024**. Saat kita meminta season 2025, API mengembalikan error:
+Mengganti semua referensi domain lama ke domain baru `bolakami.com` di seluruh file yang mengandung OG metadata dan URL sharing.
 
-> "Free plans do not have access to this season, try from 2022 to 2024."
+---
 
-Response kosong ini kemudian **di-cache selama 30 menit**, sehingga semua request berikutnya juga menampilkan data kosong.
+### File yang Akan Diubah (8 file, 80 referensi)
 
-## Solusi
+#### 1. `supabase/functions/og-metadata/index.ts`
+- **Line 44**: `siteUrl` → `https://bolakami.com`
+- **Line 25**: default image `og-default.png` → `og-bolakami.png`
+- **Line 84**: fallback image `og-default.png` → `og-bolakami.png`
 
-### File: `supabase/functions/sportmonks-standings/index.ts`
+#### 2. `src/pages/NewsDetail.tsx`
+- **Line 104**: `ogImage` fallback → `https://bolakami.com/og-bolakami.png`
+- **Line 105**: `articleUrl` → `https://bolakami.com/news/...`
+- **Line 121**: `shareUrl` → `https://bolakami.com/share/...`
 
-**1. Jangan cache response kosong dari API Football**
+#### 3. `src/pages/Index.tsx`
+- **Lines 25-33**: Semua `og:image`, `og:url`, `twitter:image`, `canonical` → `bolakami.com`
 
-Saat ini, meski standings kosong (karena error API), hasilnya tetap di-cache. Ubah logika agar hanya meng-cache jika ada data valid:
+#### 4. `src/pages/Berita.tsx`
+- **Lines 171-177**: `og:image`, `og:url`, `canonical` → `bolakami.com`
 
-```
-if (!result || result.standings.length === 0) {
-  // Return langsung tanpa cache
-  return response kosong;
-}
-```
+#### 5. `src/pages/BeritaTag.tsx`
+- **Lines 90-94**: `og:image`, `og:url`, `canonical` → `bolakami.com`
 
-Ini berarti request berikutnya akan mencoba fetch ulang alih-alih mengembalikan data kosong dari cache.
+#### 6. `src/pages/Klasemen.tsx`
+- **Lines 74-80**: `og:image`, `og:url`, `canonical` → `bolakami.com`
 
-**2. Tambahkan fallback ke season sebelumnya**
+#### 7. `src/pages/Liga.tsx`
+- **Lines 157-163**: `og:image`, `og:url`, `canonical` → `bolakami.com`
 
-Jika season 2025 gagal (karena limitasi API), otomatis coba lagi dengan season 2024. Ini memastikan user tetap bisa melihat data terakhir yang tersedia.
+#### 8. `src/pages/cms/CMSOGPreview.tsx`
+- **Line 28**: `siteUrl` → `https://bolakami.com`
+- **Line 169**: display text → `bolakami.com`
 
-Alur baru:
-1. Coba fetch season 2025
-2. Jika gagal/kosong, coba fetch season 2024
-3. Jika masih gagal, tampilkan pesan bahwa data belum tersedia
+#### 9. `index.html`
+- `og:image` dan `twitter:image` → `https://bolakami.com/og-bolakami.png`
 
-**3. Hapus cache kosong yang sudah tersimpan**
+---
 
-Hapus entry cache `standings:liga-1:2025` dan `standings:liga-2:2025` yang saat ini menyimpan data kosong, agar perubahan langsung terasa.
+### Prasyarat
+Domain `bolakami.com` harus sudah terhubung di Lovable (Settings → Domains) dan statusnya **Active** agar URL berfungsi dengan benar.
 
-### File: `src/hooks/useStandings.ts`
+### Catatan
+Semua perubahan adalah string replacement sederhana — tidak ada perubahan logika. Setelah implementasi, share via tombol WhatsApp/Facebook/Twitter akan menampilkan preview dengan domain `bolakami.com`.
 
-**4. Update default seasonStartYear**
-
-Ubah default `seasonStartYear` dari 2025 ke 2024 untuk liga Indonesia, agar sesuai dengan batasan API Football paket gratis.
-
-## Detail Teknis
-
-| Perubahan | File | Deskripsi |
-|-----------|------|-----------|
-| Skip cache jika kosong | `sportmonks-standings/index.ts` | Tidak cache standings kosong akibat error |
-| Season fallback | `sportmonks-standings/index.ts` | Coba season-1 jika season target gagal |
-| Hapus stale cache | Database migration | DELETE dari api_cache untuk liga-1/liga-2 kosong |
-| Default season | `useStandings.ts` | Gunakan 2024 sebagai default untuk liga Indo |
-
-## Catatan Penting
-
-Jika ingin data season 2025, perlu **upgrade paket API Football** ke paket berbayar. Solusi ini adalah workaround agar data terakhir yang tersedia tetap ditampilkan.
