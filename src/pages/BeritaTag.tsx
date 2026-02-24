@@ -87,11 +87,11 @@ const BeritaTag: React.FC = () => {
         <meta name="description" content={pageDesc} />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDesc} />
-        <meta property="og:image" content="https://bolakamibaru.lovable.app/og-bolakami.png" />
-        <meta property="og:url" content={`https://bolakamibaru.lovable.app/berita${tagParam ? `?tag=${tagParam}` : ''}`} />
+        <meta property="og:image" content="https://bolakami.com/og-bolakami.png" />
+        <meta property="og:url" content={`https://bolakami.com/berita${tagParam ? `?tag=${tagParam}` : ''}`} />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
-        <link rel="canonical" href={`https://bolakamibaru.lovable.app/berita${tagParam ? `?tag=${tagParam}` : ''}`} />
+        <link rel="canonical" href={`https://bolakami.com/berita${tagParam ? `?tag=${tagParam}` : ''}`} />
       </Helmet>
       <SidebarBanners />
       <Header />

@@ -71,13 +71,13 @@ const Klasemen: React.FC = () => {
         <meta name="description" content={pageDesc} />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDesc} />
-        <meta property="og:image" content="https://bolakamibaru.lovable.app/og-bolakami.png" />
-        <meta property="og:url" content="https://bolakamibaru.lovable.app/klasemen" />
+        <meta property="og:image" content="https://bolakami.com/og-bolakami.png" />
+        <meta property="og:url" content="https://bolakami.com/klasemen" />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDesc} />
-        <link rel="canonical" href="https://bolakamibaru.lovable.app/klasemen" />
+        <link rel="canonical" href="https://bolakami.com/klasemen" />
       </Helmet>
       <SidebarBanners />
       <Header />

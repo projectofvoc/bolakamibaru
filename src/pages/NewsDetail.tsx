@@ -101,8 +101,8 @@ const NewsDetail: React.FC = () => {
   const description = excerpt || 'Baca berita terbaru di BOLAKAMI';
   const content = language === 'id' ? article.content_id : article.content_en;
   const authorName = article.author_name || 'BOLAKAMI';
-  const ogImage = article.featured_image || 'https://bolakamibaru.lovable.app/og-bolakami.png';
-  const articleUrl = `https://bolakamibaru.lovable.app/news/${article.slug}`;
+  const ogImage = article.featured_image || 'https://bolakami.com/og-bolakami.png';
+  const articleUrl = `https://bolakami.com/news/${article.slug}`;
   const publishedDate = article.published_at 
     ? format(new Date(article.published_at), 'dd MMMM yyyy')
     : format(new Date(article.created_at || new Date()), 'dd MMMM yyyy');
@@ -118,7 +118,7 @@ const NewsDetail: React.FC = () => {
 
   // Share handlers - use internal /share/:slug route for professional URLs
   // The ShareRedirect page sets OG meta tags and redirects to the article
-  const shareUrl = `https://bolakamibaru.lovable.app/share/${article.slug}`;
+  const shareUrl = `https://bolakami.com/share/${article.slug}`;
   const shareTitle = title;
 
   const handleShareFacebook = () => {
