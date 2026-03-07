@@ -1,88 +1,67 @@
 
 
-## Plan: Deploy og-metadata ke Supabase Eksternal (`zmbawgfnrtspgdiqywzc`)
+## Problem: Two Issues
 
-Supabase eksternal yang Anda berikan **sama** dengan yang sudah dipakai untuk Sportmonks API. Jadi tidak perlu setup project baru — tinggal deploy function tambahan ke project yang sudah ada.
+1. **Case mismatch is already fixed** -- the `.toLowerCase()` comparison on line 107 handles `"Prediksi"` vs `"prediksi"`. This part works.
 
----
+2. **Real problem: `.limit(50)` on the query** (line 69) fetches only the 50 most recent articles regardless of category. Out of 88 published Prediksi articles, only ~12 appear in the top 50. The rest are cut off. This means:
+   - Users see far fewer prediksi articles than exist
+   - Load more button won't work properly since the source data is truncated
 
-### Perubahan yang Dilakukan (3 file saja, minimal impact)
+## Solution
 
-#### 1. Buat `docs/external-edge-functions/og-metadata.ts` (file baru)
+Change the Supabase query in `Berita.tsx` to **filter by category at the database level** when a specific filter (like `prediksi`) is active. This way, the limit of 50 applies only to the relevant category, returning up to 50 prediksi articles instead of 12.
 
-File dokumentasi + kode edge function siap deploy, mengikuti pola `sportmonks-api.ts`. Berisi:
+### File: `src/pages/Berita.tsx`
 
-- Kode `og-metadata` edge function yang **query ke Lovable Cloud database** menggunakan environment variable:
-  - `LOVABLE_SUPABASE_URL` → `https://wqrvguxkanjuorntlmmx.supabase.co`
-  - `LOVABLE_SERVICE_ROLE_KEY` → Service Role Key dari Lovable Cloud
-- Step-by-step deploy instructions via Supabase CLI
+**Query change** (lines 61-75): Make the query category-aware using a case-insensitive filter via Supabase's `ilike`:
 
-```text
-Koneksi data:
-  Supabase Eksternal (zmbawgfnrtspgdiqywzc)
-       │
-       │  og-metadata edge function
-       │  query articles menggunakan:
-       │  - LOVABLE_SUPABASE_URL
-       │  - LOVABLE_SERVICE_ROLE_KEY
-       ▼
-  Lovable Cloud DB (wqrvguxkanjuorntlmmx)
-       │
-       ▼
-  Tabel articles (data tetap di sini)
+```typescript
+const { data: allArticles, isLoading } = useQuery({
+  queryKey: ['berita-articles', filter],
+  queryFn: async () => {
+    let query = supabase
+      .from('articles')
+      .select('*')
+      .eq('status', 'published');
+    
+    // Filter by category at DB level for non-trending filters
+    if (filter && filter !== 'trending') {
+      query = query.ilike('category', filter);
+    }
+    
+    const { data, error } = await query
+      .order('published_at', { ascending: false })
+      .limit(50);
+    
+    if (error) throw error;
+    return data;
+  },
+  staleTime: 1000 * 60 * 2,
+});
 ```
 
-#### 2. Update `src/pages/ShareRedirect.tsx` (1 baris)
+Key changes:
+- `queryKey` includes `filter` so each category has its own cache
+- Uses `.ilike('category', filter)` for case-insensitive DB-level matching (`prediksi` matches `Prediksi`)
+- Trending filter still fetches all articles (client-side region filtering remains)
 
-- **Line 13**: Ganti URL dari `wqrvguxkanjuorntlmmx` → `zmbawgfnrtspgdiqywzc`
+**Client-side filter** (lines 102-108): Simplify since DB already filters for category routes:
 
-```
-// Sebelum:
-https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=...
-
-// Sesudah:
-https://zmbawgfnrtspgdiqywzc.supabase.co/functions/v1/og-metadata?slug=...
-```
-
-#### 3. Update `src/pages/cms/CMSOGPreview.tsx` (1 baris)
-
-- **Line 78**: Ganti `supabaseUrl` yang dipakai untuk Share URL dari `VITE_SUPABASE_URL` (Lovable Cloud) ke URL Supabase eksternal hardcoded
-
-```
-// Sebelum:
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-
-// Sesudah:
-const externalSupabaseUrl = 'https://zmbawgfnrtspgdiqywzc.supabase.co';
+```typescript
+const filteredArticles = isTrending
+  ? activeRegion === 'indonesia'
+    ? (allArticles || []).filter(isIndonesianArticle)
+    : (allArticles || []).filter(isInternationalArticle)
+  : allArticles || [];
 ```
 
-> Catatan: `supabase.from('articles')` di line 41 **tetap** menggunakan Lovable Cloud client — tidak berubah. Hanya URL untuk Share/Debugger yang diarahkan ke Supabase eksternal.
+No other files need changes.
 
----
-
-### Yang Perlu Anda Lakukan Setelah Implementasi
-
-Deploy edge function ke Supabase eksternal via CLI:
-
-1. **Set secrets** di Supabase eksternal:
-   ```
-   supabase secrets set LOVABLE_SUPABASE_URL=https://wqrvguxkanjuorntlmmx.supabase.co
-   supabase secrets set LOVABLE_SERVICE_ROLE_KEY=<service_role_key_lovable_cloud>
-   ```
-
-2. **Copy** kode dari `docs/external-edge-functions/og-metadata.ts` ke folder lokal project Supabase eksternal
-
-3. **Deploy**:
-   ```
-   supabase functions deploy og-metadata --project-ref zmbawgfnrtspgdiqywzc
-   ```
-
----
-
-### Yang TIDAK Berubah
-
-- Edge function `og-metadata` di Lovable Cloud tetap ada (tidak dihapus) sebagai backup
-- Database articles tetap di Lovable Cloud — tidak ada migrasi data
-- Semua halaman lain (Index, Berita, NewsDetail, dll) tidak terpengaruh
-- Hanya **2 file frontend** yang diubah, masing-masing 1 baris
+### Summary
+- 1 file changed: `src/pages/Berita.tsx`
+- Query now filters by category at DB level (case-insensitive)
+- All 88 prediksi articles become accessible (up to limit of 50 per page)
+- Trending route unchanged
+- No breaking changes to other routes
 
