@@ -51,6 +51,8 @@ interface AnalyticsData {
   countries: { country: string; visitors: number; percentage: number }[];
   devices: { device: string; visitors: number; percentage: number }[];
   sources: { source: string; visitors: number }[];
+  articlesPublished30d: number;
+  articlesPublished7d: number;
 }
 
 // Country code to name mapping
