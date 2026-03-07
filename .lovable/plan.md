@@ -1,88 +1,49 @@
 
 
-## Plan: Deploy og-metadata ke Supabase Eksternal (`zmbawgfnrtspgdiqywzc`)
+## Plan: Fix Prediksi Route Filtering
 
-Supabase eksternal yang Anda berikan **sama** dengan yang sudah dipakai untuk Sportmonks API. Jadi tidak perlu setup project baru — tinggal deploy function tambahan ke project yang sudah ada.
+### Problem
+Line 102-106 in `Berita.tsx`: `filteredArticles` only filters for `trending` (by region). For all other filters including `prediksi`, it returns **all articles** unfiltered.
 
----
+### Schema Confirmation
+Articles table has `category` field (text, default `'daily'`). The `filterTypes` array in `Berita.tsx` includes `prediksi` as a filter value. Prediction articles use `category = 'prediksi'`.
 
-### Perubahan yang Dilakukan (3 file saja, minimal impact)
+### Changes
 
-#### 1. Buat `docs/external-edge-functions/og-metadata.ts` (file baru)
+#### 1. `src/pages/Berita.tsx` -- Fix filteredArticles logic (line 102-106)
 
-File dokumentasi + kode edge function siap deploy, mengikuti pola `sportmonks-api.ts`. Berisi:
+Replace the filtering to apply category filter for non-trending filters:
 
-- Kode `og-metadata` edge function yang **query ke Lovable Cloud database** menggunakan environment variable:
-  - `LOVABLE_SUPABASE_URL` → `https://wqrvguxkanjuorntlmmx.supabase.co`
-  - `LOVABLE_SERVICE_ROLE_KEY` → Service Role Key dari Lovable Cloud
-- Step-by-step deploy instructions via Supabase CLI
-
-```text
-Koneksi data:
-  Supabase Eksternal (zmbawgfnrtspgdiqywzc)
-       │
-       │  og-metadata edge function
-       │  query articles menggunakan:
-       │  - LOVABLE_SUPABASE_URL
-       │  - LOVABLE_SERVICE_ROLE_KEY
-       ▼
-  Lovable Cloud DB (wqrvguxkanjuorntlmmx)
-       │
-       ▼
-  Tabel articles (data tetap di sini)
+```typescript
+const filteredArticles = isTrending
+  ? activeRegion === 'indonesia'
+    ? (allArticles || []).filter(isIndonesianArticle)
+    : (allArticles || []).filter(isInternationalArticle)
+  : filter
+    ? (allArticles || []).filter(a => a.category === filter)
+    : allArticles || [];
 ```
 
-#### 2. Update `src/pages/ShareRedirect.tsx` (1 baris)
+This fixes `prediksi`, `daily`, and any other category-based filter.
 
-- **Line 13**: Ganti URL dari `wqrvguxkanjuorntlmmx` → `zmbawgfnrtspgdiqywzc`
+#### 2. `src/components/MoreNewsGrid.tsx` -- Add optional `category` prop
 
-```
-// Sebelum:
-https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=...
+- Accept `category?: string` prop
+- When provided, add `.eq('category', category)` to the Supabase query
+- Include `category` in `queryKey` for cache separation
 
-// Sesudah:
-https://zmbawgfnrtspgdiqywzc.supabase.co/functions/v1/og-metadata?slug=...
-```
+#### 3. `src/pages/NewsDetail.tsx` -- Pass category to related news
 
-#### 3. Update `src/pages/cms/CMSOGPreview.tsx` (1 baris)
+- Pass `category={article.category}` to `<MoreNewsGrid />` so related articles on a prediksi detail page only show other prediksi articles
 
-- **Line 78**: Ganti `supabaseUrl` yang dipakai untuk Share URL dari `VITE_SUPABASE_URL` (Lovable Cloud) ke URL Supabase eksternal hardcoded
+### Files changed
+- `src/pages/Berita.tsx` -- 1 block (filtering logic)
+- `src/components/MoreNewsGrid.tsx` -- Add prop + query filter
+- `src/pages/NewsDetail.tsx` -- Pass category prop
 
-```
-// Sebelum:
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-
-// Sesudah:
-const externalSupabaseUrl = 'https://zmbawgfnrtspgdiqywzc.supabase.co';
-```
-
-> Catatan: `supabase.from('articles')` di line 41 **tetap** menggunakan Lovable Cloud client — tidak berubah. Hanya URL untuk Share/Debugger yang diarahkan ke Supabase eksternal.
-
----
-
-### Yang Perlu Anda Lakukan Setelah Implementasi
-
-Deploy edge function ke Supabase eksternal via CLI:
-
-1. **Set secrets** di Supabase eksternal:
-   ```
-   supabase secrets set LOVABLE_SUPABASE_URL=https://wqrvguxkanjuorntlmmx.supabase.co
-   supabase secrets set LOVABLE_SERVICE_ROLE_KEY=<service_role_key_lovable_cloud>
-   ```
-
-2. **Copy** kode dari `docs/external-edge-functions/og-metadata.ts` ke folder lokal project Supabase eksternal
-
-3. **Deploy**:
-   ```
-   supabase functions deploy og-metadata --project-ref zmbawgfnrtspgdiqywzc
-   ```
-
----
-
-### Yang TIDAK Berubah
-
-- Edge function `og-metadata` di Lovable Cloud tetap ada (tidak dihapus) sebagai backup
-- Database articles tetap di Lovable Cloud — tidak ada migrasi data
-- Semua halaman lain (Index, Berita, NewsDetail, dll) tidak terpengaruh
-- Hanya **2 file frontend** yang diubah, masing-masing 1 baris
+### What stays the same
+- No database changes needed
+- No new routes
+- Regular news routes unaffected
+- SEO slugs unchanged
 
