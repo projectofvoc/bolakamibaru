@@ -104,7 +104,7 @@ const Berita: React.FC = () => {
       ? (allArticles || []).filter(isIndonesianArticle)
       : (allArticles || []).filter(isInternationalArticle)
     : filter
-      ? (allArticles || []).filter(a => a.category === filter)
+      ? (allArticles || []).filter(a => a.category?.toLowerCase() === filter.toLowerCase())
       : allArticles || [];
 
   const visibleArticles = filteredArticles.slice(0, visibleCount);
