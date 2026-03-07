@@ -59,12 +59,19 @@ const Berita: React.FC = () => {
   
   // Fetch articles from database
   const { data: allArticles, isLoading } = useQuery({
-    queryKey: ['berita-articles'],
+    queryKey: ['berita-articles', filter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('articles')
         .select('*')
-        .eq('status', 'published')
+        .eq('status', 'published');
+      
+      // Filter by category at DB level for non-trending filters
+      if (filter && filter !== 'trending') {
+        query = query.ilike('category', filter);
+      }
+      
+      const { data, error } = await query
         .order('published_at', { ascending: false })
         .limit(50);
       
@@ -103,9 +110,7 @@ const Berita: React.FC = () => {
     ? activeRegion === 'indonesia'
       ? (allArticles || []).filter(isIndonesianArticle)
       : (allArticles || []).filter(isInternationalArticle)
-    : filter
-      ? (allArticles || []).filter(a => a.category?.toLowerCase() === filter.toLowerCase())
-      : allArticles || [];
+    : allArticles || [];
 
   const visibleArticles = filteredArticles.slice(0, visibleCount);
   const hasMore = visibleCount < filteredArticles.length;
