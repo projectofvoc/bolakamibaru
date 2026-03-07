@@ -17,7 +17,8 @@ import {
   RefreshCw,
   Calendar,
   AlertCircle,
-  Wifi
+  Wifi,
+  Newspaper
 } from 'lucide-react';
 import {
   LineChart,
