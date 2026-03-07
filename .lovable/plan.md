@@ -1,88 +1,78 @@
 
 
-## Plan: Deploy og-metadata ke Supabase Eksternal (`zmbawgfnrtspgdiqywzc`)
+## Plan: Fix Analytics Data Accuracy + Add Article Publish Stats
 
-Supabase eksternal yang Anda berikan **sama** dengan yang sudah dipakai untuk Sportmonks API. Jadi tidak perlu setup project baru — tinggal deploy function tambahan ke project yang sudah ada.
+### Problem 1: Analytics showing wrong numbers
+The `get-analytics` edge function uses `.select('*')` which hits the **Supabase default limit of 1,000 rows**. Real data: 5,266 sessions and 8,368 pageviews in 30 days, but the dashboard shows 1,000/1,000.
 
----
-
-### Perubahan yang Dilakukan (3 file saja, minimal impact)
-
-#### 1. Buat `docs/external-edge-functions/og-metadata.ts` (file baru)
-
-File dokumentasi + kode edge function siap deploy, mengikuti pola `sportmonks-api.ts`. Berisi:
-
-- Kode `og-metadata` edge function yang **query ke Lovable Cloud database** menggunakan environment variable:
-  - `LOVABLE_SUPABASE_URL` → `https://wqrvguxkanjuorntlmmx.supabase.co`
-  - `LOVABLE_SERVICE_ROLE_KEY` → Service Role Key dari Lovable Cloud
-- Step-by-step deploy instructions via Supabase CLI
-
-```text
-Koneksi data:
-  Supabase Eksternal (zmbawgfnrtspgdiqywzc)
-       │
-       │  og-metadata edge function
-       │  query articles menggunakan:
-       │  - LOVABLE_SUPABASE_URL
-       │  - LOVABLE_SERVICE_ROLE_KEY
-       ▼
-  Lovable Cloud DB (wqrvguxkanjuorntlmmx)
-       │
-       ▼
-  Tabel articles (data tetap di sini)
-```
-
-#### 2. Update `src/pages/ShareRedirect.tsx` (1 baris)
-
-- **Line 13**: Ganti URL dari `wqrvguxkanjuorntlmmx` → `zmbawgfnrtspgdiqywzc`
-
-```
-// Sebelum:
-https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=...
-
-// Sesudah:
-https://zmbawgfnrtspgdiqywzc.supabase.co/functions/v1/og-metadata?slug=...
-```
-
-#### 3. Update `src/pages/cms/CMSOGPreview.tsx` (1 baris)
-
-- **Line 78**: Ganti `supabaseUrl` yang dipakai untuk Share URL dari `VITE_SUPABASE_URL` (Lovable Cloud) ke URL Supabase eksternal hardcoded
-
-```
-// Sebelum:
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-
-// Sesudah:
-const externalSupabaseUrl = 'https://zmbawgfnrtspgdiqywzc.supabase.co';
-```
-
-> Catatan: `supabase.from('articles')` di line 41 **tetap** menggunakan Lovable Cloud client — tidak berubah. Hanya URL untuk Share/Debugger yang diarahkan ke Supabase eksternal.
+### Problem 2: Missing article publish counts
+Need to add cards showing articles published in last 30 and 7 days.
 
 ---
 
-### Yang Perlu Anda Lakukan Setelah Implementasi
+### Changes
 
-Deploy edge function ke Supabase eksternal via CLI:
+#### 1. Edge Function: `supabase/functions/get-analytics/index.ts`
 
-1. **Set secrets** di Supabase eksternal:
-   ```
-   supabase secrets set LOVABLE_SUPABASE_URL=https://wqrvguxkanjuorntlmmx.supabase.co
-   supabase secrets set LOVABLE_SERVICE_ROLE_KEY=<service_role_key_lovable_cloud>
-   ```
+**Fix row limit issue** by using `count: 'exact'` with range-based pagination for the aggregation queries, or better yet, use **database-level aggregation via RPC/SQL** to avoid fetching all rows:
 
-2. **Copy** kode dari `docs/external-edge-functions/og-metadata.ts` ke folder lokal project Supabase eksternal
+- For **total visitors**: Use `.select('session_id', { count: 'exact', head: true })` to get count without fetching rows
+- For **total pageviews**: Same approach with `head: true` for count only
+- For **trend data**: Keep fetching rows but with `.range(0, 9999)` to bypass the 1000 limit (or paginate)
+- For **bounce rate, duration**: Fetch sessions with `.select('*').range(0, 9999)` to get all rows
+- Add **article counts** (30d and 7d) to the response by querying `articles` table
 
-3. **Deploy**:
-   ```
-   supabase functions deploy og-metadata --project-ref zmbawgfnrtspgdiqywzc
-   ```
+Key changes:
+- Replace `.select('*')` with `.select('*').range(0, 9999)` for sessions and pageviews to bypass 1000-row limit
+- Add `articlesPublished30d` and `articlesPublished7d` counts to the response
+- Query articles with `status = 'published'` and `published_at` date filter
 
----
+#### 2. Frontend: `src/pages/cms/CMSAnalytics.tsx`
 
-### Yang TIDAK Berubah
+- Update the `AnalyticsData` interface to include `articlesPublished30d` and `articlesPublished7d`
+- Add 2 new stat cards after the existing 5-card grid (or expand to 7 cards in a new row)
+- Cards will show:
+  - "Berita 30 Hari" with count and subtitle "Last 30 days"
+  - "Berita 7 Hari" with count and subtitle "Last 7 days"
+- Use `Newspaper` icon from lucide-react, matching existing card style
+- Grid layout: keep existing 5 cards in first row, add 2 new cards below
 
-- Edge function `og-metadata` di Lovable Cloud tetap ada (tidak dihapus) sebagai backup
-- Database articles tetap di Lovable Cloud — tidak ada migrasi data
-- Semua halaman lain (Index, Berita, NewsDetail, dll) tidak terpengaruh
-- Hanya **2 file frontend** yang diubah, masing-masing 1 baris
+### Technical Details
+
+**Edge function data fix** - the critical change:
+```typescript
+// Instead of: .select('*') which caps at 1000
+// Use: .select('*', { count: 'exact' }).range(0, 9999)
+const { data: sessions, count: sessionCount } = await supabase
+  .from('analytics_sessions')
+  .select('*', { count: 'exact' })
+  .gte('started_at', startDate)
+  .lte('started_at', `${endDate}T23:59:59.999Z`)
+  .range(0, 9999);
+```
+
+**Article count queries** added to edge function:
+```typescript
+const { count: articles30d } = await supabase
+  .from('articles')
+  .select('id', { count: 'exact', head: true })
+  .eq('status', 'published')
+  .gte('published_at', thirtyDaysAgo);
+
+const { count: articles7d } = await supabase
+  .from('articles')
+  .select('id', { count: 'exact', head: true })
+  .eq('status', 'published')
+  .gte('published_at', sevenDaysAgo);
+```
+
+### Files Changed
+- `supabase/functions/get-analytics/index.ts` -- Fix 1000-row limit, add article counts
+- `src/pages/cms/CMSAnalytics.tsx` -- Add 2 article stat cards, consume new data fields
+
+### What stays the same
+- No database migrations needed
+- No new tables or RLS changes
+- All existing charts and cards unchanged
+- Auto-refresh behavior unchanged
 
