@@ -16,10 +16,11 @@ interface AnalyticsResponse {
   countries: { country: string; count: number }[];
   devices: { device: string; count: number }[];
   sources: { source: string; count: number }[];
+  articlesPublished30d: number;
+  articlesPublished7d: number;
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -29,35 +30,57 @@ serve(async (req) => {
     
     console.log('Fetching real analytics data:', { startDate, endDate });
 
-    // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get unique visitors (unique session_ids)
+    // Fetch sessions with range to bypass 1000-row default limit
     const { data: sessions, error: sessionsError } = await supabase
       .from('analytics_sessions')
       .select('*')
       .gte('started_at', startDate)
-      .lte('started_at', `${endDate}T23:59:59.999Z`);
+      .lte('started_at', `${endDate}T23:59:59.999Z`)
+      .range(0, 9999);
 
     if (sessionsError) {
       console.error('Error fetching sessions:', sessionsError);
       throw sessionsError;
     }
 
-    // Get pageview events
+    // Fetch pageviews with range to bypass 1000-row default limit
     const { data: pageviews, error: pageviewsError } = await supabase
       .from('analytics_events')
       .select('*')
       .eq('event_type', 'pageview')
       .gte('created_at', startDate)
-      .lte('created_at', `${endDate}T23:59:59.999Z`);
+      .lte('created_at', `${endDate}T23:59:59.999Z`)
+      .range(0, 9999);
 
     if (pageviewsError) {
       console.error('Error fetching pageviews:', pageviewsError);
       throw pageviewsError;
     }
+
+    // Article publish counts (rolling 30d and 7d from today)
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const [articles30dRes, articles7dRes] = await Promise.all([
+      supabase
+        .from('articles')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'published')
+        .gte('published_at', thirtyDaysAgo),
+      supabase
+        .from('articles')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'published')
+        .gte('published_at', sevenDaysAgo),
+    ]);
+
+    const articlesPublished30d = articles30dRes.count ?? 0;
+    const articlesPublished7d = articles7dRes.count ?? 0;
 
     const totalVisitors = sessions?.length || 0;
     const totalPageviews = pageviews?.length || 0;
@@ -66,7 +89,6 @@ serve(async (req) => {
     const visitorsTrendMap = new Map<string, Set<string>>();
     const pageviewsTrendMap = new Map<string, number>();
     
-    // Initialize dates
     const start = new Date(startDate);
     const end = new Date(endDate);
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
@@ -75,7 +97,6 @@ serve(async (req) => {
       pageviewsTrendMap.set(dateStr, 0);
     }
 
-    // Fill in visitor data
     sessions?.forEach(session => {
       if (session.started_at) {
         const date = session.started_at.split('T')[0];
@@ -85,7 +106,6 @@ serve(async (req) => {
       }
     });
 
-    // Fill in pageview data
     pageviews?.forEach(pv => {
       if (pv.created_at) {
         const date = pv.created_at.split('T')[0];
@@ -103,24 +123,24 @@ serve(async (req) => {
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([date, count]) => ({ date, value: count }));
 
-    // Calculate average session duration
+    // Average session duration
     const sessionsWithDuration = sessions?.filter(s => s.duration_seconds && s.duration_seconds > 0) || [];
     const avgDuration = sessionsWithDuration.length > 0
       ? Math.round(sessionsWithDuration.reduce((sum, s) => sum + (s.duration_seconds || 0), 0) / sessionsWithDuration.length)
       : 0;
 
-    // Calculate bounce rate
+    // Bounce rate
     const bouncedSessions = sessions?.filter(s => s.is_bounced === true) || [];
     const bounceRate = totalVisitors > 0 
       ? Math.round((bouncedSessions.length / totalVisitors) * 100) 
       : 0;
 
-    // Calculate pages/visit
+    // Pages per visit
     const pagesPerVisit = totalVisitors > 0 
       ? Number((totalPageviews / totalVisitors).toFixed(2)) 
       : 0;
 
-    // Get top pages
+    // Top pages
     const pageCountMap = new Map<string, number>();
     pageviews?.forEach(pv => {
       const path = pv.page_path;
@@ -131,7 +151,7 @@ serve(async (req) => {
       .slice(0, 10)
       .map(([page, count]) => ({ page, count }));
 
-    // Get country distribution
+    // Country distribution
     const countryCountMap = new Map<string, number>();
     sessions?.forEach(session => {
       const country = session.country || 'Unknown';
@@ -141,7 +161,7 @@ serve(async (req) => {
       .sort((a, b) => b[1] - a[1])
       .map(([country, count]) => ({ country, count }));
 
-    // Get device distribution
+    // Device distribution
     const deviceCountMap = new Map<string, number>();
     sessions?.forEach(session => {
       const device = session.device_type || 'unknown';
@@ -151,7 +171,7 @@ serve(async (req) => {
       .sort((a, b) => b[1] - a[1])
       .map(([device, count]) => ({ device, count }));
 
-    // Get source distribution
+    // Source distribution
     const sourceCountMap = new Map<string, number>();
     sessions?.forEach(session => {
       const source = session.referrer_source || 'direct';
@@ -162,30 +182,23 @@ serve(async (req) => {
       .map(([source, count]) => ({ source, count }));
 
     const analyticsData: AnalyticsResponse = {
-      visitors: { 
-        total: totalVisitors, 
-        trend: visitorsTrend
-      },
-      pageviews: { 
-        total: totalPageviews, 
-        trend: pageviewsTrend
-      },
+      visitors: { total: totalVisitors, trend: visitorsTrend },
+      pageviews: { total: totalPageviews, trend: pageviewsTrend },
       pageviewsPerVisit: { total: pagesPerVisit },
       sessionDuration: { total: avgDuration },
       bounceRate: { total: bounceRate },
       pages: topPages,
       countries,
       devices,
-      sources
+      sources,
+      articlesPublished30d,
+      articlesPublished7d,
     };
 
     console.log('Real analytics data generated:', { 
-      totalVisitors, 
-      totalPageviews, 
-      avgDuration, 
-      bounceRate,
-      sessionsCount: sessions?.length,
-      pageviewsCount: pageviews?.length
+      totalVisitors, totalPageviews, avgDuration, bounceRate,
+      sessionsCount: sessions?.length, pageviewsCount: pageviews?.length,
+      articlesPublished30d, articlesPublished7d,
     });
     
     return new Response(JSON.stringify({
@@ -218,6 +231,8 @@ function getEmptyAnalyticsData(): AnalyticsResponse {
     pages: [],
     countries: [],
     devices: [],
-    sources: []
+    sources: [],
+    articlesPublished30d: 0,
+    articlesPublished7d: 0,
   };
 }
