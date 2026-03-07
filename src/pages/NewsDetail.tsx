@@ -378,7 +378,7 @@ const NewsDetail: React.FC = () => {
               {t('news.relatedNewsSubtitle')}
             </p>
           </div>
-          <MoreNewsGrid />
+          <MoreNewsGrid category={article.category} />
         </div>
       </main>
       

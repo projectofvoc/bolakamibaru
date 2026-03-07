@@ -8,7 +8,11 @@ import { LazyImage } from '@/components/ui/LazyImage';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-const MoreNewsGrid: React.FC = () => {
+interface MoreNewsGridProps {
+  category?: string;
+}
+
+const MoreNewsGrid: React.FC<MoreNewsGridProps> = ({ category }) => {
   const {
     language,
     t
@@ -18,19 +22,20 @@ const MoreNewsGrid: React.FC = () => {
     data: articles,
     isLoading
   } = useQuery({
-    queryKey: ['more-news-grid-articles'],
+    queryKey: ['more-news-grid-articles', category],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('articles').select('*').eq('status', 'published').order('published_at', {
+      let query = supabase.from('articles').select('*').eq('status', 'published');
+      if (category) {
+        query = query.eq('category', category);
+      }
+      const { data, error } = await query.order('published_at', {
         ascending: false
-      }).range(8, 27); // Skip first 8 (used by NewsGrid), get next 20
+      }).range(8, 27);
 
       if (error) throw error;
       return data;
     },
-    staleTime: 1000 * 60 * 3 // 3 minutes cache
+    staleTime: 1000 * 60 * 3
   });
   const visibleArticles = articles?.slice(0, visibleCount) || [];
   const hasMore = visibleCount < (articles?.length || 0);
