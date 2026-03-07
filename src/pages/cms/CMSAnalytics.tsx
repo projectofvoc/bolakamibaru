@@ -173,7 +173,9 @@ const CMSAnalytics: React.FC = () => {
           sources: apiData.sources?.map((s: { source: string; count: number }) => ({
             source: s.source,
             visitors: s.count
-          })) || []
+          })) || [],
+          articlesPublished30d: apiData.articlesPublished30d || 0,
+          articlesPublished7d: apiData.articlesPublished7d || 0,
         };
       } catch (err) {
         console.error('Failed to fetch analytics:', err);
