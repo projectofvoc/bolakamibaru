@@ -95,7 +95,9 @@ const getEmptyAnalyticsData = (): AnalyticsData => ({
   topPages: [],
   countries: [],
   devices: [],
-  sources: []
+  sources: [],
+  articlesPublished30d: 0,
+  articlesPublished7d: 0,
 });
 
 const CMSAnalytics: React.FC = () => {
