@@ -98,12 +98,14 @@ const Berita: React.FC = () => {
 
   const isTrending = filter === 'trending';
   
-  // Get filtered articles based on region (only for trending)
+  // Get filtered articles based on region (trending) or category (prediksi, daily, etc.)
   const filteredArticles = isTrending
     ? activeRegion === 'indonesia'
       ? (allArticles || []).filter(isIndonesianArticle)
       : (allArticles || []).filter(isInternationalArticle)
-    : allArticles || [];
+    : filter
+      ? (allArticles || []).filter(a => a.category === filter)
+      : allArticles || [];
 
   const visibleArticles = filteredArticles.slice(0, visibleCount);
   const hasMore = visibleCount < filteredArticles.length;
