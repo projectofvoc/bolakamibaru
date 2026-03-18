@@ -83,7 +83,7 @@ const ensureHtmlContent = (content: string): string => {
   // If content already has HTML tags, return as-is
   if (content.includes('<p>') || content.includes('<h1>') || content.includes('<h2>') || 
       content.includes('<h3>') || content.includes('<ul>') || content.includes('<ol>') ||
-      content.includes('<blockquote>')) {
+      content.includes('<blockquote>') || content.includes('<table>')) {
     return content;
   }
   
