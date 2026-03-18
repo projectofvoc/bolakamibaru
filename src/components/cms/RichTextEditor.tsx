@@ -38,7 +38,8 @@ import {
   Redo,
   Pilcrow,
   Upload,
-  Loader2
+  Loader2,
+  Table as TableIcon
 } from 'lucide-react';
 import {
   Tooltip,
