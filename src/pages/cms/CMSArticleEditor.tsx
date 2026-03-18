@@ -32,7 +32,9 @@ import {
   Sparkles,
   Languages,
   Plus,
-  Target
+  Target,
+  Code,
+  FileText
 } from 'lucide-react';
 import { 
   generatePredictionTemplate, 
@@ -772,12 +774,44 @@ const CMSArticleEditor = () => {
               )}
               
               <div className="space-y-2">
-                <Label>Konten *</Label>
-                <RichTextEditor
-                  content={form.content_id}
-                  onChange={(content) => setForm(prev => ({ ...prev, content_id: content }))}
-                  placeholder="Tulis konten berita dalam Bahasa Indonesia..."
-                />
+                <div className="flex items-center gap-2">
+                  <Label>Konten *</Label>
+                  <div className="flex items-center gap-1 ml-auto text-xs text-muted-foreground">
+                    <FileText className="w-3 h-3" />
+                    <span>Visual</span>
+                    <span className="mx-1">+</span>
+                    <Code className="w-3 h-3" />
+                    <span>HTML</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  {/* Visual Editor */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Visual Editor</span>
+                    </div>
+                    <RichTextEditor
+                      content={form.content_id}
+                      onChange={(content) => setForm(prev => ({ ...prev, content_id: content }))}
+                      placeholder="Tulis konten berita dalam Bahasa Indonesia..."
+                    />
+                  </div>
+                  {/* HTML Editor */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                      <Code className="w-3.5 h-3.5" />
+                      <span>HTML Source</span>
+                    </div>
+                    <Textarea
+                      value={form.content_id}
+                      onChange={(e) => setForm(prev => ({ ...prev, content_id: e.target.value }))}
+                      placeholder="<p>Tulis HTML di sini...</p>"
+                      className="font-mono text-xs min-h-[350px] bg-muted/30 border-border resize-y leading-relaxed"
+                      spellCheck={false}
+                    />
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
