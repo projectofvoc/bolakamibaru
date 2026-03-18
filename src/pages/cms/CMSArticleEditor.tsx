@@ -130,6 +130,7 @@ const CMSArticleEditor = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [editorMode, setEditorMode] = useState<'visual' | 'html'>('visual');
 
   // Modal states
   const [showAddCategory, setShowAddCategory] = useState(false);
@@ -774,44 +775,50 @@ const CMSArticleEditor = () => {
               )}
               
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between">
                   <Label>Konten *</Label>
-                  <div className="flex items-center gap-1 ml-auto text-xs text-muted-foreground">
-                    <FileText className="w-3 h-3" />
-                    <span>Visual</span>
-                    <span className="mx-1">+</span>
-                    <Code className="w-3 h-3" />
-                    <span>HTML</span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                  {/* Visual Editor */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  <div className="flex rounded-md border border-border overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setEditorMode('visual')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                        editorMode === 'visual'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                      }`}
+                    >
                       <FileText className="w-3.5 h-3.5" />
-                      <span>Visual Editor</span>
-                    </div>
-                    <RichTextEditor
-                      content={form.content_id}
-                      onChange={(content) => setForm(prev => ({ ...prev, content_id: content }))}
-                      placeholder="Tulis konten berita dalam Bahasa Indonesia..."
-                    />
-                  </div>
-                  {/* HTML Editor */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                      Visual
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditorMode('html')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
+                        editorMode === 'html'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                      }`}
+                    >
                       <Code className="w-3.5 h-3.5" />
-                      <span>HTML Source</span>
-                    </div>
-                    <Textarea
-                      value={form.content_id}
-                      onChange={(e) => setForm(prev => ({ ...prev, content_id: e.target.value }))}
-                      placeholder="<p>Tulis HTML di sini...</p>"
-                      className="font-mono text-xs min-h-[350px] bg-muted/30 border-border resize-y leading-relaxed"
-                      spellCheck={false}
-                    />
+                      HTML
+                    </button>
                   </div>
                 </div>
+                {editorMode === 'visual' ? (
+                  <RichTextEditor
+                    content={form.content_id}
+                    onChange={(content) => setForm(prev => ({ ...prev, content_id: content }))}
+                    placeholder="Tulis konten berita dalam Bahasa Indonesia..."
+                  />
+                ) : (
+                  <Textarea
+                    value={form.content_id}
+                    onChange={(e) => setForm(prev => ({ ...prev, content_id: e.target.value }))}
+                    placeholder="<p>Tulis HTML di sini...</p>"
+                    className="font-mono text-xs min-h-[400px] bg-muted/30 border-border resize-y leading-relaxed"
+                    spellCheck={false}
+                  />
+                )}
               </div>
             </CardContent>
           </Card>
