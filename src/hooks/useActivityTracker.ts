@@ -19,7 +19,7 @@ export const useActivityTracker = () => {
   const [localActiveMinutes, setLocalActiveMinutes] = useState(0);
   const [initialLoaded, setInitialLoaded] = useState(false);
   const lastUpdateRef = useRef<number>(Date.now());
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Get user
   useEffect(() => {
