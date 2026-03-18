@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +39,19 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ isOpen, onClose, articl
   const excerpt = language === 'id' ? article.excerpt_id : article.excerpt_en;
   const content = language === 'id' ? article.content_id : article.content_en;
   const currentDate = format(new Date(), 'dd MMMM yyyy');
+
+  // Wrap tables in responsive container
+  const wrapTablesInContainer = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
+    const tables = node.querySelectorAll('table');
+    tables.forEach((table) => {
+      if (table.parentElement?.classList.contains('article-table-wrapper')) return;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'article-table-wrapper';
+      table.parentNode?.insertBefore(wrapper, table);
+      wrapper.appendChild(table);
+    });
+  }, []);
 
   const getCategoryLabel = (category: string) => {
     const labels: Record<string, string> = {
@@ -197,6 +210,7 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ isOpen, onClose, articl
               {/* Article Content */}
               <div 
                 className="article-content"
+                ref={wrapTablesInContainer}
                 dangerouslySetInnerHTML={{ __html: content || '<p>Konten artikel akan muncul di sini...</p>' }}
               />
 

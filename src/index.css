@@ -297,6 +297,53 @@
   @apply border-border my-4;
 }
 
+/* Article Table Styles */
+.article-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 1.5rem 0;
+}
+
+.article-content table,
+.tiptap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.938rem;
+  line-height: 1.5;
+}
+
+.article-content th,
+.article-content td,
+.tiptap th,
+.tiptap td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.75rem 1rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.article-content thead th,
+.tiptap thead th {
+  background: hsl(var(--muted));
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.article-content tbody tr:hover,
+.tiptap tbody tr:hover {
+  background: hsl(var(--muted) / 0.3);
+}
+
+.article-content tbody td,
+.tiptap tbody td {
+  color: hsl(var(--foreground) / 0.9);
+}
+
+/* TipTap table cell selection */
+.tiptap .selectedCell {
+  background: hsl(var(--primary) / 0.15);
+}
+
 /* Shrink container on Mac-sized screens to make room for sidebar banners */
 @media (min-width: 1440px) and (max-width: 1799px) {
   .container {

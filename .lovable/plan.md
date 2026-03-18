@@ -1,64 +1,88 @@
 
 
-## Plan: Full HTML Table Support in Article Editor & Frontend
+## Plan: Deploy og-metadata ke Supabase Eksternal (`zmbawgfnrtspgdiqywzc`)
 
-### Root Cause Analysis
+Supabase eksternal yang Anda berikan **sama** dengan yang sudah dipakai untuk Sportmonks API. Jadi tidak perlu setup project baru — tinggal deploy function tambahan ke project yang sudah ada.
 
-The problem has **two sources**:
+---
 
-1. **TipTap Editor (Visual mode)** — StarterKit does not include table extensions. When content with `<table>` tags is loaded into the visual editor, TipTap strips all unknown HTML nodes, converting tables to flat text. Switching from HTML mode → Visual mode destroys tables.
+### Perubahan yang Dilakukan (3 file saja, minimal impact)
 
-2. **Frontend CSS** — `dangerouslySetInnerHTML` in `NewsDetail.tsx` and `ArticlePreview.tsx` renders raw HTML correctly, but `.article-content` in `index.css` has no table styling, so tables appear unstyled and break on mobile.
+#### 1. Buat `docs/external-edge-functions/og-metadata.ts` (file baru)
 
-**Storage is fine** — the database stores raw HTML, no sanitization happens on save.
+File dokumentasi + kode edge function siap deploy, mengikuti pola `sportmonks-api.ts`. Berisi:
 
-### Changes (4 files)
+- Kode `og-metadata` edge function yang **query ke Lovable Cloud database** menggunakan environment variable:
+  - `LOVABLE_SUPABASE_URL` → `https://wqrvguxkanjuorntlmmx.supabase.co`
+  - `LOVABLE_SERVICE_ROLE_KEY` → Service Role Key dari Lovable Cloud
+- Step-by-step deploy instructions via Supabase CLI
 
-#### 1. `src/components/cms/RichTextEditor.tsx` — Add TipTap Table Extension
-- Install and add `@tiptap/extension-table`, `@tiptap/extension-table-row`, `@tiptap/extension-table-header`, `@tiptap/extension-table-cell` extensions
-- Add a "Table" toolbar button (insert 3×3 table)
-- This ensures Visual mode preserves table HTML instead of stripping it
-
-#### 2. `src/index.css` — Add Article Table Styles
-- Add comprehensive `.article-content table` styles:
-  - `width: 100%`, `border-collapse: collapse`
-  - `th`/`td` with padding, borders
-  - `thead` with distinct background (`bg-muted`)
-  - Wrap tables in responsive container via `.article-content .article-table-wrapper` with `overflow-x: auto`
-- Add matching `.tiptap table` styles for the editor preview
-- Dark-theme compatible using existing CSS variables
-
-#### 3. `src/pages/NewsDetail.tsx` — Wrap content for responsive tables
-- After rendering `dangerouslySetInnerHTML`, add a `useEffect` that finds all `<table>` elements inside `.article-content` and wraps them in a `<div class="article-table-wrapper">` with `overflow-x: auto` for mobile responsiveness
-
-#### 4. `src/components/cms/ArticlePreview.tsx` — Same table wrapper logic
-- Apply the same table-wrapping logic so admin preview matches frontend output
-
-### Table CSS (approximate)
-
-```css
-.article-content table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1.5rem 0;
-  font-size: 0.938rem;
-}
-.article-content th, .article-content td {
-  border: 1px solid hsl(var(--border));
-  padding: 0.75rem 1rem;
-  text-align: left;
-}
-.article-content thead th {
-  background: hsl(var(--muted));
-  font-weight: 600;
-}
-.article-content tbody tr:hover {
-  background: hsl(var(--muted) / 0.3);
-}
+```text
+Koneksi data:
+  Supabase Eksternal (zmbawgfnrtspgdiqywzc)
+       │
+       │  og-metadata edge function
+       │  query articles menggunakan:
+       │  - LOVABLE_SUPABASE_URL
+       │  - LOVABLE_SERVICE_ROLE_KEY
+       ▼
+  Lovable Cloud DB (wqrvguxkanjuorntlmmx)
+       │
+       ▼
+  Tabel articles (data tetap di sini)
 ```
 
-### Backward Compatibility
-- Existing articles without tables are unaffected
-- Table extension only adds capability, doesn't change other content
-- CSS targets only `table` elements inside `.article-content`
+#### 2. Update `src/pages/ShareRedirect.tsx` (1 baris)
+
+- **Line 13**: Ganti URL dari `wqrvguxkanjuorntlmmx` → `zmbawgfnrtspgdiqywzc`
+
+```
+// Sebelum:
+https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=...
+
+// Sesudah:
+https://zmbawgfnrtspgdiqywzc.supabase.co/functions/v1/og-metadata?slug=...
+```
+
+#### 3. Update `src/pages/cms/CMSOGPreview.tsx` (1 baris)
+
+- **Line 78**: Ganti `supabaseUrl` yang dipakai untuk Share URL dari `VITE_SUPABASE_URL` (Lovable Cloud) ke URL Supabase eksternal hardcoded
+
+```
+// Sebelum:
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+// Sesudah:
+const externalSupabaseUrl = 'https://zmbawgfnrtspgdiqywzc.supabase.co';
+```
+
+> Catatan: `supabase.from('articles')` di line 41 **tetap** menggunakan Lovable Cloud client — tidak berubah. Hanya URL untuk Share/Debugger yang diarahkan ke Supabase eksternal.
+
+---
+
+### Yang Perlu Anda Lakukan Setelah Implementasi
+
+Deploy edge function ke Supabase eksternal via CLI:
+
+1. **Set secrets** di Supabase eksternal:
+   ```
+   supabase secrets set LOVABLE_SUPABASE_URL=https://wqrvguxkanjuorntlmmx.supabase.co
+   supabase secrets set LOVABLE_SERVICE_ROLE_KEY=<service_role_key_lovable_cloud>
+   ```
+
+2. **Copy** kode dari `docs/external-edge-functions/og-metadata.ts` ke folder lokal project Supabase eksternal
+
+3. **Deploy**:
+   ```
+   supabase functions deploy og-metadata --project-ref zmbawgfnrtspgdiqywzc
+   ```
+
+---
+
+### Yang TIDAK Berubah
+
+- Edge function `og-metadata` di Lovable Cloud tetap ada (tidak dihapus) sebagai backup
+- Database articles tetap di Lovable Cloud — tidak ada migrasi data
+- Semua halaman lain (Index, Berita, NewsDetail, dll) tidak terpengaruh
+- Hanya **2 file frontend** yang diubah, masing-masing 1 baris
 

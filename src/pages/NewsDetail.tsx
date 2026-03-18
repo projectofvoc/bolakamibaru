@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
@@ -82,6 +82,19 @@ const NewsDetail: React.FC = () => {
     trackView();
   }, [article?.id]);
 
+
+  // Wrap tables in responsive container
+  const wrapTablesInContainer = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
+    const tables = node.querySelectorAll('table');
+    tables.forEach((table) => {
+      if (table.parentElement?.classList.contains('article-table-wrapper')) return;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'article-table-wrapper';
+      table.parentNode?.insertBefore(wrapper, table);
+      wrapper.appendChild(table);
+    });
+  }, []);
 
   if (isLoading) {
     return (
@@ -347,6 +360,7 @@ const NewsDetail: React.FC = () => {
             {/* Article Body - HTML Content */}
             <div 
               className="article-content"
+              ref={wrapTablesInContainer}
               dangerouslySetInnerHTML={{ __html: content }}
             />
             

@@ -7,6 +7,10 @@ import Youtube from '@tiptap/extension-youtube';
 import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TableCell } from '@tiptap/extension-table-cell';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
@@ -34,7 +38,8 @@ import {
   Redo,
   Pilcrow,
   Upload,
-  Loader2
+  Loader2,
+  Table as TableIcon
 } from 'lucide-react';
 import {
   Tooltip,
@@ -140,6 +145,15 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      Table.configure({
+        resizable: false,
+        HTMLAttributes: {
+          class: 'article-table',
+        },
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -518,6 +532,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
           tooltip="Tambah Video"
         >
           <YoutubeIcon className="w-4 h-4" />
+        </MenuButton>
+
+        <Separator orientation="vertical" className="h-6 mx-1" />
+
+        {/* Table */}
+        <MenuButton 
+          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+          tooltip="Insert Table"
+        >
+          <TableIcon className="w-4 h-4" />
         </MenuButton>
       </div>
       
