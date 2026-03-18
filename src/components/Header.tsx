@@ -35,8 +35,8 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   
   // Refs for dropdown close delay
-  const ligaTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const beritaTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ligaTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const beritaTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Dropdown delay handlers
   const handleLigaMouseEnter = () => {
