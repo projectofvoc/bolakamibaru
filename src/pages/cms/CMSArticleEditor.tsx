@@ -32,7 +32,9 @@ import {
   Sparkles,
   Languages,
   Plus,
-  Target
+  Target,
+  Code,
+  FileText
 } from 'lucide-react';
 import { 
   generatePredictionTemplate, 
