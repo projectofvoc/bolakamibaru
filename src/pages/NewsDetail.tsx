@@ -347,6 +347,7 @@ const NewsDetail: React.FC = () => {
             {/* Article Body - HTML Content */}
             <div 
               className="article-content"
+              ref={wrapTablesInContainer}
               dangerouslySetInnerHTML={{ __html: content }}
             />
             
