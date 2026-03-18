@@ -40,9 +40,9 @@
         "@tiptap/extension-link": "^2.11.5",
         "@tiptap/extension-placeholder": "^2.11.5",
         "@tiptap/extension-table": "^3.20.4",
-        "@tiptap/extension-table-cell": "^3.20.4",
+        "@tiptap/extension-table-cell": "^2.11.5",
         "@tiptap/extension-table-header": "^3.20.4",
-        "@tiptap/extension-table-row": "^3.20.4",
+        "@tiptap/extension-table-row": "^2.11.5",
         "@tiptap/extension-text-align": "^2.11.5",
         "@tiptap/extension-underline": "^2.11.5",
         "@tiptap/extension-youtube": "^2.11.5",
@@ -448,11 +448,11 @@
 
     "@tiptap/extension-table": ["@tiptap/extension-table@3.20.4", "", { "peerDependencies": { "@tiptap/core": "^3.20.4", "@tiptap/pm": "^3.20.4" } }, "sha512-vEHXRL9k9G02pp3P+DyUnN4YRaRAHGfTBC6gck0s9TpsCM9NIchL0qI1fb/u46Bu6UaoMMk58DGr7xaJ29g7KQ=="],
 
-    "@tiptap/extension-table-cell": ["@tiptap/extension-table-cell@3.20.4", "", { "peerDependencies": { "@tiptap/extension-table": "^3.20.4" } }, "sha512-R+AKOPKCq2NwETa4/nsidXnYe7UP8CxdbvJI1r6DMYipdj4ksQI24ij91hkwDLkeAhJyNGKub4soEMRdLgcQyQ=="],
+    "@tiptap/extension-table-cell": ["@tiptap/extension-table-cell@2.27.2", "", { "peerDependencies": { "@tiptap/core": "^2.7.0" } }, "sha512-9Lk46MjZMFzVZfOj9Kd7VgC6Odt6vmEhlCYVumErShUY7EkFqCw3b2IYoUtQkntfOEx/Afnhff/okNQwPsJeUA=="],
 
     "@tiptap/extension-table-header": ["@tiptap/extension-table-header@3.20.4", "", { "peerDependencies": { "@tiptap/extension-table": "^3.20.4" } }, "sha512-f8xlcNfmh2MD+fzPYXhy1zvao5DlWf+Sdd7eQ4G3baui/PdgBpJEroVCPYZIOazVRHL43MFxtvPeSJ5RN6J+bw=="],
 
-    "@tiptap/extension-table-row": ["@tiptap/extension-table-row@3.20.4", "", { "peerDependencies": { "@tiptap/extension-table": "^3.20.4" } }, "sha512-bW9pXTMpNmDoZrLVPYylkfhiSwPxTYpubFduW3cjsiSJK046kSw5zOlvlv4+9vZI1TSlA+BFykPeW34YqLbr6Q=="],
+    "@tiptap/extension-table-row": ["@tiptap/extension-table-row@2.27.2", "", { "peerDependencies": { "@tiptap/core": "^2.7.0" } }, "sha512-Nw9+tA56Y5HtLVP01NGCZSUuTQhJPtfK9OfmDgGgcxynn2cRVdEtj+9FNZqRhQ1iRVaAI+Rd4xRvX9qYePMOxw=="],
 
     "@tiptap/extension-text": ["@tiptap/extension-text@2.27.2", "", { "peerDependencies": { "@tiptap/core": "^2.7.0" } }, "sha512-Xk7nYcigljAY0GO9hAQpZ65ZCxqOqaAlTPDFcKerXmlkQZP/8ndx95OgUb1Xf63kmPOh3xypurGS2is3v0MXSA=="],
 
