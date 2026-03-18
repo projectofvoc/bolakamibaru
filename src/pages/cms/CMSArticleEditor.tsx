@@ -130,6 +130,7 @@ const CMSArticleEditor = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [editorMode, setEditorMode] = useState<'visual' | 'html'>('visual');
 
   // Modal states
   const [showAddCategory, setShowAddCategory] = useState(false);
