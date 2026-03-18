@@ -210,6 +210,7 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ isOpen, onClose, articl
               {/* Article Content */}
               <div 
                 className="article-content"
+                ref={wrapTablesInContainer}
                 dangerouslySetInnerHTML={{ __html: content || '<p>Konten artikel akan muncul di sini...</p>' }}
               />
 

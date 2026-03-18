@@ -83,6 +83,19 @@ const NewsDetail: React.FC = () => {
   }, [article?.id]);
 
 
+  // Wrap tables in responsive container
+  const wrapTablesInContainer = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
+    const tables = node.querySelectorAll('table');
+    tables.forEach((table) => {
+      if (table.parentElement?.classList.contains('article-table-wrapper')) return;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'article-table-wrapper';
+      table.parentNode?.insertBefore(wrapper, table);
+      wrapper.appendChild(table);
+    });
+  }, []);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">

@@ -533,6 +533,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
         >
           <YoutubeIcon className="w-4 h-4" />
         </MenuButton>
+
+        <Separator orientation="vertical" className="h-6 mx-1" />
+
+        {/* Table */}
+        <MenuButton 
+          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+          tooltip="Insert Table"
+        >
+          <TableIcon className="w-4 h-4" />
+        </MenuButton>
       </div>
       
       {/* Editor Content */}
