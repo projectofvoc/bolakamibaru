@@ -1,88 +1,46 @@
 
 
-## Plan: Deploy og-metadata ke Supabase Eksternal (`zmbawgfnrtspgdiqywzc`)
+## Root Cause Analysis
 
-Supabase eksternal yang Anda berikan **sama** dengan yang sudah dipakai untuk Sportmonks API. Jadi tidak perlu setup project baru — tinggal deploy function tambahan ke project yang sudah ada.
+There are **two critical bugs** preventing HTML tables from working:
 
----
+### Bug 1: TipTap Version Mismatch (Primary Cause)
+The table extensions are **v3.x** but the TipTap core is **v2.x**:
+- `@tiptap/react`: `^2.11.5`
+- `@tiptap/starter-kit`: `^2.11.5`
+- `@tiptap/extension-table`: `^3.20.4` ← **INCOMPATIBLE**
+- `@tiptap/extension-table-cell`: `^3.20.4` ← **INCOMPATIBLE**
+- `@tiptap/extension-table-header`: `^3.20.4` ← **INCOMPATIBLE**
+- `@tiptap/extension-table-row`: `^3.20.4` ← **INCOMPATIBLE**
 
-### Perubahan yang Dilakukan (3 file saja, minimal impact)
+v3 extensions silently fail with v2 core — TipTap doesn't register the table nodes, so all `<table>` tags are stripped when content is loaded into the editor or when switching from HTML to Visual mode.
 
-#### 1. Buat `docs/external-edge-functions/og-metadata.ts` (file baru)
+### Bug 2: `ensureHtmlContent` Strips Tables
+In `CMSArticleEditor.tsx` lines 80-96, the function checks for `<p>`, `<h1>`, `<h2>`, `<h3>`, `<ul>`, `<ol>`, `<blockquote>` — but **NOT** `<table>`. If an article contains only a table (no paragraphs), the function treats it as plain text and wraps it in `<p>` tags, destroying the HTML structure.
 
-File dokumentasi + kode edge function siap deploy, mengikuti pola `sportmonks-api.ts`. Berisi:
-
-- Kode `og-metadata` edge function yang **query ke Lovable Cloud database** menggunakan environment variable:
-  - `LOVABLE_SUPABASE_URL` → `https://wqrvguxkanjuorntlmmx.supabase.co`
-  - `LOVABLE_SERVICE_ROLE_KEY` → Service Role Key dari Lovable Cloud
-- Step-by-step deploy instructions via Supabase CLI
-
-```text
-Koneksi data:
-  Supabase Eksternal (zmbawgfnrtspgdiqywzc)
-       │
-       │  og-metadata edge function
-       │  query articles menggunakan:
-       │  - LOVABLE_SUPABASE_URL
-       │  - LOVABLE_SERVICE_ROLE_KEY
-       ▼
-  Lovable Cloud DB (wqrvguxkanjuorntlmmx)
-       │
-       ▼
-  Tabel articles (data tetap di sini)
-```
-
-#### 2. Update `src/pages/ShareRedirect.tsx` (1 baris)
-
-- **Line 13**: Ganti URL dari `wqrvguxkanjuorntlmmx` → `zmbawgfnrtspgdiqywzc`
-
-```
-// Sebelum:
-https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=...
-
-// Sesudah:
-https://zmbawgfnrtspgdiqywzc.supabase.co/functions/v1/og-metadata?slug=...
-```
-
-#### 3. Update `src/pages/cms/CMSOGPreview.tsx` (1 baris)
-
-- **Line 78**: Ganti `supabaseUrl` yang dipakai untuk Share URL dari `VITE_SUPABASE_URL` (Lovable Cloud) ke URL Supabase eksternal hardcoded
-
-```
-// Sebelum:
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-
-// Sesudah:
-const externalSupabaseUrl = 'https://zmbawgfnrtspgdiqywzc.supabase.co';
-```
-
-> Catatan: `supabase.from('articles')` di line 41 **tetap** menggunakan Lovable Cloud client — tidak berubah. Hanya URL untuk Share/Debugger yang diarahkan ke Supabase eksternal.
+### What's Already Working
+- CSS styling for tables in `index.css` — already implemented
+- Responsive wrapper logic in `NewsDetail.tsx` and `ArticlePreview.tsx` — already implemented
+- Table button in toolbar — already implemented
+- `dangerouslySetInnerHTML` rendering — no sanitization, this is fine
 
 ---
 
-### Yang Perlu Anda Lakukan Setelah Implementasi
+## Fix Plan (2 files)
 
-Deploy edge function ke Supabase eksternal via CLI:
+### 1. `package.json` — Downgrade table extensions to v2.x
+Change all four table extension versions from `^3.20.4` to `^2.11.5` to match the TipTap core version.
 
-1. **Set secrets** di Supabase eksternal:
-   ```
-   supabase secrets set LOVABLE_SUPABASE_URL=https://wqrvguxkanjuorntlmmx.supabase.co
-   supabase secrets set LOVABLE_SERVICE_ROLE_KEY=<service_role_key_lovable_cloud>
-   ```
+### 2. `src/pages/cms/CMSArticleEditor.tsx` — Fix `ensureHtmlContent`
+Add `<table>` to the list of recognized HTML tags so table-only content is not treated as plain text.
 
-2. **Copy** kode dari `docs/external-edge-functions/og-metadata.ts` ke folder lokal project Supabase eksternal
+```typescript
+if (content.includes('<p>') || content.includes('<h1>') || content.includes('<h2>') || 
+    content.includes('<h3>') || content.includes('<ul>') || content.includes('<ol>') ||
+    content.includes('<blockquote>') || content.includes('<table>')) {
+  return content;
+}
+```
 
-3. **Deploy**:
-   ```
-   supabase functions deploy og-metadata --project-ref zmbawgfnrtspgdiqywzc
-   ```
-
----
-
-### Yang TIDAK Berubah
-
-- Edge function `og-metadata` di Lovable Cloud tetap ada (tidak dihapus) sebagai backup
-- Database articles tetap di Lovable Cloud — tidak ada migrasi data
-- Semua halaman lain (Index, Berita, NewsDetail, dll) tidak terpengaruh
-- Hanya **2 file frontend** yang diubah, masing-masing 1 baris
+That's it — two targeted fixes that address the actual root causes. Everything else (CSS, wrappers, toolbar) was already implemented correctly.
 
