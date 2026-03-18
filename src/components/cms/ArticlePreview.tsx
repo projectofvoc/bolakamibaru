@@ -40,6 +40,19 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ isOpen, onClose, articl
   const content = language === 'id' ? article.content_id : article.content_en;
   const currentDate = format(new Date(), 'dd MMMM yyyy');
 
+  // Wrap tables in responsive container
+  const wrapTablesInContainer = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
+    const tables = node.querySelectorAll('table');
+    tables.forEach((table) => {
+      if (table.parentElement?.classList.contains('article-table-wrapper')) return;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'article-table-wrapper';
+      table.parentNode?.insertBefore(wrapper, table);
+      wrapper.appendChild(table);
+    });
+  }, []);
+
   const getCategoryLabel = (category: string) => {
     const labels: Record<string, string> = {
       trending: '🔥 Trending',
