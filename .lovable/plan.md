@@ -1,88 +1,26 @@
 
 
-## Plan: Deploy og-metadata ke Supabase Eksternal (`zmbawgfnrtspgdiqywzc`)
+## Plan: Fix Editor + Build Errors
 
-Supabase eksternal yang Anda berikan **sama** dengan yang sudah dipakai untuk Sportmonks API. Jadi tidak perlu setup project baru — tinggal deploy function tambahan ke project yang sudah ada.
+### 1. Fix Build Errors (NodeJS namespace)
 
----
+**Files:** `src/components/Header.tsx`, `src/hooks/useActivityTracker.ts`
 
-### Perubahan yang Dilakukan (3 file saja, minimal impact)
+Replace `NodeJS.Timeout` with `ReturnType<typeof setTimeout>` — this is the standard TypeScript-compatible type that works without Node.js type definitions.
 
-#### 1. Buat `docs/external-edge-functions/og-metadata.ts` (file baru)
+### 2. Replace Split View with Toggle Mode
 
-File dokumentasi + kode edge function siap deploy, mengikuti pola `sportmonks-api.ts`. Berisi:
+**File:** `src/pages/cms/CMSArticleEditor.tsx`
 
-- Kode `og-metadata` edge function yang **query ke Lovable Cloud database** menggunakan environment variable:
-  - `LOVABLE_SUPABASE_URL` → `https://wqrvguxkanjuorntlmmx.supabase.co`
-  - `LOVABLE_SERVICE_ROLE_KEY` → Service Role Key dari Lovable Cloud
-- Step-by-step deploy instructions via Supabase CLI
+- Add state: `const [editorMode, setEditorMode] = useState<'visual' | 'html'>('visual')`
+- Replace the split view grid (lines 776-815) with:
+  - A header row with "Konten *" label on left, two toggle buttons ("Visual" / "HTML") on right
+  - Conditional rendering: show `<RichTextEditor>` when `visual`, show `<Textarea>` when `html`
+  - Both full width, no side-by-side
+- Content stays synced via shared `form.content_id` state
 
-```text
-Koneksi data:
-  Supabase Eksternal (zmbawgfnrtspgdiqywzc)
-       │
-       │  og-metadata edge function
-       │  query articles menggunakan:
-       │  - LOVABLE_SUPABASE_URL
-       │  - LOVABLE_SERVICE_ROLE_KEY
-       ▼
-  Lovable Cloud DB (wqrvguxkanjuorntlmmx)
-       │
-       ▼
-  Tabel articles (data tetap di sini)
-```
-
-#### 2. Update `src/pages/ShareRedirect.tsx` (1 baris)
-
-- **Line 13**: Ganti URL dari `wqrvguxkanjuorntlmmx` → `zmbawgfnrtspgdiqywzc`
-
-```
-// Sebelum:
-https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=...
-
-// Sesudah:
-https://zmbawgfnrtspgdiqywzc.supabase.co/functions/v1/og-metadata?slug=...
-```
-
-#### 3. Update `src/pages/cms/CMSOGPreview.tsx` (1 baris)
-
-- **Line 78**: Ganti `supabaseUrl` yang dipakai untuk Share URL dari `VITE_SUPABASE_URL` (Lovable Cloud) ke URL Supabase eksternal hardcoded
-
-```
-// Sebelum:
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-
-// Sesudah:
-const externalSupabaseUrl = 'https://zmbawgfnrtspgdiqywzc.supabase.co';
-```
-
-> Catatan: `supabase.from('articles')` di line 41 **tetap** menggunakan Lovable Cloud client — tidak berubah. Hanya URL untuk Share/Debugger yang diarahkan ke Supabase eksternal.
-
----
-
-### Yang Perlu Anda Lakukan Setelah Implementasi
-
-Deploy edge function ke Supabase eksternal via CLI:
-
-1. **Set secrets** di Supabase eksternal:
-   ```
-   supabase secrets set LOVABLE_SUPABASE_URL=https://wqrvguxkanjuorntlmmx.supabase.co
-   supabase secrets set LOVABLE_SERVICE_ROLE_KEY=<service_role_key_lovable_cloud>
-   ```
-
-2. **Copy** kode dari `docs/external-edge-functions/og-metadata.ts` ke folder lokal project Supabase eksternal
-
-3. **Deploy**:
-   ```
-   supabase functions deploy og-metadata --project-ref zmbawgfnrtspgdiqywzc
-   ```
-
----
-
-### Yang TIDAK Berubah
-
-- Edge function `og-metadata` di Lovable Cloud tetap ada (tidak dihapus) sebagai backup
-- Database articles tetap di Lovable Cloud — tidak ada migrasi data
-- Semua halaman lain (Index, Berita, NewsDetail, dll) tidak terpengaruh
-- Hanya **2 file frontend** yang diubah, masing-masing 1 baris
+### Result
+- Clean single-editor view, default Visual
+- Toggle to HTML only when needed
+- No dual rendering
 
