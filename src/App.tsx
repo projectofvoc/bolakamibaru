@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { HelmetProvider } from "react-helmet-async";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { GoogleIntegrations } from "@/components/GoogleIntegrations";
 import PointsWidget from "@/components/PointsWidget";
 import Index from "./pages/Index";
 
@@ -40,6 +41,7 @@ import {
   CMSFooterBanners,
   CMSSidebarBanners,
   CMSReadToEarn,
+  CMSIntegrations,
 } from "./pages/cms";
 import Rewards from "./pages/Rewards";
 
@@ -54,6 +56,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AnalyticsTracker />
+          <GoogleIntegrations />
           <PointsWidget />
           <Routes>
             <Route path="/" element={<Index />} />
@@ -89,6 +92,7 @@ const App = () => (
               <Route path="api" element={<CMSApi />} />
               <Route path="users" element={<CMSUsers />} />
               <Route path="read-to-earn" element={<CMSReadToEarn />} />
+              <Route path="integrations" element={<CMSIntegrations />} />
             </Route>
             
             {/* Legacy route redirect */}
