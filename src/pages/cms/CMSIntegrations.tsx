@@ -217,6 +217,12 @@ const CMSIntegrations = () => {
               <p className="text-xs text-muted-foreground">
                 Copy hanya bagian <code className="bg-muted px-1 rounded">content="..."</code> dari meta tag yang diberikan Google.
               </p>
+              <Alert className="mt-2">
+                <Info className="w-4 h-4" />
+                <AlertDescription>
+                  <strong>Penting:</strong> Setelah menyimpan verification code, diperlukan <strong>rebuild</strong> agar meta tag muncul di HTML source (view-source). Perubahan kode apapun di Lovable akan otomatis trigger rebuild.
+                </AlertDescription>
+              </Alert>
             </div>
           )}
 
