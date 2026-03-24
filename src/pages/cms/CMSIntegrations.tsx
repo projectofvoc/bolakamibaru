@@ -158,7 +158,7 @@ const CMSIntegrations = () => {
               Test Integration
             </Button>
             {gaTestResult === 'success' && (
-              <Badge variant="default" className="bg-green-600 text-white gap-1">
+              <Badge className="bg-primary text-primary-foreground gap-1">
                 <CheckCircle className="w-3 h-3" /> Aktif
               </Badge>
             )}
@@ -240,7 +240,7 @@ const CMSIntegrations = () => {
               Test Integration
             </Button>
             {gscTestResult === 'success' && (
-              <Badge variant="default" className="bg-green-600 text-white gap-1">
+              <Badge className="bg-primary text-primary-foreground gap-1">
                 <CheckCircle className="w-3 h-3" /> Terdeteksi
               </Badge>
             )}
