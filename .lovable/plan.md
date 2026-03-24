@@ -1,88 +1,92 @@
 
 
-## Plan: Deploy og-metadata ke Supabase Eksternal (`zmbawgfnrtspgdiqywzc`)
+## Plan: Google Analytics & Search Console CMS Integration
 
-Supabase eksternal yang Anda berikan **sama** dengan yang sudah dipakai untuk Sportmonks API. Jadi tidak perlu setup project baru — tinggal deploy function tambahan ke project yang sudah ada.
+### Overview
+Add a new "Integrations" page in CMS where admin can configure Google Analytics and Google Search Console dynamically from the database, without code changes.
 
----
+### 1. Database Migration — `site_integrations` table
 
-### Perubahan yang Dilakukan (3 file saja, minimal impact)
+Create a new table to store integration settings:
 
-#### 1. Buat `docs/external-edge-functions/og-metadata.ts` (file baru)
+```sql
+CREATE TABLE public.site_integrations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  key text UNIQUE NOT NULL,        -- e.g. 'ga_measurement_id', 'gsc_method', 'gsc_verification_code'
+  value text NOT NULL DEFAULT '',
+  updated_at timestamptz DEFAULT now(),
+  updated_by uuid
+);
 
-File dokumentasi + kode edge function siap deploy, mengikuti pola `sportmonks-api.ts`. Berisi:
+ALTER TABLE public.site_integrations ENABLE ROW LEVEL SECURITY;
 
-- Kode `og-metadata` edge function yang **query ke Lovable Cloud database** menggunakan environment variable:
-  - `LOVABLE_SUPABASE_URL` → `https://wqrvguxkanjuorntlmmx.supabase.co`
-  - `LOVABLE_SERVICE_ROLE_KEY` → Service Role Key dari Lovable Cloud
-- Step-by-step deploy instructions via Supabase CLI
+-- Admins can manage
+CREATE POLICY "Admins can manage integrations" ON public.site_integrations
+  FOR ALL TO authenticated
+  USING (has_role(auth.uid(), 'admin')) WITH CHECK (has_role(auth.uid(), 'admin'));
+
+-- Public can read (needed for frontend script injection)
+CREATE POLICY "Public can read integrations" ON public.site_integrations
+  FOR SELECT TO public USING (true);
+```
+
+Keys stored: `ga_measurement_id`, `gsc_method` (`meta_tag` or `html_file`), `gsc_verification_code`
+
+### 2. New CMS Page — `src/pages/cms/CMSIntegrations.tsx`
+
+Two sections:
+
+**A. Google Analytics**
+- Input field for Measurement ID (validated: must start with `G-`)
+- Save button → upserts to `site_integrations`
+- "Test Integration" button → checks if `window.gtag` exists
+
+**B. Google Search Console**
+- Dropdown: Meta Tag / HTML File
+- If Meta Tag: input for verification code, saves to DB
+- If HTML File: note explaining this requires manual file placement (SPA limitation)
+- "Test Integration" button → checks if meta tag exists in DOM
+
+### 3. Global Script Injector — `src/components/GoogleIntegrations.tsx`
+
+A component placed in `App.tsx` (alongside `AnalyticsTracker`) that:
+- Fetches `ga_measurement_id` and `gsc_verification_code` from `site_integrations` table
+- If GA ID exists and starts with `G-`: dynamically creates and appends the gtag.js `<script>` tags to `<head>`
+- If GSC verification code exists: dynamically creates and appends `<meta name="google-site-verification">` to `<head>`
+- Prevents duplicate injection using element ID checks
+- Cleans up on unmount
+
+### 4. Wire Up Routes & Sidebar
+
+**Files changed:**
+- `src/pages/cms/CMSLayout.tsx` — add "Integrations" menu item with Settings icon
+- `src/pages/cms/index.ts` — export new page
+- `src/App.tsx` — add route `/cms/integrations` and import `GoogleIntegrations` component
+
+### 5. HTML File Upload Limitation
+
+Since this is an SPA, we cannot dynamically serve files at arbitrary root URLs like `/googleXXXX.html`. The plan will:
+- Clearly note this in the UI
+- Recommend Meta Tag method as the primary approach
+- For HTML file method, show instructions to manually place the file
+
+### Technical Details
 
 ```text
-Koneksi data:
-  Supabase Eksternal (zmbawgfnrtspgdiqywzc)
-       │
-       │  og-metadata edge function
-       │  query articles menggunakan:
-       │  - LOVABLE_SUPABASE_URL
-       │  - LOVABLE_SERVICE_ROLE_KEY
-       ▼
-  Lovable Cloud DB (wqrvguxkanjuorntlmmx)
-       │
-       ▼
-  Tabel articles (data tetap di sini)
+┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│  CMS Admin  │────▶│ site_integrations│────▶│ GoogleIntegrations│
+│  Settings   │     │    (database)    │     │   (App.tsx)      │
+│  Page       │     │                  │     │  injects <script>│
+└─────────────┘     └──────────────────┘     │  injects <meta>  │
+                                              └─────────────────┘
 ```
 
-#### 2. Update `src/pages/ShareRedirect.tsx` (1 baris)
+### Files Changed (5 files + 1 migration)
 
-- **Line 13**: Ganti URL dari `wqrvguxkanjuorntlmmx` → `zmbawgfnrtspgdiqywzc`
-
-```
-// Sebelum:
-https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/og-metadata?slug=...
-
-// Sesudah:
-https://zmbawgfnrtspgdiqywzc.supabase.co/functions/v1/og-metadata?slug=...
-```
-
-#### 3. Update `src/pages/cms/CMSOGPreview.tsx` (1 baris)
-
-- **Line 78**: Ganti `supabaseUrl` yang dipakai untuk Share URL dari `VITE_SUPABASE_URL` (Lovable Cloud) ke URL Supabase eksternal hardcoded
-
-```
-// Sebelum:
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-
-// Sesudah:
-const externalSupabaseUrl = 'https://zmbawgfnrtspgdiqywzc.supabase.co';
-```
-
-> Catatan: `supabase.from('articles')` di line 41 **tetap** menggunakan Lovable Cloud client — tidak berubah. Hanya URL untuk Share/Debugger yang diarahkan ke Supabase eksternal.
-
----
-
-### Yang Perlu Anda Lakukan Setelah Implementasi
-
-Deploy edge function ke Supabase eksternal via CLI:
-
-1. **Set secrets** di Supabase eksternal:
-   ```
-   supabase secrets set LOVABLE_SUPABASE_URL=https://wqrvguxkanjuorntlmmx.supabase.co
-   supabase secrets set LOVABLE_SERVICE_ROLE_KEY=<service_role_key_lovable_cloud>
-   ```
-
-2. **Copy** kode dari `docs/external-edge-functions/og-metadata.ts` ke folder lokal project Supabase eksternal
-
-3. **Deploy**:
-   ```
-   supabase functions deploy og-metadata --project-ref zmbawgfnrtspgdiqywzc
-   ```
-
----
-
-### Yang TIDAK Berubah
-
-- Edge function `og-metadata` di Lovable Cloud tetap ada (tidak dihapus) sebagai backup
-- Database articles tetap di Lovable Cloud — tidak ada migrasi data
-- Semua halaman lain (Index, Berita, NewsDetail, dll) tidak terpengaruh
-- Hanya **2 file frontend** yang diubah, masing-masing 1 baris
+1. **Migration** — create `site_integrations` table
+2. **`src/pages/cms/CMSIntegrations.tsx`** — new CMS settings page
+3. **`src/components/GoogleIntegrations.tsx`** — dynamic script/meta injector
+4. **`src/pages/cms/CMSLayout.tsx`** — add sidebar menu item
+5. **`src/pages/cms/index.ts`** — export new page
+6. **`src/App.tsx`** — add route + injector component
 
