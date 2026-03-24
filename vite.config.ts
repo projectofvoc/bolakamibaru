@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, type HtmlTagDescriptor } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
@@ -9,7 +9,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 function gscMetaPlugin() {
   return {
     name: "inject-gsc-meta",
-    async transformIndexHtml() {
+    async transformIndexHtml(): Promise<HtmlTagDescriptor[]> {
       try {
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/site_integrations?key=eq.gsc_verification_code&select=value`,
@@ -20,7 +20,7 @@ function gscMetaPlugin() {
             },
           }
         );
-        const data = await res.json();
+        const data = await res.json() as Array<{ value: string }>;
         if (data?.[0]?.value) {
           return [
             {
@@ -29,7 +29,7 @@ function gscMetaPlugin() {
                 name: "google-site-verification",
                 content: data[0].value,
               },
-              injectTo: "head",
+              injectTo: "head" as const,
             },
           ];
         }
