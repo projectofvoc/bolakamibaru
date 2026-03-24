@@ -11,7 +11,7 @@ declare global {
 
 export function GoogleIntegrations() {
   const { data: settings } = useQuery({
-    queryKey: ['site-integrations-global'],
+    queryKey: ['site-integrations'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('site_integrations')
