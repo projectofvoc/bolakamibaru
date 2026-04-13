@@ -1,48 +1,45 @@
 
 
-## Fix: Telegram "TOPIC_CLOSED" Error
+## Fix: Cek `auto_send_on_publish` Sebelum Kirim Otomatis
 
 ### Problem
-Grup Telegram yang digunakan mengaktifkan fitur **Forum/Topics**. Topic "General" ditutup, sehingga bot tidak bisa mengirim pesan tanpa menentukan topic tujuan. Telegram mengembalikan error `Bad Request: TOPIC_CLOSED`.
+Saat artikel dipublish, bot langsung mengirim tanpa mengecek setting `auto_send_on_publish`. Jika admin menonaktifkan auto-send di settings, bot tetap kirim.
 
 ### Solution
-Tambahkan field `message_thread_id` di settings agar admin bisa menentukan topic tujuan di grup Forum.
+Tambahkan pengecekan `auto_send_on_publish` di `CMSArticleEditor.tsx` sebelum memanggil edge function. Fetch setting dari `bot_sender_settings` terlebih dahulu.
 
-### Changes
+### Changes (1 file)
 
-**1. Database Migration**
-- Tambah kolom `message_thread_id` (text, nullable) di `bot_sender_settings`
+**`src/pages/cms/CMSArticleEditor.tsx` (lines 413-424)**
 
-```sql
-ALTER TABLE public.bot_sender_settings
-  ADD COLUMN message_thread_id text;
-```
+Ubah blok auto-send agar:
+1. Query `bot_sender_settings` untuk cek `is_enabled` dan `auto_send_on_publish`
+2. Hanya invoke edge function jika kedua setting bernilai `true`
 
-**2. Edge Function: `supabase/functions/bot-send-article/index.ts`**
-- Tambahkan `message_thread_id` ke semua request `sendMessage` dan `sendPhoto`
-- Jika `message_thread_id` ada di settings, sertakan di body request Telegram API
-
-```text
-// Di setiap fetch sendMessage/sendPhoto:
-body: {
-  chat_id: chatId,
-  message_thread_id: settings.message_thread_id ? Number(settings.message_thread_id) : undefined,
-  ...
+```typescript
+// Auto-send to bot if publishing
+if (variables.status === 'published' && articleId) {
+  // Check bot settings first
+  supabase
+    .from('bot_sender_settings')
+    .select('is_enabled, auto_send_on_publish')
+    .limit(1)
+    .single()
+    .then(({ data: botSettings }) => {
+      if (!botSettings?.is_enabled || !botSettings?.auto_send_on_publish) return;
+      
+      supabase.functions.invoke('bot-send-article', {
+        body: { article_id: articleId },
+      }).then(({ data }) => {
+        if (data?.success) {
+          toast({ title: 'Berita dikirim ke bot!' });
+        } else if (data?.error && !data?.skipped) {
+          toast({ title: 'Bot sender', description: data.error, variant: 'destructive' });
+        }
+      }).catch(() => {});
+    });
 }
 ```
 
-**3. Frontend: `src/pages/cms/CMSBotSender.tsx`**
-- Tambah field input "Message Thread ID / Topic ID" di section Provider Configuration
-- Tambah keterangan: "Wajib diisi jika grup menggunakan Forum/Topics. Kosongkan jika grup biasa."
-
-### Cara Mendapatkan Topic ID
-Admin bisa mendapatkan `message_thread_id` dari URL topic di Telegram Desktop/Web. Contoh URL: `https://t.me/c/1234567890/123` — angka terakhir (`123`) adalah topic ID.
-
-### File Summary
-
-| File | Action |
-|------|--------|
-| DB migration | Add `message_thread_id` column |
-| `bot-send-article/index.ts` | Include `message_thread_id` in all Telegram requests |
-| `CMSBotSender.tsx` | Add Topic ID input field |
+Tidak ada perubahan di edge function atau database. Hanya logic frontend yang diperbaiki.
 
