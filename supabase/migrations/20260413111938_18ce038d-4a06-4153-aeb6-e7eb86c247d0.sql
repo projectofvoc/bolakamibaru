@@ -1,0 +1,1 @@
+ALTER TABLE public.bot_sender_settings ADD COLUMN message_thread_id text;
