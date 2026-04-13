@@ -81,6 +81,8 @@ const CMSArticles = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [featuredFilter, setFeaturedFilter] = useState('all');
+  const [sendingId, setSendingId] = useState<string | null>(null);
+  const [logsArticleId, setLogsArticleId] = useState<string | null>(null);
 
   // Fetch featured count for published articles
   const { data: featuredCount = 0 } = useQuery({
