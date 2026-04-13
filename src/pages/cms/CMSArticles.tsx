@@ -39,8 +39,19 @@ import {
   CheckCircle,
   Clock,
   FileText,
-  Star
+  Star,
+  Send,
+  RefreshCw,
+  AlertCircle,
+  ScrollText,
+  Loader2
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 
@@ -57,6 +68,8 @@ interface Article {
   published_at: string | null;
   created_at: string;
   author_name: string | null;
+  send_status: string | null;
+  is_sent: boolean | null;
 }
 
 const CMSArticles = () => {
@@ -68,6 +81,8 @@ const CMSArticles = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [featuredFilter, setFeaturedFilter] = useState('all');
+  const [sendingId, setSendingId] = useState<string | null>(null);
+  const [logsArticleId, setLogsArticleId] = useState<string | null>(null);
 
   // Fetch featured count for published articles
   const { data: featuredCount = 0 } = useQuery({
@@ -89,7 +104,7 @@ const CMSArticles = () => {
     queryFn: async () => {
       let query = supabase
         .from('articles')
-        .select('id, slug, title_id, title_en, category, status, views, is_featured, badges, published_at, created_at, author_name')
+        .select('id, slug, title_id, title_en, category, status, views, is_featured, badges, published_at, created_at, author_name, send_status, is_sent')
         .order('is_featured', { ascending: false })
         .order('created_at', { ascending: false });
       
@@ -111,6 +126,22 @@ const CMSArticles = () => {
     },
   });
 
+  // Send logs query
+  const { data: sendLogs = [] } = useQuery({
+    queryKey: ['article-send-logs', logsArticleId],
+    queryFn: async () => {
+      if (!logsArticleId) return [];
+      const { data, error } = await supabase
+        .from('article_send_logs')
+        .select('*')
+        .eq('article_id', logsArticleId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!logsArticleId,
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -128,6 +159,27 @@ const CMSArticles = () => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     },
   });
+
+  const handleSendArticle = async (articleId: string, force = false) => {
+    setSendingId(articleId);
+    try {
+      const { data, error } = await supabase.functions.invoke('bot-send-article', {
+        body: { article_id: articleId, force },
+      });
+      if (error) throw error;
+      if (data.success) {
+        toast({ title: 'Berita berhasil dikirim ke bot!' });
+      } else if (data.skipped) {
+        toast({ title: 'Dilewati', description: data.error });
+      } else {
+        toast({ title: 'Gagal mengirim', description: data.error, variant: 'destructive' });
+      }
+      queryClient.invalidateQueries({ queryKey: ['cms-articles'] });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+    setSendingId(null);
+  };
 
   const filteredArticles = articles.filter(article =>
     article.title_id.toLowerCase().includes(search.toLowerCase()) ||
@@ -162,6 +214,19 @@ const CMSArticles = () => {
         return <Badge className="bg-warning/20 text-warning gap-1"><Clock className="w-3 h-3" />Pending</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getSendStatusBadge = (sendStatus: string | null) => {
+    switch (sendStatus) {
+      case 'sent':
+        return <Badge className="bg-primary/20 text-primary gap-1"><CheckCircle className="w-3 h-3" />Sent</Badge>;
+      case 'sending':
+        return <Badge className="bg-amber-500/20 text-amber-400 gap-1"><Loader2 className="w-3 h-3 animate-spin" />Sending</Badge>;
+      case 'failed':
+        return <Badge variant="destructive" className="gap-1"><AlertCircle className="w-3 h-3" />Failed</Badge>;
+      default:
+        return <Badge variant="outline" className="gap-1 text-muted-foreground">Not Sent</Badge>;
     }
   };
 
@@ -257,11 +322,12 @@ const CMSArticles = () => {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
+                 <TableHeader>
                   <TableRow>
                     <TableHead className="min-w-[300px]">Judul</TableHead>
                     <TableHead>Kategori</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Bot</TableHead>
                     <TableHead className="text-center">Views</TableHead>
                     <TableHead>Tanggal</TableHead>
                     <TableHead className="text-right">Aksi</TableHead>
@@ -296,6 +362,7 @@ const CMSArticles = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>{getStatusBadge(article.status)}</TableCell>
+                      <TableCell>{getSendStatusBadge(article.send_status)}</TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-1 text-muted-foreground">
                           <Eye className="w-4 h-4" />
@@ -323,6 +390,31 @@ const CMSArticles = () => {
                                 Lihat
                               </DropdownMenuItem>
                             )}
+                            {article.status === 'published' && !article.is_sent && (
+                              <DropdownMenuItem 
+                                onClick={() => handleSendArticle(article.id)}
+                                disabled={sendingId === article.id}
+                              >
+                                {sendingId === article.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+                                Send Now
+                              </DropdownMenuItem>
+                            )}
+                            {article.send_status === 'failed' && (
+                              <DropdownMenuItem onClick={() => handleSendArticle(article.id, true)}>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Retry Send
+                              </DropdownMenuItem>
+                            )}
+                            {article.is_sent && (
+                              <DropdownMenuItem onClick={() => handleSendArticle(article.id, true)}>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Send Again
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => setLogsArticleId(article.id)}>
+                              <ScrollText className="w-4 h-4 mr-2" />
+                              View Send Logs
+                            </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => {
                                 if (confirm('Yakin ingin menghapus berita ini?')) {
@@ -345,6 +437,37 @@ const CMSArticles = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Send Logs Dialog */}
+      <Dialog open={!!logsArticleId} onOpenChange={() => setLogsArticleId(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Send Logs</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {sendLogs.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">Belum ada log pengiriman</p>
+            ) : (
+              sendLogs.map((log: any) => (
+                <div key={log.id} className="border rounded-lg p-3 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Badge className={log.send_status === 'sent' ? 'bg-primary/20 text-primary' : 'bg-destructive/20 text-destructive'}>
+                      {log.send_status}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      Attempt #{log.attempt_number} · {format(new Date(log.created_at), 'dd MMM yyyy HH:mm', { locale: idLocale })}
+                    </span>
+                  </div>
+                  {log.error_message && (
+                    <p className="text-sm text-destructive">{log.error_message}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">Provider: {log.provider_name} · Sent to: {log.sent_to}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

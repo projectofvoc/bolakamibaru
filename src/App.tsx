@@ -42,6 +42,7 @@ import {
   CMSSidebarBanners,
   CMSReadToEarn,
   CMSIntegrations,
+  CMSBotSender,
 } from "./pages/cms";
 import Rewards from "./pages/Rewards";
 
@@ -93,6 +94,7 @@ const App = () => (
               <Route path="users" element={<CMSUsers />} />
               <Route path="read-to-earn" element={<CMSReadToEarn />} />
               <Route path="integrations" element={<CMSIntegrations />} />
+              <Route path="bot-sender" element={<CMSBotSender />} />
             </Route>
             
             {/* Legacy route redirect */}

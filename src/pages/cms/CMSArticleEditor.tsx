@@ -394,17 +394,35 @@ const CMSArticleEditor = () => {
           .eq('id', id);
         
         if (error) throw error;
+        return id;
       } else {
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from('articles')
-          .insert(articleData);
+          .insert(articleData)
+          .select('id')
+          .single();
         
         if (error) throw error;
+        return inserted?.id;
       }
     },
-    onSuccess: () => {
+    onSuccess: (articleId, variables) => {
       queryClient.invalidateQueries({ queryKey: ['cms-articles'] });
       toast({ title: isEditing ? 'Berita diperbarui!' : 'Berita ditambahkan!' });
+      
+      // Auto-send to bot if publishing
+      if (variables.status === 'published' && articleId) {
+        supabase.functions.invoke('bot-send-article', {
+          body: { article_id: articleId },
+        }).then(({ data }) => {
+          if (data?.success) {
+            toast({ title: 'Berita dikirim ke bot!' });
+          } else if (data?.error && !data?.skipped) {
+            toast({ title: 'Bot sender', description: data.error, variant: 'destructive' });
+          }
+        }).catch(() => {});
+      }
+      
       navigate('/cms/articles');
     },
     onError: (error: any) => {

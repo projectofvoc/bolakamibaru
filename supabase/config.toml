@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.generate-ai-prompts]
 verify_jwt = false
+
+[functions.bot-send-article]
+verify_jwt = false

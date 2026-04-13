@@ -289,6 +289,45 @@ export type Database = {
           },
         ]
       }
+      article_send_logs: {
+        Row: {
+          article_id: string
+          attempt_number: number
+          created_at: string | null
+          error_message: string | null
+          id: string
+          provider_name: string | null
+          request_payload: Json | null
+          response_payload: Json | null
+          send_status: string
+          sent_to: string | null
+        }
+        Insert: {
+          article_id: string
+          attempt_number?: number
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          provider_name?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          send_status?: string
+          sent_to?: string | null
+        }
+        Update: {
+          article_id?: string
+          attempt_number?: number
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          provider_name?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          send_status?: string
+          sent_to?: string | null
+        }
+        Relationships: []
+      }
       article_views: {
         Row: {
           article_id: string
@@ -331,14 +370,20 @@ export type Database = {
           created_at: string | null
           excerpt_en: string | null
           excerpt_id: string | null
+          external_message_id: string | null
           featured_image: string | null
           id: string
           is_featured: boolean | null
+          is_sent: boolean | null
           league: string | null
           published_at: string | null
           publisher_icon: string | null
           publisher_name: string | null
           publisher_verified: boolean | null
+          send_attempt_count: number | null
+          send_error: string | null
+          send_status: string | null
+          sent_at: string | null
           slug: string
           sort_order: number | null
           status: string | null
@@ -360,14 +405,20 @@ export type Database = {
           created_at?: string | null
           excerpt_en?: string | null
           excerpt_id?: string | null
+          external_message_id?: string | null
           featured_image?: string | null
           id?: string
           is_featured?: boolean | null
+          is_sent?: boolean | null
           league?: string | null
           published_at?: string | null
           publisher_icon?: string | null
           publisher_name?: string | null
           publisher_verified?: boolean | null
+          send_attempt_count?: number | null
+          send_error?: string | null
+          send_status?: string | null
+          sent_at?: string | null
           slug: string
           sort_order?: number | null
           status?: string | null
@@ -389,14 +440,20 @@ export type Database = {
           created_at?: string | null
           excerpt_en?: string | null
           excerpt_id?: string | null
+          external_message_id?: string | null
           featured_image?: string | null
           id?: string
           is_featured?: boolean | null
+          is_sent?: boolean | null
           league?: string | null
           published_at?: string | null
           publisher_icon?: string | null
           publisher_name?: string | null
           publisher_verified?: boolean | null
+          send_attempt_count?: number | null
+          send_error?: string | null
+          send_status?: string | null
+          sent_at?: string | null
           slug?: string
           sort_order?: number | null
           status?: string | null
@@ -471,6 +528,81 @@ export type Database = {
           title_id?: string
           updated_at?: string | null
           video_url?: string | null
+        }
+        Relationships: []
+      }
+      bot_sender_settings: {
+        Row: {
+          allow_manual_send: boolean
+          api_key: string | null
+          auto_send_on_publish: boolean
+          bot_token: string | null
+          created_at: string | null
+          default_template: string | null
+          destination_id: string | null
+          endpoint_url: string | null
+          fallback_image_url: string | null
+          id: string
+          is_enabled: boolean
+          max_retry_count: number
+          parse_mode: string
+          provider_name: string
+          request_timeout_seconds: number
+          retry_delay_seconds: number
+          retry_enabled: boolean
+          secret_key: string | null
+          send_mode: string
+          send_without_image: boolean
+          updated_at: string | null
+          use_fallback_image: boolean
+        }
+        Insert: {
+          allow_manual_send?: boolean
+          api_key?: string | null
+          auto_send_on_publish?: boolean
+          bot_token?: string | null
+          created_at?: string | null
+          default_template?: string | null
+          destination_id?: string | null
+          endpoint_url?: string | null
+          fallback_image_url?: string | null
+          id?: string
+          is_enabled?: boolean
+          max_retry_count?: number
+          parse_mode?: string
+          provider_name?: string
+          request_timeout_seconds?: number
+          retry_delay_seconds?: number
+          retry_enabled?: boolean
+          secret_key?: string | null
+          send_mode?: string
+          send_without_image?: boolean
+          updated_at?: string | null
+          use_fallback_image?: boolean
+        }
+        Update: {
+          allow_manual_send?: boolean
+          api_key?: string | null
+          auto_send_on_publish?: boolean
+          bot_token?: string | null
+          created_at?: string | null
+          default_template?: string | null
+          destination_id?: string | null
+          endpoint_url?: string | null
+          fallback_image_url?: string | null
+          id?: string
+          is_enabled?: boolean
+          max_retry_count?: number
+          parse_mode?: string
+          provider_name?: string
+          request_timeout_seconds?: number
+          retry_delay_seconds?: number
+          retry_enabled?: boolean
+          secret_key?: string | null
+          send_mode?: string
+          send_without_image?: boolean
+          updated_at?: string | null
+          use_fallback_image?: boolean
         }
         Relationships: []
       }
