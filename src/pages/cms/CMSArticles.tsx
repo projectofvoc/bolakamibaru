@@ -322,11 +322,12 @@ const CMSArticles = () => {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
+                 <TableHeader>
                   <TableRow>
                     <TableHead className="min-w-[300px]">Judul</TableHead>
                     <TableHead>Kategori</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Bot</TableHead>
                     <TableHead className="text-center">Views</TableHead>
                     <TableHead>Tanggal</TableHead>
                     <TableHead className="text-right">Aksi</TableHead>
@@ -361,6 +362,7 @@ const CMSArticles = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>{getStatusBadge(article.status)}</TableCell>
+                      <TableCell>{getSendStatusBadge(article.send_status)}</TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-1 text-muted-foreground">
                           <Eye className="w-4 h-4" />
@@ -388,6 +390,31 @@ const CMSArticles = () => {
                                 Lihat
                               </DropdownMenuItem>
                             )}
+                            {article.status === 'published' && !article.is_sent && (
+                              <DropdownMenuItem 
+                                onClick={() => handleSendArticle(article.id)}
+                                disabled={sendingId === article.id}
+                              >
+                                {sendingId === article.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+                                Send Now
+                              </DropdownMenuItem>
+                            )}
+                            {article.send_status === 'failed' && (
+                              <DropdownMenuItem onClick={() => handleSendArticle(article.id, true)}>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Retry Send
+                              </DropdownMenuItem>
+                            )}
+                            {article.is_sent && (
+                              <DropdownMenuItem onClick={() => handleSendArticle(article.id, true)}>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Send Again
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => setLogsArticleId(article.id)}>
+                              <ScrollText className="w-4 h-4 mr-2" />
+                              View Send Logs
+                            </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => {
                                 if (confirm('Yakin ingin menghapus berita ini?')) {
@@ -410,6 +437,37 @@ const CMSArticles = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Send Logs Dialog */}
+      <Dialog open={!!logsArticleId} onOpenChange={() => setLogsArticleId(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Send Logs</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {sendLogs.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">Belum ada log pengiriman</p>
+            ) : (
+              sendLogs.map((log: any) => (
+                <div key={log.id} className="border rounded-lg p-3 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Badge className={log.send_status === 'sent' ? 'bg-primary/20 text-primary' : 'bg-destructive/20 text-destructive'}>
+                      {log.send_status}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      Attempt #{log.attempt_number} · {format(new Date(log.created_at), 'dd MMM yyyy HH:mm', { locale: idLocale })}
+                    </span>
+                  </div>
+                  {log.error_message && (
+                    <p className="text-sm text-destructive">{log.error_message}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">Provider: {log.provider_name} · Sent to: {log.sent_to}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
