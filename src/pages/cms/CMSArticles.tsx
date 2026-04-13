@@ -126,6 +126,22 @@ const CMSArticles = () => {
     },
   });
 
+  // Send logs query
+  const { data: sendLogs = [] } = useQuery({
+    queryKey: ['article-send-logs', logsArticleId],
+    queryFn: async () => {
+      if (!logsArticleId) return [];
+      const { data, error } = await supabase
+        .from('article_send_logs')
+        .select('*')
+        .eq('article_id', logsArticleId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!logsArticleId,
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -143,6 +159,27 @@ const CMSArticles = () => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     },
   });
+
+  const handleSendArticle = async (articleId: string, force = false) => {
+    setSendingId(articleId);
+    try {
+      const { data, error } = await supabase.functions.invoke('bot-send-article', {
+        body: { article_id: articleId, force },
+      });
+      if (error) throw error;
+      if (data.success) {
+        toast({ title: 'Berita berhasil dikirim ke bot!' });
+      } else if (data.skipped) {
+        toast({ title: 'Dilewati', description: data.error });
+      } else {
+        toast({ title: 'Gagal mengirim', description: data.error, variant: 'destructive' });
+      }
+      queryClient.invalidateQueries({ queryKey: ['cms-articles'] });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+    setSendingId(null);
+  };
 
   const filteredArticles = articles.filter(article =>
     article.title_id.toLowerCase().includes(search.toLowerCase()) ||
@@ -177,6 +214,19 @@ const CMSArticles = () => {
         return <Badge className="bg-warning/20 text-warning gap-1"><Clock className="w-3 h-3" />Pending</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getSendStatusBadge = (sendStatus: string | null) => {
+    switch (sendStatus) {
+      case 'sent':
+        return <Badge className="bg-primary/20 text-primary gap-1"><CheckCircle className="w-3 h-3" />Sent</Badge>;
+      case 'sending':
+        return <Badge className="bg-amber-500/20 text-amber-400 gap-1"><Loader2 className="w-3 h-3 animate-spin" />Sending</Badge>;
+      case 'failed':
+        return <Badge variant="destructive" className="gap-1"><AlertCircle className="w-3 h-3" />Failed</Badge>;
+      default:
+        return <Badge variant="outline" className="gap-1 text-muted-foreground">Not Sent</Badge>;
     }
   };
 
