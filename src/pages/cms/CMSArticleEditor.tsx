@@ -402,9 +402,24 @@ const CMSArticleEditor = () => {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['cms-articles'] });
       toast({ title: isEditing ? 'Berita diperbarui!' : 'Berita ditambahkan!' });
+      
+      // Auto-send to bot if publishing
+      if (variables.status === 'published' && variables.id) {
+        // Fire and forget - don't block navigation
+        supabase.functions.invoke('bot-send-article', {
+          body: { article_id: variables.id },
+        }).then(({ data }) => {
+          if (data?.success) {
+            toast({ title: 'Berita dikirim ke bot!' });
+          } else if (data?.error && !data?.skipped) {
+            toast({ title: 'Bot sender', description: data.error, variant: 'destructive' });
+          }
+        }).catch(() => {});
+      }
+      
       navigate('/cms/articles');
     },
     onError: (error: any) => {
