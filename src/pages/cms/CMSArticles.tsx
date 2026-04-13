@@ -39,8 +39,19 @@ import {
   CheckCircle,
   Clock,
   FileText,
-  Star
+  Star,
+  Send,
+  RefreshCw,
+  AlertCircle,
+  ScrollText,
+  Loader2
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 
@@ -57,6 +68,8 @@ interface Article {
   published_at: string | null;
   created_at: string;
   author_name: string | null;
+  send_status: string | null;
+  is_sent: boolean | null;
 }
 
 const CMSArticles = () => {
