@@ -410,17 +410,26 @@ const CMSArticleEditor = () => {
       queryClient.invalidateQueries({ queryKey: ['cms-articles'] });
       toast({ title: isEditing ? 'Berita diperbarui!' : 'Berita ditambahkan!' });
       
-      // Auto-send to bot if publishing
+      // Auto-send to bot if publishing (only if auto_send_on_publish is enabled)
       if (variables.status === 'published' && articleId) {
-        supabase.functions.invoke('bot-send-article', {
-          body: { article_id: articleId },
-        }).then(({ data }) => {
-          if (data?.success) {
-            toast({ title: 'Berita dikirim ke bot!' });
-          } else if (data?.error && !data?.skipped) {
-            toast({ title: 'Bot sender', description: data.error, variant: 'destructive' });
-          }
-        }).catch(() => {});
+        supabase
+          .from('bot_sender_settings')
+          .select('is_enabled, auto_send_on_publish')
+          .limit(1)
+          .single()
+          .then(({ data: botSettings }) => {
+            if (!botSettings?.is_enabled || !botSettings?.auto_send_on_publish) return;
+            
+            supabase.functions.invoke('bot-send-article', {
+              body: { article_id: articleId },
+            }).then(({ data }) => {
+              if (data?.success) {
+                toast({ title: 'Berita dikirim ke bot!' });
+              } else if (data?.error && !data?.skipped) {
+                toast({ title: 'Bot sender', description: data.error, variant: 'destructive' });
+              }
+            }).catch(() => {});
+          });
       }
       
       navigate('/cms/articles');
