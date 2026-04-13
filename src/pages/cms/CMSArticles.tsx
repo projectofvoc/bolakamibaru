@@ -104,7 +104,7 @@ const CMSArticles = () => {
     queryFn: async () => {
       let query = supabase
         .from('articles')
-        .select('id, slug, title_id, title_en, category, status, views, is_featured, badges, published_at, created_at, author_name')
+        .select('id, slug, title_id, title_en, category, status, views, is_featured, badges, published_at, created_at, author_name, send_status, is_sent')
         .order('is_featured', { ascending: false })
         .order('created_at', { ascending: false });
       
