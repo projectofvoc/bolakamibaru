@@ -394,12 +394,16 @@ const CMSArticleEditor = () => {
           .eq('id', id);
         
         if (error) throw error;
+        return id;
       } else {
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from('articles')
-          .insert(articleData);
+          .insert(articleData)
+          .select('id')
+          .single();
         
         if (error) throw error;
+        return inserted?.id;
       }
     },
     onSuccess: (_, variables) => {
