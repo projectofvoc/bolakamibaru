@@ -67,6 +67,7 @@ const CMSSidebar = ({ isAdmin }: { isAdmin: boolean }) => {
     { title: 'OG Preview', url: '/cms/og-preview', icon: Eye },
     { title: 'API', url: '/cms/api', icon: Key },
     { title: 'Users', url: '/cms/users', icon: Users },
+    { title: 'Bot Sender', url: '/cms/bot-sender', icon: Bot },
     { title: 'Integrations', url: '/cms/integrations', icon: Settings },
   ];
 
