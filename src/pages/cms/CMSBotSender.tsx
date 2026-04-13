@@ -28,6 +28,7 @@ const CMSBotSender = () => {
     secret_key: '',
     endpoint_url: '',
     destination_id: '',
+    message_thread_id: '',
     default_template: '📰 {title}\n\n{excerpt}\n\n🔗 Baca selengkapnya:\n{article_url}',
     fallback_image_url: '',
     send_mode: 'photo_caption',
@@ -65,6 +66,7 @@ const CMSBotSender = () => {
         secret_key: settings.secret_key || '',
         endpoint_url: settings.endpoint_url || '',
         destination_id: settings.destination_id || '',
+        message_thread_id: (settings as any).message_thread_id || '',
         default_template: settings.default_template || '',
         fallback_image_url: settings.fallback_image_url || '',
         send_mode: settings.send_mode,
@@ -221,6 +223,11 @@ const CMSBotSender = () => {
             <div className="space-y-2">
               <Label>Chat ID / Channel ID *</Label>
               <Input placeholder="-1001234567890 atau @channelname" value={form.destination_id} onChange={(e) => setForm(p => ({ ...p, destination_id: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Message Thread ID / Topic ID</Label>
+              <Input placeholder="123" value={form.message_thread_id} onChange={(e) => setForm(p => ({ ...p, message_thread_id: e.target.value }))} />
+              <p className="text-xs text-muted-foreground">Wajib diisi jika grup menggunakan Forum/Topics. Kosongkan jika grup biasa. Dapatkan dari URL topic: https://t.me/c/.../123 → angka terakhir.</p>
             </div>
             <div className="space-y-2">
               <Label>Endpoint URL (opsional)</Label>

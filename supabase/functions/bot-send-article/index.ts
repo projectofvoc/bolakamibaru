@@ -16,6 +16,7 @@ interface BotSettings {
   secret_key: string | null;
   endpoint_url: string | null;
   destination_id: string | null;
+  message_thread_id: string | null;
   default_template: string | null;
   fallback_image_url: string | null;
   send_mode: string;
@@ -82,6 +83,7 @@ async function sendTelegram(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: chatId,
+          ...(settings.message_thread_id ? { message_thread_id: Number(settings.message_thread_id) } : {}),
           photo: imageUrl,
           caption,
           parse_mode: settings.parse_mode,
@@ -97,6 +99,7 @@ async function sendTelegram(
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             chat_id: chatId,
+            ...(settings.message_thread_id ? { message_thread_id: Number(settings.message_thread_id) } : {}),
             text: message,
             parse_mode: settings.parse_mode,
           }),
@@ -109,6 +112,7 @@ async function sendTelegram(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: chatId,
+          ...(settings.message_thread_id ? { message_thread_id: Number(settings.message_thread_id) } : {}),
           text: message,
           parse_mode: settings.parse_mode,
         }),
@@ -232,6 +236,7 @@ Deno.serve(async (req) => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             chat_id: settings.destination_id,
+            ...(settings.message_thread_id ? { message_thread_id: Number(settings.message_thread_id) } : {}),
             text: testMessage,
             parse_mode: settings.parse_mode,
           }),

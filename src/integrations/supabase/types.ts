@@ -545,6 +545,7 @@ export type Database = {
           id: string
           is_enabled: boolean
           max_retry_count: number
+          message_thread_id: string | null
           parse_mode: string
           provider_name: string
           request_timeout_seconds: number
@@ -569,6 +570,7 @@ export type Database = {
           id?: string
           is_enabled?: boolean
           max_retry_count?: number
+          message_thread_id?: string | null
           parse_mode?: string
           provider_name?: string
           request_timeout_seconds?: number
@@ -593,6 +595,7 @@ export type Database = {
           id?: string
           is_enabled?: boolean
           max_retry_count?: number
+          message_thread_id?: string | null
           parse_mode?: string
           provider_name?: string
           request_timeout_seconds?: number
