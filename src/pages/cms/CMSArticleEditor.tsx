@@ -406,15 +406,14 @@ const CMSArticleEditor = () => {
         return inserted?.id;
       }
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (articleId, variables) => {
       queryClient.invalidateQueries({ queryKey: ['cms-articles'] });
       toast({ title: isEditing ? 'Berita diperbarui!' : 'Berita ditambahkan!' });
       
       // Auto-send to bot if publishing
-      if (variables.status === 'published' && variables.id) {
-        // Fire and forget - don't block navigation
+      if (variables.status === 'published' && articleId) {
         supabase.functions.invoke('bot-send-article', {
-          body: { article_id: variables.id },
+          body: { article_id: articleId },
         }).then(({ data }) => {
           if (data?.success) {
             toast({ title: 'Berita dikirim ke bot!' });
