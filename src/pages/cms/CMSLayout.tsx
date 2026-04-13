@@ -35,7 +35,8 @@ import {
   Share2,
   Eye,
   Image,
-  Gift
+  Gift,
+  Bot
 } from 'lucide-react';
 import logoBolakami from '@/assets/logo-bolakami.png';
 

@@ -15,3 +15,4 @@ export { default as CMSFooterBanners } from './CMSFooterBanners';
 export { default as CMSSidebarBanners } from './CMSSidebarBanners';
 export { default as CMSReadToEarn } from './CMSReadToEarn';
 export { default as CMSIntegrations } from './CMSIntegrations';
+export { default as CMSBotSender } from './CMSBotSender';
