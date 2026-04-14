@@ -164,7 +164,7 @@ const Header: React.FC = () => {
 
   // Fallback if database is empty
   const fallbackNavItems = [
-    { key: 'Live', label_id: 'Live', label_en: 'Live', path: 'https://stream.bolakami.com/', icon: Radio, priority: 'high', isExternal: true, hasDropdown: false },
+    { key: 'Live', label_id: 'Live', label_en: 'Live', path: 'https://ayonontonbola.xyz', icon: Radio, priority: 'high', isExternal: true, hasDropdown: false },
     { key: 'Liga', label_id: 'Liga', label_en: 'Liga', path: '/liga', icon: Trophy, priority: 'medium', isExternal: false, hasDropdown: true },
     { key: 'Berita', label_id: 'Berita', label_en: 'Berita', path: '/berita', icon: Newspaper, priority: 'medium', isExternal: false, hasDropdown: true },
   ];
