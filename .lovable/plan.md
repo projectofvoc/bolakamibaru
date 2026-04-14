@@ -1,45 +1,24 @@
 
 
-## Fix: Cek `auto_send_on_publish` Sebelum Kirim Otomatis
+## Ganti Link LIVE ke ayonontonbola.xyz
 
 ### Problem
-Saat artikel dipublish, bot langsung mengirim tanpa mengecek setting `auto_send_on_publish`. Jika admin menonaktifkan auto-send di settings, bot tetap kirim.
+Link tombol LIVE di header saat ini mengarah ke `https://stream.bolakami.com/`. Perlu diganti ke `https://ayonontonbola.xyz`.
 
-### Solution
-Tambahkan pengecekan `auto_send_on_publish` di `CMSArticleEditor.tsx` sebelum memanggil edge function. Fetch setting dari `bot_sender_settings` terlebih dahulu.
+### Changes
 
-### Changes (1 file)
+**1. Database: Update `nav_items` table**
+- Update path untuk item "Live" di tabel `nav_items` menjadi `https://ayonontonbola.xyz`
 
-**`src/pages/cms/CMSArticleEditor.tsx` (lines 413-424)**
-
-Ubah blok auto-send agar:
-1. Query `bot_sender_settings` untuk cek `is_enabled` dan `auto_send_on_publish`
-2. Hanya invoke edge function jika kedua setting bernilai `true`
-
-```typescript
-// Auto-send to bot if publishing
-if (variables.status === 'published' && articleId) {
-  // Check bot settings first
-  supabase
-    .from('bot_sender_settings')
-    .select('is_enabled, auto_send_on_publish')
-    .limit(1)
-    .single()
-    .then(({ data: botSettings }) => {
-      if (!botSettings?.is_enabled || !botSettings?.auto_send_on_publish) return;
-      
-      supabase.functions.invoke('bot-send-article', {
-        body: { article_id: articleId },
-      }).then(({ data }) => {
-        if (data?.success) {
-          toast({ title: 'Berita dikirim ke bot!' });
-        } else if (data?.error && !data?.skipped) {
-          toast({ title: 'Bot sender', description: data.error, variant: 'destructive' });
-        }
-      }).catch(() => {});
-    });
-}
+```sql
+UPDATE public.nav_items SET path = 'https://ayonontonbola.xyz' WHERE label_id = 'Live';
 ```
 
-Tidak ada perubahan di edge function atau database. Hanya logic frontend yang diperbaiki.
+**2. Frontend fallback: `src/components/Header.tsx` (line 167)**
+- Ubah fallback URL dari `https://stream.bolakami.com/` ke `https://ayonontonbola.xyz`
+
+| File | Perubahan |
+|------|-----------|
+| DB `nav_items` | Update path Live → `https://ayonontonbola.xyz` |
+| `src/components/Header.tsx` | Update fallback URL line 167 |
 
