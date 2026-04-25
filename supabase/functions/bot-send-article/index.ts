@@ -275,6 +275,14 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Honor auto_send_on_publish unless this is a forced manual send
+    if (!force && !settings.auto_send_on_publish) {
+      return new Response(
+        JSON.stringify({ error: "Auto-send disabled", skipped: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (!settings.bot_token || !settings.destination_id) {
       return new Response(
         JSON.stringify({ error: "Bot configuration incomplete" }),
