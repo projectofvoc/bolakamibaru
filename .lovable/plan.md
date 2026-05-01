@@ -1,75 +1,70 @@
-# Integrasi Google Analytics 4 via OAuth (Login Google Pribadi)
+# Implementasi GA4 OAuth Integration
 
-## Kenapa OAuth (bukan Service Account)
+## Status Saat Ini
+- Tabel `ga4_oauth_tokens` sudah ada di database (dengan RLS admin-only)
+- Halaman `/cms/analytics` sudah dibersihkan dari Histats
+- Anda sudah punya: Client ID, Client Secret, dan tahu cara dapat GA4 Property ID
 
-Service Account ditolak terus oleh UI GA4 Anda. OAuth lebih simpel:
-- Anda login pakai akun Google pribadi yang **sudah punya akses ke GA4 Property**
-- Tidak perlu buat service account, tidak perlu invite email apapun ke GA4
-- Tidak perlu file JSON key
-- Token disimpan aman di backend (Lovable Cloud), hanya admin CMS yang bisa pakai
+## Yang Akan Saya Lakukan (setelah plan disetujui)
 
-## Yang Perlu Anda Siapkan (di Google Cloud Console)
+### 1. Simpan Secrets
+- `GA4_OAUTH_CLIENT_ID` = `288631404038-mda2elpp6ra5angmm2jtpl1f8q7hqkkkk.apps.googleusercontent.com`
+- `GA4_OAUTH_CLIENT_SECRET` = `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`
 
-Saya akan pandu setelah plan disetujui. Garis besarnya:
+(Anda akan lihat 1 popup approval — klik Approve)
 
-1. **OAuth Consent Screen** di project `bolakami-analytics`
-   - User type: External
-   - Scope: `https://www.googleapis.com/auth/analytics.readonly`
-   - Test users: tambahkan email Google Anda sendiri
+### 2. Bangun 3 Edge Functions
 
-2. **Buat OAuth Client ID** (type: Web application)
-   - Authorized redirect URI: `https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/ga4-oauth-callback`
-   - Hasilnya: **Client ID** + **Client Secret** → akan disimpan ke Lovable Cloud sebagai secret
+**`ga4-oauth-start`** (verify_jwt, admin-only)
+- Generate Google OAuth URL dengan `scope=analytics.readonly`, `access_type=offline`, `prompt=consent`
+- State parameter berisi user_id admin (signed)
+- Return URL untuk frontend redirect
 
-3. **Enable Google Analytics Data API** di project Google Cloud yang sama
+**`ga4-oauth-callback`** (verify_jwt = false, dipanggil oleh Google)
+- Terima `code` dari Google
+- Tukar jadi `access_token` + `refresh_token` via `oauth2.googleapis.com/token`
+- Ambil email Google user (untuk display)
+- Simpan ke tabel `ga4_oauth_tokens` (upsert by user_id)
+- Redirect kembali ke `/cms/analytics?connected=1`
 
-## Yang Akan Saya Bangun
+**`ga4-analytics`** (verify_jwt, admin-only)
+- Baca token dari DB
+- Auto-refresh kalau `expires_at < now() + 60s`
+- Panggil GA4 Data API: `properties/{id}:runReport`
+- Return: total users, sessions, pageviews, avg duration, daily visitors, top pages, traffic sources, devices, countries
+- Parameter: `propertyId`, `days` (7/30/90)
 
-### 1. Database
-Tabel baru `ga4_oauth_tokens`:
-- `user_id` (uuid) — admin yang konek
-- `access_token`, `refresh_token`, `expires_at`
-- `ga4_property_id` (text) — disimpan setelah Anda pilih property
-- RLS: hanya role `admin` yang boleh baca/tulis row miliknya
+### 3. Update UI `/cms/analytics`
 
-### 2. Edge Functions (3 buah)
-- **`ga4-oauth-start`** — generate URL otorisasi Google, redirect admin ke Google
-- **`ga4-oauth-callback`** — terima code dari Google, tukar jadi access + refresh token, simpan ke DB
-- **`ga4-analytics`** — pakai refresh token untuk panggil GA4 Data API; auto-refresh access token kalau expired. Return: visitor harian, top pages, traffic source, device, country
+**Kalau belum konek**: Card besar dengan tombol "Connect Google Analytics" + input "GA4 Property ID"
 
-### 3. UI di `/cms/analytics`
-Hapus implementasi Histats yang lama, ganti dengan:
-- **Kalau belum konek**: tombol besar "Connect Google Analytics" + input "GA4 Property ID" (angka, contoh: `123456789`)
-- **Kalau sudah konek**:
-  - Header: "Connected as <email>" + tombol Disconnect
-  - Filter range: 7 / 30 / 90 hari
-  - Card: Total Users, Sessions, Pageviews, Avg Session Duration
-  - Chart: Visitors per hari (line chart, pakai Recharts yang sudah ada)
-  - Table: Top 10 pages (path + views)
-  - Table: Traffic sources (source/medium + sessions)
-  - Breakdown device & country
+**Kalau sudah konek**:
+- Header: "Connected as <email>" + tombol Disconnect
+- Filter range: 7 / 30 / 90 hari
+- 4 card metrik: Users, Sessions, Pageviews, Avg Duration
+- Line chart: visitors per hari (Recharts)
+- Table: Top 10 pages
+- Table: Traffic sources
+- Breakdown: device & country
 
 ### 4. Cleanup
 - Hapus edge function `get-histats-analytics`
-- Hapus secret `HISTATS_*` (opsional — saya tanya dulu sebelum hapus)
+- Biarkan secret `HISTATS_*` (tidak mengganggu, bisa dihapus manual nanti)
 
-## Detail Teknis
+## Redirect URI yang HARUS Sudah Dipasang di Google Cloud
+Pastikan di OAuth Client Anda sudah ada:
+```
+https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/ga4-oauth-callback
+```
+Kalau belum → tambahkan di Google Cloud Console → Credentials → OAuth Client → Authorized redirect URIs → Save.
 
-**OAuth flow**: Authorization Code dengan `access_type=offline` + `prompt=consent` supaya dapat refresh_token. State parameter berisi user_id admin (signed) untuk verifikasi di callback.
-
-**Token refresh**: Edge function `ga4-analytics` cek `expires_at`. Kalau < 60 detik dari sekarang, refresh dulu pakai refresh_token, update DB, baru request ke GA4 Data API.
-
-**Endpoint GA4**: `POST https://analyticsdata.googleapis.com/v1beta/properties/{propertyId}:runReport` — body berisi `dateRanges`, `dimensions`, `metrics`.
-
-**Security**: Semua edge function verify JWT + cek role `admin` via `has_role()` sebelum proses apapun.
-
-## Yang Akan Saya Minta Setelah Plan Disetujui
-
-1. Saya beri panduan langkah demi langkah buat OAuth Client di Google Cloud Console (dengan screenshot reference kalau perlu)
-2. Anda paste **Client ID** dan **Client Secret** → saya tambahkan sebagai secret `GA4_OAUTH_CLIENT_ID` dan `GA4_OAUTH_CLIENT_SECRET`
-3. Saya deploy semua kode → Anda klik "Connect" di `/cms/analytics`
-4. Anda paste GA4 Property ID → selesai, data muncul
+## Setelah Saya Selesai
+1. Anda buka `/cms/analytics` → klik **Connect Google Analytics**
+2. Login Google (akun yang punya akses GA4 Property)
+3. Approve scope `analytics.readonly`
+4. Otomatis kembali ke CMS → masukkan **GA4 Property ID** (angka)
+5. Data muncul
 
 ---
 
-**Setujui plan ini untuk lanjut?** Setelah disetujui, saya mulai dengan panduan setup OAuth Client di Google Cloud (belum tulis kode dulu, supaya Anda bisa siapkan kredensial paralel).
+**Setujui plan untuk lanjut?** Setelah disetujui saya langsung minta approval secret + tulis semua kode dalam satu run.
