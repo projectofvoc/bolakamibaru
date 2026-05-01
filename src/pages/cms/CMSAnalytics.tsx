@@ -1,110 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
 import {
-  Eye, FileText, BarChart3, Newspaper, Link2Off, Users, MousePointerClick,
-  Clock, Globe, Smartphone, Loader2, LogOut,
+  Eye, FileText, BarChart3, Newspaper, Users, MousePointerClick,
+  Clock, Globe, Smartphone, Loader2,
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
 
-type Status = { connected: boolean; email: string | null; property_id: string | null };
-
 const RANGES = [7, 30, 90];
 
 const CMSAnalytics: React.FC = () => {
-  const { toast } = useToast();
-  const qc = useQueryClient();
   const [days, setDays] = useState(30);
-  const [propertyInput, setPropertyInput] = useState('');
 
-  // Handle redirect from OAuth callback
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    const connected = url.searchParams.get('ga4_connected');
-    const err = url.searchParams.get('ga4_error');
-    if (connected) {
-      toast({ title: 'Google Analytics terhubung', description: 'Masukkan GA4 Property ID untuk melihat data.' });
-      url.searchParams.delete('ga4_connected');
-      window.history.replaceState({}, '', url.toString());
-      qc.invalidateQueries({ queryKey: ['ga4-status'] });
-    }
-    if (err) {
-      toast({ title: 'Gagal terhubung', description: err, variant: 'destructive' });
-      url.searchParams.delete('ga4_error');
-      window.history.replaceState({}, '', url.toString());
-    }
-  }, [toast, qc]);
-
-  // Status
-  const { data: status, isLoading: statusLoading } = useQuery<Status>({
-    queryKey: ['ga4-status'],
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('ga4-analytics', { body: { action: 'status' } });
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Report (only if connected & property set)
+  // Report (auto-loads via service account)
   const { data: report, isLoading: reportLoading, error: reportError } = useQuery({
-    queryKey: ['ga4-report', days, status?.property_id],
+    queryKey: ['ga4-report', days],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('ga4-analytics', { body: { action: 'report', days } });
+      const { data, error } = await supabase.functions.invoke('ga4-analytics', { body: { days } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    enabled: !!status?.connected && !!status?.property_id,
     refetchInterval: 5 * 60_000,
-  });
-
-  // Connect
-  const connectMutation = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('ga4-oauth-start', {
-        body: { return_to: window.location.origin + '/cms/analytics' },
-      });
-      if (error) throw error;
-      if (!data?.url) throw new Error('No URL returned');
-      window.location.href = data.url;
-    },
-    onError: (e: any) => toast({ title: 'Gagal memulai login', description: e.message, variant: 'destructive' }),
-  });
-
-  // Set property
-  const setPropertyMutation = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('ga4-analytics', {
-        body: { action: 'set_property', property_id: propertyInput.trim() },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-    },
-    onSuccess: () => {
-      toast({ title: 'Property ID tersimpan' });
-      setPropertyInput('');
-      qc.invalidateQueries({ queryKey: ['ga4-status'] });
-    },
-    onError: (e: any) => toast({ title: 'Gagal menyimpan', description: e.message, variant: 'destructive' }),
-  });
-
-  // Disconnect
-  const disconnectMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.functions.invoke('ga4-analytics', { body: { action: 'disconnect' } });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({ title: 'Disconnected' });
-      qc.invalidateQueries({ queryKey: ['ga4-status'] });
-    },
   });
 
   // Article publish stats
@@ -150,7 +72,7 @@ const CMSAnalytics: React.FC = () => {
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <BarChart3 className="w-6 h-6 text-primary" />
             Analytics
-            {status?.connected && status?.property_id && (
+            {report && (
               <Badge variant="outline" className="ml-2 text-xs text-emerald-500 border-emerald-500/40">Connected</Badge>
             )}
           </h1>
@@ -158,95 +80,31 @@ const CMSAnalytics: React.FC = () => {
             Data pengunjung dari Google Analytics 4
           </p>
         </div>
-        {status?.connected && (
-          <div className="flex items-center gap-2 flex-wrap">
-            {status.property_id && (
-              <div className="flex gap-1">
-                {RANGES.map((d) => (
-                  <Button key={d} size="sm" variant={days === d ? 'default' : 'outline'} onClick={() => setDays(d)}>
-                    {d}d
-                  </Button>
-                ))}
-              </div>
-            )}
-            <Button size="sm" variant="outline" onClick={() => disconnectMutation.mutate()} disabled={disconnectMutation.isPending}>
-              <LogOut className="w-4 h-4 mr-1" /> Disconnect
+        <div className="flex gap-1">
+          {RANGES.map((d) => (
+            <Button key={d} size="sm" variant={days === d ? 'default' : 'outline'} onClick={() => setDays(d)}>
+              {d}d
             </Button>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
 
-      {/* Loading status */}
-      {statusLoading && (
+      {/* Report */}
+      {reportLoading && (
         <Card><CardContent className="p-6 flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="w-4 h-4 animate-spin" /> Memuat status koneksi...
+          <Loader2 className="w-4 h-4 animate-spin" /> Mengambil data dari GA4...
         </CardContent></Card>
       )}
 
-      {/* Not connected */}
-      {!statusLoading && !status?.connected && (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardContent className="flex items-start gap-4 p-6">
-            <div className="p-3 bg-primary/10 rounded-lg flex-shrink-0">
-              <Link2Off className="h-6 w-6 text-primary" />
-            </div>
-            <div className="space-y-3 flex-1">
-              <h3 className="font-semibold text-foreground">Hubungkan Google Analytics</h3>
-              <p className="text-sm text-muted-foreground">
-                Login dengan akun Google yang punya akses ke GA4 property Anda. Hanya scope read-only yang diminta.
-              </p>
-              <Button onClick={() => connectMutation.mutate()} disabled={connectMutation.isPending}>
-                {connectMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Connect Google Analytics
-              </Button>
-            </div>
+      {reportError && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardContent className="p-4 text-sm text-destructive">
+            Gagal memuat data: {(reportError as Error).message}
           </CardContent>
         </Card>
       )}
 
-      {/* Connected but no property set */}
-      {!statusLoading && status?.connected && !status?.property_id && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Masukkan GA4 Property ID</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Connected sebagai <strong>{status.email}</strong>. GA4 Admin → Property Settings → Property ID (angka, contoh: <code>123456789</code>).
-            </p>
-            <div className="flex gap-2">
-              <Input
-                placeholder="123456789"
-                value={propertyInput}
-                onChange={(e) => setPropertyInput(e.target.value)}
-                inputMode="numeric"
-              />
-              <Button onClick={() => setPropertyMutation.mutate()} disabled={setPropertyMutation.isPending || !/^\d+$/.test(propertyInput.trim())}>
-                Simpan
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Report */}
-      {status?.connected && status?.property_id && (
-        <>
-          {reportLoading && (
-            <Card><CardContent className="p-6 flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" /> Mengambil data dari GA4...
-            </CardContent></Card>
-          )}
-
-          {reportError && (
-            <Card className="border-destructive/40 bg-destructive/5">
-              <CardContent className="p-4 text-sm text-destructive">
-                Gagal memuat data: {(reportError as Error).message}
-              </CardContent>
-            </Card>
-          )}
-
-          {report && (
+      {report && (
             <>
               {/* Overview */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -332,8 +190,6 @@ const CMSAnalytics: React.FC = () => {
                 </Card>
               </div>
             </>
-          )}
-        </>
       )}
 
       {/* Internal article stats — always shown */}
