@@ -5,20 +5,76 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-async function refreshAccessToken(refreshToken: string) {
+// --- Service account JWT -> access token ---
+function b64url(input: ArrayBuffer | Uint8Array | string): string {
+  let bytes: Uint8Array
+  if (typeof input === 'string') bytes = new TextEncoder().encode(input)
+  else if (input instanceof ArrayBuffer) bytes = new Uint8Array(input)
+  else bytes = input
+  let str = ''
+  for (let i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i])
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function pemToPkcs8(pem: string): Uint8Array {
+  const b64 = pem
+    .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+    .replace(/-----END PRIVATE KEY-----/g, '')
+    .replace(/\s+/g, '')
+  const bin = atob(b64)
+  const bytes = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+  return bytes
+}
+
+let cachedToken: { token: string; expiresAt: number } | null = null
+
+async function getServiceAccountAccessToken(): Promise<string> {
+  if (cachedToken && cachedToken.expiresAt - Date.now() > 60_000) {
+    return cachedToken.token
+  }
+  const raw = Deno.env.get('GA4_SERVICE_ACCOUNT_JSON')
+  if (!raw) throw new Error('GA4_SERVICE_ACCOUNT_JSON not set')
+  const sa = JSON.parse(raw)
+
+  const now = Math.floor(Date.now() / 1000)
+  const header = { alg: 'RS256', typ: 'JWT' }
+  const claim = {
+    iss: sa.client_email,
+    scope: 'https://www.googleapis.com/auth/analytics.readonly',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600,
+  }
+  const unsigned = `${b64url(JSON.stringify(header))}.${b64url(JSON.stringify(claim))}`
+
+  const keyData = pemToPkcs8(sa.private_key)
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8',
+    keyData,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  )
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, new TextEncoder().encode(unsigned))
+  const jwt = `${unsigned}.${b64url(sig)}`
+
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      client_id: Deno.env.get('GA4_OAUTH_CLIENT_ID')!,
-      client_secret: Deno.env.get('GA4_OAUTH_CLIENT_SECRET')!,
-      refresh_token: refreshToken,
-      grant_type: 'refresh_token',
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
     }),
   })
   const j = await res.json()
-  if (!res.ok) throw new Error(j.error_description || j.error || 'refresh_failed')
-  return { access_token: j.access_token as string, expires_in: (j.expires_in as number) || 3600 }
+  if (!res.ok) throw new Error(j.error_description || j.error || 'token_exchange_failed')
+
+  cachedToken = {
+    token: j.access_token,
+    expiresAt: Date.now() + (j.expires_in || 3600) * 1000,
+  }
+  return cachedToken.token
 }
 
 async function runReport(propertyId: string, accessToken: string, body: any) {
@@ -44,7 +100,7 @@ Deno.serve(async (req) => {
     const userClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } }
+      { global: { headers: { Authorization: authHeader } } },
     )
     const token = authHeader.replace('Bearer ', '')
     const { data: userData, error: userErr } = await userClient.auth.getUser(token)
@@ -59,49 +115,15 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
+    const propertyId = Deno.env.get('GA4_PROPERTY_ID')
+    if (!propertyId || !/^\d+$/.test(propertyId)) {
+      return new Response(JSON.stringify({ error: 'GA4_PROPERTY_ID secret missing or invalid' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
     const body = await req.json().catch(() => ({}))
-    const action = body.action || 'report'
     const days = Math.min(Math.max(parseInt(body.days || '30', 10) || 30, 1), 365)
 
-    if (action === 'status') {
-      const { data: t } = await admin.from('ga4_oauth_tokens').select('google_email, ga4_property_id').eq('user_id', userId).maybeSingle()
-      return new Response(JSON.stringify({ connected: !!t, email: t?.google_email || null, property_id: t?.ga4_property_id || null }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
-
-    if (action === 'set_property') {
-      const propertyId = String(body.property_id || '').trim()
-      if (!/^\d+$/.test(propertyId)) {
-        return new Response(JSON.stringify({ error: 'Invalid property id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-      }
-      const { error: upErr } = await admin.from('ga4_oauth_tokens').update({ ga4_property_id: propertyId, updated_at: new Date().toISOString() }).eq('user_id', userId)
-      if (upErr) return new Response(JSON.stringify({ error: upErr.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-      return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
-
-    if (action === 'disconnect') {
-      await admin.from('ga4_oauth_tokens').delete().eq('user_id', userId)
-      return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
-
-    // action === 'report'
-    const { data: tokenRow, error: tokenErr } = await admin.from('ga4_oauth_tokens').select('*').eq('user_id', userId).maybeSingle()
-    if (tokenErr || !tokenRow) {
-      return new Response(JSON.stringify({ error: 'Not connected' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
-    if (!tokenRow.ga4_property_id) {
-      return new Response(JSON.stringify({ error: 'No property id set' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
-
-    let accessToken = tokenRow.access_token
-    const expiresAt = new Date(tokenRow.expires_at).getTime()
-    if (expiresAt - Date.now() < 60_000) {
-      const r = await refreshAccessToken(tokenRow.refresh_token)
-      accessToken = r.access_token
-      const newExpiresAt = new Date(Date.now() + r.expires_in * 1000).toISOString()
-      await admin.from('ga4_oauth_tokens').update({ access_token: accessToken, expires_at: newExpiresAt, updated_at: new Date().toISOString() }).eq('user_id', userId)
-    }
-
-    const propertyId = tokenRow.ga4_property_id
+    const accessToken = await getServiceAccountAccessToken()
     const dateRange = { startDate: `${days}daysAgo`, endDate: 'today' }
 
     const [overview, daily, topPages, sources, devices, countries] = await Promise.all([
@@ -150,8 +172,6 @@ Deno.serve(async (req) => {
 
     const ovRow = overview.rows?.[0]?.metricValues || []
     const result = {
-      connected: true,
-      email: tokenRow.google_email,
       property_id: propertyId,
       days,
       overview: {
