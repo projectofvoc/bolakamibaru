@@ -9,9 +9,6 @@ import {
   Eye, 
   Clock, 
   TrendingUp, 
-  Globe,
-  Smartphone,
-  Monitor,
   FileText,
   BarChart3,
   RefreshCw,
@@ -28,11 +25,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
 } from 'recharts';
 import { format, subDays } from 'date-fns';
 import { id as localeID } from 'date-fns/locale';
@@ -47,12 +39,10 @@ interface AnalyticsData {
   sessionDuration: number;
   bounceRate: number;
   visitorsPerDay: { date: string; visitors: number }[];
-  topPages: { path: string; pageviews: number }[];
-  countries: { country: string; visitors: number; percentage: number }[];
-  devices: { device: string; visitors: number; percentage: number }[];
-  sources: { source: string; visitors: number }[];
   articlesPublished30d: number;
   articlesPublished7d: number;
+  stale?: boolean;
+  source?: string;
 }
 
 // Country code to name mapping
