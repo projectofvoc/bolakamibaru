@@ -1,47 +1,42 @@
-## Tujuan
+# Fix GA4 Analytics 500 Error
 
-Menambahkan **section/halaman baru** di CMS bernama **"Analytics GA4"** (terpisah dari menu "Analytics" yang sudah ada), yang menampilkan dashboard GA4 secara otomatis menggunakan service account global yang sudah dikonfigurasi (`GA4_SERVICE_ACCOUNT_JSON` + `GA4_PROPERTY_ID`).
+## Root cause
+Service account lama tidak punya akses ke GA4 Property `534103475`. User sudah generate service account baru dari project Google Cloud `dashboard-bolakami` dengan email:
+`google-analytics@dashboard-bolakami.iam.gserviceaccount.com`
 
-Konteks: User sudah punya email service account dan Property ID `534103475`, dan service account sudah ditambahkan sebagai Viewer di GA4 Property.
+## Yang akan saya lakukan (otomatis)
 
-## Yang akan dibuat
+1. **Update secret `GA4_SERVICE_ACCOUNT_JSON`** dengan JSON service account baru yang sudah Anda kirim.
+2. **Verifikasi secret `GA4_PROPERTY_ID`** masih bernilai `534103475` (sesuai konfirmasi Anda).
+3. **Re-deploy edge function `ga4-analytics`** agar memakai secret terbaru.
+4. **Test edge function** via curl untuk konfirmasi response sukses.
 
-### 1. Halaman baru: `src/pages/cms/CMSAnalyticsGA4.tsx`
-Halaman dashboard GA4 yang:
-- Auto-load saat halaman dibuka (tidak perlu klik tombol)
-- Memanggil edge function `ga4-analytics` (sudah deployed) via `supabase.functions.invoke`
-- Menampilkan:
-  - Badge status koneksi (Connected/Error) + Property ID
-  - Range selector: 7 / 30 / 90 hari
-  - 4 metric cards: Users, Sessions, Pageviews, Avg Duration
-  - Line chart pengunjung harian (users + pageviews)
-  - Tabel Top Pages & Traffic Sources
-  - Tabel Devices & Top Countries
-  - Tombol Refresh manual
-- Refetch otomatis setiap 5 menit
-- Error state jelas (mis. PERMISSION_DENIED → instruksi singkat menambahkan service account ke Property)
+## Yang HARUS Anda lakukan manual (tidak bisa via Lovable)
 
-Catatan: file ini pada dasarnya versi "GA4-only" dari `CMSAnalytics.tsx` saat ini — tapi sebagai halaman terpisah agar menu "Analytics" lama (yang juga punya stats internal artikel) tidak terganggu.
+Dua langkah ini di sisi Google — wajib selesai sebelum tes berhasil:
 
-### 2. Registrasi halaman
-- `src/pages/cms/index.ts` → export `CMSAnalyticsGA4`
-- `src/App.tsx` → tambah route `/cms/analytics-ga4` di dalam `<Route path="/cms">`
-- `src/pages/cms/CMSLayout.tsx` → tambah item menu sidebar:
-  - Title: **Analytics GA4**
-  - URL: `/cms/analytics-ga4`
-  - Icon: `LineChart` (atau `Activity`) dari `lucide-react` agar beda dari `BarChart3` milik "Analytics" lama
-  - Letakkan tepat di bawah item "Analytics" di grup KONTEN
+### A. Enable Google Analytics Data API
+1. Buka: https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com
+2. Pilih project **`dashboard-bolakami`** (di selector atas)
+3. Klik **Enable**
 
-### 3. Tidak ada perubahan backend
-Edge function `ga4-analytics` sudah siap dan secrets sudah ada. Tidak ada migration.
+### B. Tambahkan service account ke GA4 Property
+1. Buka https://analytics.google.com
+2. Pastikan Property aktif = **`534103475`**
+3. Klik **Admin** (⚙️ kiri bawah)
+4. Kolom **Property** → **Property access management**
+5. Klik **+** kanan atas → **Add users**
+6. Email: `google-analytics@dashboard-bolakami.iam.gserviceaccount.com`
+7. Role: **Viewer**
+8. Uncheck "Notify new users by email" (service account tidak punya inbox)
+9. Klik **Add**
 
-## Yang TIDAK diubah
-- Halaman `CMSAnalytics.tsx` lama tetap ada apa adanya (masih bisa diakses di `/cms/analytics`)
-- Edge function & secrets tidak disentuh
+## Urutan eksekusi setelah Anda approve
+1. Saya update secret + redeploy (langsung).
+2. Anda kerjakan langkah A & B di Google.
+3. Anda confirm "sudah", saya jalankan test curl ke edge function.
+4. Refresh halaman `/cms/analytics-ga4` — data harus muncul.
 
-## Konfirmasi yang dibutuhkan
-Sesuai instruksi workspace (NO FIX BEFORE ASK AND FINAL CONFIRMATIONS), mohon konfirmasi:
-1. Setuju membuat halaman **baru terpisah** (`/cms/analytics-ga4`), bukan menggantikan menu "Analytics" lama?
-2. Setuju label menu sidebar = **"Analytics GA4"**?
-
-Setelah disetujui, saya implementasikan langsung.
+## Catatan
+- Tidak ada perubahan kode (UI dan edge function sudah benar).
+- Hanya update secret + konfigurasi Google.
