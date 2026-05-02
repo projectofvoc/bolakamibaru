@@ -1,70 +1,47 @@
-# Implementasi GA4 OAuth Integration
+## Tujuan
 
-## Status Saat Ini
-- Tabel `ga4_oauth_tokens` sudah ada di database (dengan RLS admin-only)
-- Halaman `/cms/analytics` sudah dibersihkan dari Histats
-- Anda sudah punya: Client ID, Client Secret, dan tahu cara dapat GA4 Property ID
+Menambahkan **section/halaman baru** di CMS bernama **"Analytics GA4"** (terpisah dari menu "Analytics" yang sudah ada), yang menampilkan dashboard GA4 secara otomatis menggunakan service account global yang sudah dikonfigurasi (`GA4_SERVICE_ACCOUNT_JSON` + `GA4_PROPERTY_ID`).
 
-## Yang Akan Saya Lakukan (setelah plan disetujui)
+Konteks: User sudah punya email service account dan Property ID `534103475`, dan service account sudah ditambahkan sebagai Viewer di GA4 Property.
 
-### 1. Simpan Secrets
-- `GA4_OAUTH_CLIENT_ID` = `288631404038-mda2elpp6ra5angmm2jtpl1f8q7hqkkkk.apps.googleusercontent.com`
-- `GA4_OAUTH_CLIENT_SECRET` = `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`
+## Yang akan dibuat
 
-(Anda akan lihat 1 popup approval — klik Approve)
+### 1. Halaman baru: `src/pages/cms/CMSAnalyticsGA4.tsx`
+Halaman dashboard GA4 yang:
+- Auto-load saat halaman dibuka (tidak perlu klik tombol)
+- Memanggil edge function `ga4-analytics` (sudah deployed) via `supabase.functions.invoke`
+- Menampilkan:
+  - Badge status koneksi (Connected/Error) + Property ID
+  - Range selector: 7 / 30 / 90 hari
+  - 4 metric cards: Users, Sessions, Pageviews, Avg Duration
+  - Line chart pengunjung harian (users + pageviews)
+  - Tabel Top Pages & Traffic Sources
+  - Tabel Devices & Top Countries
+  - Tombol Refresh manual
+- Refetch otomatis setiap 5 menit
+- Error state jelas (mis. PERMISSION_DENIED → instruksi singkat menambahkan service account ke Property)
 
-### 2. Bangun 3 Edge Functions
+Catatan: file ini pada dasarnya versi "GA4-only" dari `CMSAnalytics.tsx` saat ini — tapi sebagai halaman terpisah agar menu "Analytics" lama (yang juga punya stats internal artikel) tidak terganggu.
 
-**`ga4-oauth-start`** (verify_jwt, admin-only)
-- Generate Google OAuth URL dengan `scope=analytics.readonly`, `access_type=offline`, `prompt=consent`
-- State parameter berisi user_id admin (signed)
-- Return URL untuk frontend redirect
+### 2. Registrasi halaman
+- `src/pages/cms/index.ts` → export `CMSAnalyticsGA4`
+- `src/App.tsx` → tambah route `/cms/analytics-ga4` di dalam `<Route path="/cms">`
+- `src/pages/cms/CMSLayout.tsx` → tambah item menu sidebar:
+  - Title: **Analytics GA4**
+  - URL: `/cms/analytics-ga4`
+  - Icon: `LineChart` (atau `Activity`) dari `lucide-react` agar beda dari `BarChart3` milik "Analytics" lama
+  - Letakkan tepat di bawah item "Analytics" di grup KONTEN
 
-**`ga4-oauth-callback`** (verify_jwt = false, dipanggil oleh Google)
-- Terima `code` dari Google
-- Tukar jadi `access_token` + `refresh_token` via `oauth2.googleapis.com/token`
-- Ambil email Google user (untuk display)
-- Simpan ke tabel `ga4_oauth_tokens` (upsert by user_id)
-- Redirect kembali ke `/cms/analytics?connected=1`
+### 3. Tidak ada perubahan backend
+Edge function `ga4-analytics` sudah siap dan secrets sudah ada. Tidak ada migration.
 
-**`ga4-analytics`** (verify_jwt, admin-only)
-- Baca token dari DB
-- Auto-refresh kalau `expires_at < now() + 60s`
-- Panggil GA4 Data API: `properties/{id}:runReport`
-- Return: total users, sessions, pageviews, avg duration, daily visitors, top pages, traffic sources, devices, countries
-- Parameter: `propertyId`, `days` (7/30/90)
+## Yang TIDAK diubah
+- Halaman `CMSAnalytics.tsx` lama tetap ada apa adanya (masih bisa diakses di `/cms/analytics`)
+- Edge function & secrets tidak disentuh
 
-### 3. Update UI `/cms/analytics`
+## Konfirmasi yang dibutuhkan
+Sesuai instruksi workspace (NO FIX BEFORE ASK AND FINAL CONFIRMATIONS), mohon konfirmasi:
+1. Setuju membuat halaman **baru terpisah** (`/cms/analytics-ga4`), bukan menggantikan menu "Analytics" lama?
+2. Setuju label menu sidebar = **"Analytics GA4"**?
 
-**Kalau belum konek**: Card besar dengan tombol "Connect Google Analytics" + input "GA4 Property ID"
-
-**Kalau sudah konek**:
-- Header: "Connected as <email>" + tombol Disconnect
-- Filter range: 7 / 30 / 90 hari
-- 4 card metrik: Users, Sessions, Pageviews, Avg Duration
-- Line chart: visitors per hari (Recharts)
-- Table: Top 10 pages
-- Table: Traffic sources
-- Breakdown: device & country
-
-### 4. Cleanup
-- Hapus edge function `get-histats-analytics`
-- Biarkan secret `HISTATS_*` (tidak mengganggu, bisa dihapus manual nanti)
-
-## Redirect URI yang HARUS Sudah Dipasang di Google Cloud
-Pastikan di OAuth Client Anda sudah ada:
-```
-https://wqrvguxkanjuorntlmmx.supabase.co/functions/v1/ga4-oauth-callback
-```
-Kalau belum → tambahkan di Google Cloud Console → Credentials → OAuth Client → Authorized redirect URIs → Save.
-
-## Setelah Saya Selesai
-1. Anda buka `/cms/analytics` → klik **Connect Google Analytics**
-2. Login Google (akun yang punya akses GA4 Property)
-3. Approve scope `analytics.readonly`
-4. Otomatis kembali ke CMS → masukkan **GA4 Property ID** (angka)
-5. Data muncul
-
----
-
-**Setujui plan untuk lanjut?** Setelah disetujui saya langsung minta approval secret + tulis semua kode dalam satu run.
+Setelah disetujui, saya implementasikan langsung.
