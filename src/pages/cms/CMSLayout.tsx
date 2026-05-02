@@ -36,7 +36,8 @@ import {
   Eye,
   Image,
   Gift,
-  Bot
+  Bot,
+  Activity
 } from 'lucide-react';
 import logoBolakami from '@/assets/logo-bolakami.png';
 
@@ -51,6 +52,7 @@ const CMSSidebar = ({ isAdmin }: { isAdmin: boolean }) => {
   const menuItems = [
     { title: 'Dashboard', url: '/cms', icon: LayoutDashboard },
     { title: 'Analytics', url: '/cms/analytics', icon: BarChart3 },
+    { title: 'Analytics GA4', url: '/cms/analytics-ga4', icon: Activity },
     { title: 'Semua Berita', url: '/cms/articles', icon: FileText },
     { title: 'Tambah Berita', url: '/cms/articles/new', icon: Plus },
     { title: 'Momen Terbaik', url: '/cms/moments', icon: Video },
