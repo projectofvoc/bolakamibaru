@@ -34,7 +34,6 @@ import {
   CMSNavigation,
   CMSUsers,
   CMSAnalytics,
-  CMSAnalyticsGA4,
   CMSApi,
   CMSAdvertise,
   CMSSocialMedia,
@@ -80,7 +79,6 @@ const App = () => (
             <Route path="/cms" element={<CMSLayout />}>
               <Route index element={<CMSDashboard />} />
               <Route path="analytics" element={<CMSAnalytics />} />
-              <Route path="analytics-ga4" element={<CMSAnalyticsGA4 />} />
               <Route path="articles" element={<CMSArticles />} />
               <Route path="articles/new" element={<CMSArticleEditor />} />
               <Route path="articles/:id" element={<CMSArticleEditor />} />
