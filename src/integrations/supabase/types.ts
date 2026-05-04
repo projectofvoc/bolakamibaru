@@ -1175,6 +1175,7 @@ export type Database = {
       }
       claim_daily_checkin: { Args: { p_user_id: string }; Returns: Json }
       cleanup_expired_cache: { Args: never; Returns: number }
+      get_total_article_views: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
