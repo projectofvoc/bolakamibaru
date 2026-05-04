@@ -115,13 +115,18 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    const propertyId = Deno.env.get('GA4_PROPERTY_ID')
-    if (!propertyId || !/^\d+$/.test(propertyId)) {
-      return new Response(JSON.stringify({ error: 'GA4_PROPERTY_ID secret missing or invalid' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
-
     const body = await req.json().catch(() => ({}))
     const days = Math.min(Math.max(parseInt(body.days || '30', 10) || 30, 1), 365)
+    const domain = body.domain === 'com' ? 'com' : 'news'
+
+    const propertyEnvKey = domain === 'com' ? 'GA4_PROPERTY_ID_COM' : 'GA4_PROPERTY_ID'
+    const propertyId = Deno.env.get(propertyEnvKey)
+    if (!propertyId || !/^\d+$/.test(propertyId)) {
+      const domainLabel = domain === 'com' ? 'bolakami.com' : 'bolakami.news'
+      return new Response(JSON.stringify({
+        error: `GA4 Property ID untuk ${domainLabel} belum dikonfigurasi (secret ${propertyEnvKey} kosong/invalid)`,
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
 
     const accessToken = await getServiceAccountAccessToken()
     const dateRange = { startDate: `${days}daysAgo`, endDate: 'today' }
@@ -173,6 +178,7 @@ Deno.serve(async (req) => {
     const ovRow = overview.rows?.[0]?.metricValues || []
     const result = {
       property_id: propertyId,
+      domain,
       days,
       overview: {
         users: parseInt(ovRow[0]?.value || '0', 10),
