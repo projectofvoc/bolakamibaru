@@ -1,75 +1,120 @@
 ## Tujuan
 
-Tampilkan ringkasan grafik GA4 untuk **bolakami.news** dan **bolakami.com** secara berdampingan di halaman **Dashboard CMS** (`/cms`), tanpa mengganggu layout existing dan konsisten dengan style kartu yang sudah ada.
+Tambahkan tombol **Export** di pojok kanan atas Dashboard CMS (area yang ditandai user) yang membuka dropdown dengan 2 pilihan:
+- **Export PDF**
+- **Export HTML**
+
+Hasil export harus rapi, mengikuti brand style BolaKami (dark theme, primary #4ade80, card #1a1d24) dan menggunakan font **Circular Std**.
 
 ## Analisa logic
 
-- Edge function `ga4-analytics` sudah support param `{ days, domain }` dengan `domain: 'news' | 'com'`. Tinggal panggil 2x — satu per domain.
-- `CMSDashboard.tsx` sekarang punya 2 baris utama:
-  1. 4 stat cards (Total Berita, Published, Total Views, Momen Aktif)
-  2. Grid 2 kolom: Berita Terbaru + Ringkasan Status
-- Kita tambahkan **section baru di bawah stat cards, di atas grid quick actions** → grid 2 kolom berisi 2 mini-chart card (one per domain). Posisi ini paling natural untuk overview.
-- Style ikut komponen `Card` + `recharts LineChart` yang sudah dipakai di `CMSAnalytics.tsx` (warna `hsl(var(--primary))` untuk users, `#a78bfa` untuk pageviews) → konsisten.
+### Konten yang di-export
+Snapshot Dashboard saat itu:
+1. Header — judul "Dashboard BolaKami" + tanggal generate (WIB)
+2. 4 stat cards: Total Berita, Published, Total Views, Momen Aktif
+3. Ringkasan Pengunjung 7 hari — **bolakami.news** & **bolakami.com** (Users / Sessions / Pageviews + chart trend harian)
+4. Berita Terbaru (5 artikel) + Ringkasan Status (Published / Draft / Pending / Momen Aktif)
+
+### Sumber data export
+Export tidak boleh nge-screenshot DOM (hasil sering pecah). Pakai data yang sudah ada di React Query cache:
+- `cms-articles-stats`, `cms-moments-stats` — sudah dipakai dashboard
+- `ga4-dashboard-mini` (news + com) — sudah dipakai `DomainAnalyticsCard`
+
+Untuk akses data dari handler export, kita pakai `queryClient.getQueryData()` agar nilai live yang sudah ditampilkan ikut ke-export (zero re-fetch, zero delay).
+
+### Font Circular Std
+- Sudah di-load di `index.html` dari `https://fonts.cdnfonts.com/css/circular-std` → tinggal referensi `font-family: 'Circular Std'`.
+- **PDF**: pakai approach **HTML → PDF di browser** (cetak via `window.print()` ke iframe tersembunyi) supaya font Circular yang di-load CDN ikut terpakai. Tidak pakai jsPDF (kompleks untuk embed font web + ribet untuk chart).
+- **HTML**: standalone single-file `.html` dengan `<link>` ke CDN font yang sama + CSS inline + chart sebagai inline SVG.
 
 ## Plan implementasi
 
-### 1. Buat komponen reusable `DomainAnalyticsCard`
-File baru: `src/components/cms/DomainAnalyticsCard.tsx`
-
-Props:
-- `domain: 'news' | 'com'`
-- `days?: number` (default 7 — supaya ringkas di dashboard)
-
-Isi:
-- `useQuery` dengan key `['ga4-dashboard-mini', domain, days]`, panggil `supabase.functions.invoke('ga4-analytics', { body: { days, domain }})`.
-- Header card: judul `bolakami.{news|com}` + badge total Users (small).
-- Body: mini line chart tinggi `h-40` pakai `report.daily` (Users + Pageviews), styling identik dengan chart di `CMSAnalytics`.
-- 3 metric kecil di bawah chart: Users / Sessions / Pageviews (inline, text-xs).
-- Loading state: `Loader2` spinner di tengah card.
-- Error state: pesan kompak `text-destructive text-xs` (mis. "Akses GA4 belum dikonfigurasi" jika error mengandung "permission" atau "not configured"); jangan break dashboard.
-- Empty state (jika `report` ada tapi `daily` kosong): teks "Belum ada data".
-
-### 2. Edit `src/pages/cms/CMSDashboard.tsx`
-- Import `DomainAnalyticsCard`.
-- Tambahkan section setelah grid stat cards:
+### 1. Buat util `src/lib/dashboardExport.ts`
+Fungsi pure yang return `{ html: string }` lengkap (DOCTYPE + `<head>` + `<body>`):
+- Inline CSS dengan token brand:
   ```text
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <DomainAnalyticsCard domain="news" />
-    <DomainAnalyticsCard domain="com" />
+  --bg: #0d0f14; --card: #1a1d24; --border: #2a2e38;
+  --primary: #4ade80; --violet: #a78bfa; --text: #e6e8ec; --muted: #8b909a;
+  ```
+- `<link href="https://fonts.cdnfonts.com/css/circular-std" rel="stylesheet">` + `body { font-family: 'Circular Std', system-ui, sans-serif; }`
+- Print-friendly CSS (`@page { size: A4; margin: 16mm; }`, `@media print { ... }`) supaya saat dipakai untuk cetak PDF tetap rapi.
+- Header dengan logo text "BOLAKAMI" + label "CMS Dashboard Report" + tanggal `format(now, "dd MMM yyyy HH:mm 'WIB'")`.
+- Section stat cards (4 box, grid 2x2 di mobile / 4x1 di A4).
+- Section Ringkasan Pengunjung — **render line chart sebagai inline SVG** (tulis polyline manual dari array `daily`, normalisasi ke viewBox). Tampilkan 2 chart side-by-side untuk news & com + 3 metric kecil (Users/Sessions/Pageviews) di bawah masing-masing.
+- Section Berita Terbaru (tabel sederhana: judul, kategori, status, views).
+- Section Ringkasan Status (Published / Draft / Pending / Momen Aktif).
+- Footer kecil "Generated by BolaKami CMS — bolakami.com".
+
+Helper: `buildSparklineSVG(points: {date, users, pageviews}[], width, height)` → return string SVG dengan grid + 2 polyline (primary untuk users, violet untuk pageviews) + axis label tanggal pojok.
+
+### 2. Buat komponen `DashboardExportButton`
+File: `src/components/cms/DashboardExportButton.tsx`
+
+- Pakai shadcn `DropdownMenu`:
+  ```text
+  [ ⬇ Export ▾ ]
+    ├ Export PDF
+    └ Export HTML
+  ```
+- Style tombol konsisten dengan tombol "Lihat detail →" (variant outline atau secondary, ukuran sm), icon `Download` dari lucide.
+- Props: `onExportRequest` opsional; default ambil data via `useQueryClient`.
+
+Handler internal:
+- `getSnapshot()` → kumpulkan data dari `queryClient.getQueryData(['cms-articles-stats'])`, `['cms-moments-stats']`, `['ga4-dashboard-mini', 'news', 7]`, `['ga4-dashboard-mini', 'com', 7]`. Jika belum ada → `await queryClient.fetchQuery(...)` dengan key yang sama.
+- `exportHTML()`:
+  - Generate string via `buildDashboardHTML(snapshot)`.
+  - Buat `Blob([html], { type: 'text/html;charset=utf-8' })` → trigger download `bolakami-dashboard-{YYYYMMDD-HHmm}.html`.
+- `exportPDF()`:
+  - Buat `<iframe>` hidden (offscreen, `position:fixed; left:-9999px`).
+  - `iframe.srcdoc = html` (HTML yang sama).
+  - `iframe.onload` → tunggu `document.fonts.ready` di iframe (penting biar Circular sudah ter-load) + 300ms buffer untuk render SVG → `iframe.contentWindow.focus(); iframe.contentWindow.print();`.
+  - User pilih "Save as PDF" di dialog print browser. Setelah print/cancel → cleanup iframe.
+  - Toast info: "Pilih 'Save as PDF' di dialog print untuk menyimpan."
+
+Loading state: tombol disabled + spinner kecil saat snapshot sedang di-build.
+Error: toast destructive bila gagal.
+
+### 3. Edit `src/pages/cms/CMSDashboard.tsx`
+- Ubah header dari plain `<h1>` jadi flex row:
+  ```text
+  <div class="flex items-start justify-between gap-4 flex-wrap">
+    <div> Dashboard / Selamat datang… </div>
+    <DashboardExportButton />
   </div>
   ```
-- Heading kecil di atasnya: `Ringkasan Pengunjung (7 Hari)` dengan `Link` "Lihat detail →" ke `/cms/analytics`.
+- Posisi `DashboardExportButton` align dengan kanan atas — persis di area yang ditandai user.
 
-### 3. Konsistensi style
-- Reuse komponen `Card`, `CardHeader`, `CardTitle`, `CardContent`.
-- Warna chart sama persis dgn `CMSAnalytics`: primary + violet (`#a78bfa`).
-- Grid responsive: 1 kolom mobile, 2 kolom `lg`.
-- Tinggi chart `h-40` (lebih kecil dari halaman Analytics yang `h-72`) supaya dashboard tidak terlalu panjang.
-- Metric inline pakai `text-xs text-muted-foreground` + value `font-semibold text-foreground`.
+### 4. Quality assurance hasil export
+- HTML dibuka di browser → cek: font Circular ter-load (cek dengan `document.fonts.check`), warna brand match, chart SVG tidak overflow, tabel tidak terpotong.
+- PDF: pakai `@page` + ukur lebar (max 794px = A4 portrait @ 96dpi). Tidak ada element lebih lebar. Setiap section punya `break-inside: avoid` supaya tidak terpotong di tengah card.
+- Test kosong: kalau `report` null (misal .com error) → tampilkan placeholder "Data tidak tersedia" di section itu, jangan crash.
 
-### 4. Edge case
-- Jika `bolakami.com` belum punya akses service account → card .com tampil error compact, card .news tetap normal.
-- Tidak ada perubahan edge function (sudah siap).
-- Tidak ada perubahan DB.
-
-## File yang diubah / dibuat
+## File yang dibuat / diubah
 
 | Aksi | File |
 |------|------|
-| Create | `src/components/cms/DomainAnalyticsCard.tsx` |
+| Create | `src/lib/dashboardExport.ts` |
+| Create | `src/components/cms/DashboardExportButton.tsx` |
 | Edit | `src/pages/cms/CMSDashboard.tsx` |
+
+## Tidak diubah
+
+- Tidak ada perubahan edge function.
+- Tidak ada perubahan database.
+- Tidak install dependency baru (pakai SVG manual + browser print, bukan jsPDF/html2canvas).
 
 ## Hasil akhir
 
-Dashboard `/cms` punya layout:
-
 ```text
+[ Dashboard                                          [⬇ Export ▾] ]
+[ Selamat datang di CMS BolaKami                     ─ Export PDF ]
+                                                     └ Export HTML
 [ 4 stat cards ]
-[ Ringkasan Pengunjung (7 Hari)              Lihat detail → ]
-[ bolakami.news mini chart ] [ bolakami.com mini chart ]
-[ Berita Terbaru          ] [ Ringkasan Status         ]
+[ Ringkasan Pengunjung … ]
+...
 ```
 
-Konsisten dengan style existing, tidak berantakan, dan kalau `.com` error tidak mengganggu sisanya.
+Klik **Export PDF** → dialog print browser dengan preview rapi (font Circular, warna brand) → Save as PDF.
+Klik **Export HTML** → file `.html` ter-download, bisa dibuka langsung di browser dan tampil identik dengan PDF.
 
 Konfirmasi untuk lanjut eksekusi.
