@@ -13,25 +13,29 @@ const CMSDashboard = () => {
   const { data: articlesStats } = useQuery({
     queryKey: ['cms-articles-stats'],
     queryFn: async () => {
-      const { data: articles, error } = await supabase
-        .from('articles')
-        .select('id, status, views, published_at, title_id, slug, category')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      const published = articles?.filter(a => a.status === 'published') || [];
-      const drafts = articles?.filter(a => a.status === 'draft') || [];
-      const pending = articles?.filter(a => a.status === 'pending') || [];
-      const totalViews = published.reduce((sum, a) => sum + (a.views || 0), 0);
-      
+      const [totalRes, publishedRes, draftsRes, pendingRes, viewsRes, recentRes] = await Promise.all([
+        supabase.from('articles').select('id', { count: 'exact', head: true }),
+        supabase.from('articles').select('id', { count: 'exact', head: true }).eq('status', 'published'),
+        supabase.from('articles').select('id', { count: 'exact', head: true }).eq('status', 'draft'),
+        supabase.from('articles').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.rpc('get_total_article_views'),
+        supabase
+          .from('articles')
+          .select('id, status, views, published_at, title_id, slug, category')
+          .order('created_at', { ascending: false })
+          .limit(5),
+      ]);
+
+      if (totalRes.error) throw totalRes.error;
+      if (recentRes.error) throw recentRes.error;
+
       return {
-        total: articles?.length || 0,
-        published: published.length,
-        drafts: drafts.length,
-        pending: pending.length,
-        totalViews,
-        recent: articles?.slice(0, 5) || [],
+        total: totalRes.count || 0,
+        published: publishedRes.count || 0,
+        drafts: draftsRes.count || 0,
+        pending: pendingRes.count || 0,
+        totalViews: Number(viewsRes.data) || 0,
+        recent: recentRes.data || [],
       };
     },
   });
