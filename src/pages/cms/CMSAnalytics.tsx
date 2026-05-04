@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Eye, FileText, BarChart3, Newspaper, Users, MousePointerClick,
   Clock, Globe, Smartphone, Loader2,
@@ -16,12 +17,13 @@ const RANGES = [7, 30, 90];
 
 const CMSAnalytics: React.FC = () => {
   const [days, setDays] = useState(30);
+  const [domain, setDomain] = useState<'news' | 'com'>('news');
 
   // Report (auto-loads via service account)
   const { data: report, isLoading: reportLoading, error: reportError } = useQuery({
-    queryKey: ['ga4-report', days],
+    queryKey: ['ga4-report', days, domain],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('ga4-analytics', { body: { days } });
+      const { data, error } = await supabase.functions.invoke('ga4-analytics', { body: { days, domain } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
@@ -77,15 +79,26 @@ const CMSAnalytics: React.FC = () => {
             )}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Data pengunjung dari Google Analytics 4
+            Data pengunjung GA4 untuk {domain === 'com' ? 'bolakami.com' : 'bolakami.news'}
           </p>
         </div>
-        <div className="flex gap-1">
-          {RANGES.map((d) => (
-            <Button key={d} size="sm" variant={days === d ? 'default' : 'outline'} onClick={() => setDays(d)}>
-              {d}d
-            </Button>
-          ))}
+        <div className="flex gap-2 items-center flex-wrap">
+          <Select value={domain} onValueChange={(v) => setDomain(v as 'news' | 'com')}>
+            <SelectTrigger className="h-9 w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="news">bolakami.news</SelectItem>
+              <SelectItem value="com">bolakami.com</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="flex gap-1">
+            {RANGES.map((d) => (
+              <Button key={d} size="sm" variant={days === d ? 'default' : 'outline'} onClick={() => setDays(d)}>
+                {d}d
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 
