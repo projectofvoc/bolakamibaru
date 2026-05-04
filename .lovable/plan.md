@@ -1,80 +1,75 @@
 ## Tujuan
 
-Hilangkan duplikasi menu "Analytics" dan "Analytics GA4" di sidebar CMS. Sisakan satu menu **Analytics** saja, tapi tambahkan **dropdown switcher domain** di dalamnya:
-- **bolakami.news** (data existing — tetap berfungsi seperti sekarang)
-- **bolakami.com** (property GA4 baru, akan Anda inject Property ID-nya)
+Tampilkan ringkasan grafik GA4 untuk **bolakami.news** dan **bolakami.com** secara berdampingan di halaman **Dashboard CMS** (`/cms`), tanpa mengganggu layout existing dan konsisten dengan style kartu yang sudah ada.
 
-## Analisa logic saat ini
+## Analisa logic
 
-1. Ada 2 file halaman yang hampir identik:
-   - `src/pages/cms/CMSAnalytics.tsx` → menu "Analytics"
-   - `src/pages/cms/CMSAnalyticsGA4.tsx` → menu "Analytics GA4"
-   - Keduanya memanggil edge function yang sama: `ga4-analytics`
-   - Bedanya hanya: versi GA4 punya tombol refresh + badge property ID; versi Analytics punya stats artikel internal.
-   - **Yang dipertahankan: `CMSAnalytics.tsx`** (lebih lengkap, sudah ada stats artikel + top articles dari DB).
-
-2. Edge function `supabase/functions/ga4-analytics/index.ts` saat ini:
-   - Membaca `GA4_PROPERTY_ID` dari env (single property, hardcoded ke 1 domain).
-   - Menerima body `{ days }` saja.
-   - Belum support pemilihan property per request.
-
-3. Sidebar `CMSLayout.tsx` punya 2 entri menu (baris 54 & 55) — salah satunya akan dihapus.
-
-4. Route di `App.tsx` punya `/cms/analytics` dan `/cms/analytics-ga4` — yang `analytics-ga4` akan dihapus.
-
-5. Index re-export `src/pages/cms/index.ts` punya `CMSAnalyticsGA4` — akan dihapus.
+- Edge function `ga4-analytics` sudah support param `{ days, domain }` dengan `domain: 'news' | 'com'`. Tinggal panggil 2x — satu per domain.
+- `CMSDashboard.tsx` sekarang punya 2 baris utama:
+  1. 4 stat cards (Total Berita, Published, Total Views, Momen Aktif)
+  2. Grid 2 kolom: Berita Terbaru + Ringkasan Status
+- Kita tambahkan **section baru di bawah stat cards, di atas grid quick actions** → grid 2 kolom berisi 2 mini-chart card (one per domain). Posisi ini paling natural untuk overview.
+- Style ikut komponen `Card` + `recharts LineChart` yang sudah dipakai di `CMSAnalytics.tsx` (warna `hsl(var(--primary))` untuk users, `#a78bfa` untuk pageviews) → konsisten.
 
 ## Plan implementasi
 
-### 1. Hapus halaman duplikat
-- **Delete** `src/pages/cms/CMSAnalyticsGA4.tsx`
-- **Edit** `src/pages/cms/index.ts` → hapus baris export `CMSAnalyticsGA4`
-- **Edit** `src/App.tsx` → hapus import `CMSAnalyticsGA4` dan route `analytics-ga4`
-- **Edit** `src/pages/cms/CMSLayout.tsx` → hapus item menu `Analytics GA4` (baris 55), hapus import `Activity` jika sudah tidak dipakai
+### 1. Buat komponen reusable `DomainAnalyticsCard`
+File baru: `src/components/cms/DomainAnalyticsCard.tsx`
 
-### 2. Update edge function `ga4-analytics` untuk multi-property
-- Tambah secret baru: **`GA4_PROPERTY_ID_COM`** (untuk bolakami.com). `GA4_PROPERTY_ID` existing tetap untuk bolakami.news.
-- Edge function terima param body baru: `{ days, domain }` di mana `domain` = `"news"` (default, backward compatible) atau `"com"`.
-- Pemilihan property:
-  ```
-  domain === 'com' → GA4_PROPERTY_ID_COM
-  domain === 'news' (default) → GA4_PROPERTY_ID
-  ```
-- Validasi: kalau property ID untuk domain yang diminta belum di-set → return 400 dengan pesan jelas (`"Property ID untuk bolakami.com belum dikonfigurasi"`).
-- Service account yang sama harus diberi akses **Viewer** di GA4 property bolakami.com. Saya akan ingatkan di pesan setelah deploy.
+Props:
+- `domain: 'news' | 'com'`
+- `days?: number` (default 7 — supaya ringkas di dashboard)
 
-### 3. Tambah dropdown domain di `CMSAnalytics.tsx`
-- State baru: `const [domain, setDomain] = useState<'news' | 'com'>('news')`.
-- UI dropdown pakai komponen `Select` dari `@/components/ui/select` di header, di sebelah tombol range hari:
+Isi:
+- `useQuery` dengan key `['ga4-dashboard-mini', domain, days]`, panggil `supabase.functions.invoke('ga4-analytics', { body: { days, domain }})`.
+- Header card: judul `bolakami.{news|com}` + badge total Users (small).
+- Body: mini line chart tinggi `h-40` pakai `report.daily` (Users + Pageviews), styling identik dengan chart di `CMSAnalytics`.
+- 3 metric kecil di bawah chart: Users / Sessions / Pageviews (inline, text-xs).
+- Loading state: `Loader2` spinner di tengah card.
+- Error state: pesan kompak `text-destructive text-xs` (mis. "Akses GA4 belum dikonfigurasi" jika error mengandung "permission" atau "not configured"); jangan break dashboard.
+- Empty state (jika `report` ada tapi `daily` kosong): teks "Belum ada data".
+
+### 2. Edit `src/pages/cms/CMSDashboard.tsx`
+- Import `DomainAnalyticsCard`.
+- Tambahkan section setelah grid stat cards:
   ```text
-  [ Domain: bolakami.news ▼ ]   [ 7d ] [ 30d ] [ 90d ]
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <DomainAnalyticsCard domain="news" />
+    <DomainAnalyticsCard domain="com" />
+  </div>
   ```
-- React Query key di-include `domain`: `queryKey: ['ga4-report', days, domain]` supaya ganti domain → fetch ulang.
-- Kirim `domain` ke edge function: `body: { days, domain }`.
-- Header halaman tampilkan domain aktif di subtitle: `Data pengunjung GA4 untuk {domain === 'com' ? 'bolakami.com' : 'bolakami.news'}`.
-- Internal article stats (Berita Dipublish 7/30 hari, Top Articles dari DB) tetap ditampilkan apa adanya — tidak terpengaruh dropdown karena memang dari database internal yang sama.
+- Heading kecil di atasnya: `Ringkasan Pengunjung (7 Hari)` dengan `Link` "Lihat detail →" ke `/cms/analytics`.
 
-### 4. Request secret baru
-Setelah perubahan kode siap, saya akan minta Anda input secret **`GA4_PROPERTY_ID_COM`** (numeric Property ID GA4 untuk bolakami.com) via tool add_secret.
+### 3. Konsistensi style
+- Reuse komponen `Card`, `CardHeader`, `CardTitle`, `CardContent`.
+- Warna chart sama persis dgn `CMSAnalytics`: primary + violet (`#a78bfa`).
+- Grid responsive: 1 kolom mobile, 2 kolom `lg`.
+- Tinggi chart `h-40` (lebih kecil dari halaman Analytics yang `h-72`) supaya dashboard tidak terlalu panjang.
+- Metric inline pakai `text-xs text-muted-foreground` + value `font-semibold text-foreground`.
 
-## File yang akan diubah / dihapus
+### 4. Edge case
+- Jika `bolakami.com` belum punya akses service account → card .com tampil error compact, card .news tetap normal.
+- Tidak ada perubahan edge function (sudah siap).
+- Tidak ada perubahan DB.
+
+## File yang diubah / dibuat
 
 | Aksi | File |
 |------|------|
-| Delete | `src/pages/cms/CMSAnalyticsGA4.tsx` |
-| Edit | `src/pages/cms/index.ts` |
-| Edit | `src/App.tsx` |
-| Edit | `src/pages/cms/CMSLayout.tsx` |
-| Edit | `src/pages/cms/CMSAnalytics.tsx` |
-| Edit | `supabase/functions/ga4-analytics/index.ts` |
-| Add secret | `GA4_PROPERTY_ID_COM` (akan diminta setelah konfirmasi) |
+| Create | `src/components/cms/DomainAnalyticsCard.tsx` |
+| Edit | `src/pages/cms/CMSDashboard.tsx` |
 
 ## Hasil akhir
 
-- Sidebar hanya punya 1 menu **Analytics**.
-- Di halaman Analytics ada dropdown domain → bisa toggle bolakami.news ↔ bolakami.com.
-- Data bolakami.news tetap jalan tanpa perubahan (default).
-- Data bolakami.com aktif setelah Anda input Property ID baru + beri akses service account ke property tersebut.
-- Tidak ada breaking change untuk data existing.
+Dashboard `/cms` punya layout:
+
+```text
+[ 4 stat cards ]
+[ Ringkasan Pengunjung (7 Hari)              Lihat detail → ]
+[ bolakami.news mini chart ] [ bolakami.com mini chart ]
+[ Berita Terbaru          ] [ Ringkasan Status         ]
+```
+
+Konsisten dengan style existing, tidak berantakan, dan kalau `.com` error tidak mengganggu sisanya.
 
 Konfirmasi untuk lanjut eksekusi.

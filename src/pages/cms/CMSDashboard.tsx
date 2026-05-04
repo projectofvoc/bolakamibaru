@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import DomainAnalyticsCard from '@/components/cms/DomainAnalyticsCard';
 
 const CMSDashboard = () => {
   // Fetch articles stats
@@ -137,6 +138,23 @@ const CMSDashboard = () => {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Domain Analytics Overview */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Ringkasan Pengunjung</h2>
+            <p className="text-xs text-muted-foreground">Data GA4 — 7 hari terakhir</p>
+          </div>
+          <Link to="/cms/analytics">
+            <Button variant="ghost" size="sm">Lihat detail →</Button>
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <DomainAnalyticsCard domain="news" />
+          <DomainAnalyticsCard domain="com" />
+        </div>
       </div>
 
       {/* Quick Actions */}
