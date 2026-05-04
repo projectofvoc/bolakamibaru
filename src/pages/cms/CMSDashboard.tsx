@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import DomainAnalyticsCard from '@/components/cms/DomainAnalyticsCard';
+import DashboardExportButton from '@/components/cms/DashboardExportButton';
 
 const CMSDashboard = () => {
   // Fetch articles stats
@@ -114,9 +115,12 @@ const CMSDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">Selamat datang di CMS BolaKami</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground">Selamat datang di CMS BolaKami</p>
+        </div>
+        <DashboardExportButton />
       </div>
 
       {/* Stats Cards */}
