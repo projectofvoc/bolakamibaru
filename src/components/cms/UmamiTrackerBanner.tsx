@@ -30,21 +30,7 @@ const pct = (cur: number, prev: number) => {
 const UmamiTrackerBanner: React.FC = () => {
   const [hours, setHours] = useState(24);
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['umami-stats', hours],
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('umami-stats', {
-        body: null,
-      } as any);
-      // invoke doesn't support GET query — call via fetch instead
-      if (error) throw error;
-      return data;
-    },
-    enabled: false, // disabled — we use direct fetch below
-  });
-
-  // Direct fetch to support query params
-  const { data: stats, isLoading: loading, error: err, refetch } = useQuery({
+  const { data: stats, isLoading: loading, error: err } = useQuery({
     queryKey: ['umami-stats-direct', hours],
     queryFn: async () => {
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/umami-stats?hours=${hours}`;
