@@ -12,6 +12,7 @@ import {
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
+import UmamiTrackerBanner from '@/components/cms/UmamiTrackerBanner';
 
 const RANGES = [7, 30, 90];
 
@@ -101,6 +102,9 @@ const CMSAnalytics: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Umami tracker banner */}
+      <UmamiTrackerBanner />
 
       {/* Report */}
       {reportLoading && (
