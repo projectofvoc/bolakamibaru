@@ -4,13 +4,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Eye, Users, MousePointerClick, TrendingDown, Clock, Loader2 } from 'lucide-react';
+import { Activity, Eye, Users, MousePointerClick, TrendingDown, Clock, Loader2, Play, SkipForward, MousePointer, Megaphone, X as XIcon, ExternalLink } from 'lucide-react';
 
 const RANGES: { label: string; hours: number }[] = [
   { label: '24j', hours: 24 },
   { label: '7h', hours: 24 * 7 },
   { label: '30h', hours: 24 * 30 },
 ];
+
+const EVENT_META: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
+  preroll_view: { label: 'Preroll View', icon: <Play className="w-4 h-4" />, color: 'text-violet-400' },
+  preroll_skip: { label: 'Preroll Skip', icon: <SkipForward className="w-4 h-4" />, color: 'text-amber-400' },
+  preroll_click: { label: 'Preroll Click', icon: <MousePointer className="w-4 h-4" />, color: 'text-emerald-400' },
+  popup_banner_view: { label: 'Popup View', icon: <Megaphone className="w-4 h-4" />, color: 'text-sky-400' },
+  popup_banner_close: { label: 'Popup Close', icon: <XIcon className="w-4 h-4" />, color: 'text-rose-400' },
+  popup_banner_click: { label: 'Popup Click', icon: <ExternalLink className="w-4 h-4" />, color: 'text-pink-400' },
+};
+const EVENT_ORDER = ['preroll_view', 'preroll_skip', 'preroll_click', 'popup_banner_view', 'popup_banner_close', 'popup_banner_click'];
 
 const fmtDuration = (sec: number) => {
   if (!sec) return '0s';
@@ -56,6 +66,9 @@ const UmamiTrackerBanner: React.FC = () => {
   const dV = cmp ? pct(stats.visitors, cmp.visitors) : null;
   const dS = cmp ? pct(stats.visits, cmp.visits) : null;
 
+  const eventMap: Record<string, number> = {};
+  (stats?.events || []).forEach((e: { x: string; y: number }) => { eventMap[e.x] = e.y; });
+
   return (
     <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden">
       <CardContent className="p-5">
@@ -98,6 +111,7 @@ const UmamiTrackerBanner: React.FC = () => {
         )}
 
         {stats && !loading && (
+          <>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <Metric icon={<Eye className="w-4 h-4 text-violet-400" />} label="Pageviews" value={stats.pageviews} delta={dPV} />
             <Metric icon={<Users className="w-4 h-4 text-emerald-400" />} label="Visitors" value={stats.visitors} delta={dV} />
@@ -105,6 +119,23 @@ const UmamiTrackerBanner: React.FC = () => {
             <Metric icon={<TrendingDown className="w-4 h-4 text-amber-400" />} label="Bounce" value={`${bounceRate.toFixed(1)}%`} />
             <Metric icon={<Clock className="w-4 h-4 text-pink-400" />} label="Avg Time" value={fmtDuration(avgDuration)} />
           </div>
+          <div className="mt-4">
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium mb-2">Event Tracking</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {EVENT_ORDER.map((key) => {
+                const meta = EVENT_META[key];
+                return (
+                  <Metric
+                    key={key}
+                    icon={<span className={meta.color}>{meta.icon}</span>}
+                    label={meta.label}
+                    value={eventMap[key] || 0}
+                  />
+                );
+              })}
+            </div>
+          </div>
+          </>
         )}
       </CardContent>
     </Card>
