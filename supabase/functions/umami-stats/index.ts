@@ -13,18 +13,24 @@ Deno.serve(async (req) => {
     const startAt = endAt - hours * 3600 * 1000;
     const token = Deno.env.get("UMAMI_API_TOKEN") || "";
 
-    const res = await fetch(`${BASE}/stats?startAt=${startAt}&endAt=${endAt}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) {
-      const text = await res.text();
-      return new Response(JSON.stringify({ error: `Umami ${res.status}: ${text.slice(0, 200)}` }), {
+    const auth = { Authorization: `Bearer ${token}` };
+    const qs = `startAt=${startAt}&endAt=${endAt}`;
+
+    const [statsRes, eventsRes] = await Promise.all([
+      fetch(`${BASE}/stats?${qs}`, { headers: auth }),
+      fetch(`${BASE}/metrics?${qs}&type=event`, { headers: auth }),
+    ]);
+
+    if (!statsRes.ok) {
+      const text = await statsRes.text();
+      return new Response(JSON.stringify({ error: `Umami ${statsRes.status}: ${text.slice(0, 200)}` }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const data = await res.json();
-    return new Response(JSON.stringify({ ok: true, hours, ...data }), {
+    const data = await statsRes.json();
+    const events = eventsRes.ok ? await eventsRes.json() : [];
+    return new Response(JSON.stringify({ ok: true, hours, ...data, events }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
