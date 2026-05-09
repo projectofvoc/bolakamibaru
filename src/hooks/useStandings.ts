@@ -28,7 +28,16 @@ export interface StandingsResponse {
   error?: string;
 }
 
-export const useStandings = (leagueSlug: string, seasonStartYear: number = 2024) => {
+// Auto-detect current season start year:
+// Jan–Jun → tahun lalu (musim masih berjalan), Jul–Des → tahun ini (musim baru)
+const getCurrentSeasonStartYear = (): number => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1; // 1-12
+  return month <= 6 ? year - 1 : year;
+};
+
+export const useStandings = (leagueSlug: string, seasonStartYear: number = getCurrentSeasonStartYear()) => {
   return useQuery<StandingsResponse>({
     queryKey: ['standings', leagueSlug, seasonStartYear],
     queryFn: async () => {

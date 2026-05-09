@@ -1,49 +1,29 @@
-## Tujuan
+# Penyebab Klasemen Tampil 2024/25
 
-Membuat akun baru `headcreativedepartment@gmail.com` dengan password `Head1984!` dan memberinya role **admin** (super admin) — setara dengan akun admin utama Bolakami, sehingga punya akses penuh ke seluruh menu CMS (Dashboard, Analytics, Articles, Moments, Liga, Read to Earn, Advertise, Banners, Navigation, Social Media, OG Preview, API, Users, Bot Sender, Integrations).
+Setelah saya telusuri, sumber masalah ada di **`src/hooks/useStandings.ts`** baris 31:
 
-## Konteks Hasil Pengecekan
-
-Saat saya cek database (`auth.users` join `public.user_roles`), **tidak ada baris** untuk `headcreativedepartment@gmail.com` maupun `admin@bolakami.com`. Artinya:
-
-- Akun `headcreativedepartment@gmail.com` memang belum ada → harus dibuat dari nol.
-- Akun referensi yang Anda sebut (`admin@bolakami.com`) juga tidak terdaftar dengan email persis itu. Kemungkinan email super admin asli Anda berbeda (mis. tanpa `@bolakami.com`, atau `admin@bolakami.work`). Hal ini tidak menghalangi pembuatan akun baru — saya akan tetap memberi role `admin` penuh, yang merupakan level tertinggi pada sistem RBAC project ini (enum: `admin` > `author` > `user`).
-
-## Langkah Implementasi
-
-### 1. Eksekusi pembuatan user via Supabase Admin API
-
-Jalankan skrip Node sekali-pakai (`/tmp/create-admin.ts`) di sandbox yang:
-
-a. Memakai `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (sudah tersedia sebagai secret).
-b. Memanggil `supabaseAdmin.auth.admin.createUser({ email: 'headcreativedepartment@gmail.com', password: 'Head1984!', email_confirm: true })` — `email_confirm: true` agar user bisa langsung login tanpa proses verifikasi email.
-c. Insert ke `public.user_roles` `{ user_id: <id baru>, role: 'admin' }`.
-d. Idempotent: jika user sudah ada (error "already registered"), lewati pembuatan dan langsung pastikan baris role `admin` ada (insert dengan `ON CONFLICT (user_id, role) DO NOTHING` style — atau cek dulu lalu insert).
-
-### 2. Verifikasi
-
-Setelah skrip jalan, query verifikasi:
-
-```sql
-SELECT u.email, u.email_confirmed_at, array_agg(ur.role) AS roles
-FROM auth.users u
-LEFT JOIN public.user_roles ur ON ur.user_id = u.id
-WHERE u.email = 'headcreativedepartment@gmail.com'
-GROUP BY u.email, u.email_confirmed_at;
+```ts
+export const useStandings = (leagueSlug: string, seasonStartYear: number = 2024) => {
 ```
 
-Harus mengembalikan: email terkonfirmasi (`email_confirmed_at` ≠ null) dan `roles` mengandung `admin`.
+Default parameter `seasonStartYear` masih `2024`. Halaman `src/pages/Klasemen.tsx` memanggil `useStandings(selectedLeague)` tanpa argumen kedua, sehingga selalu mengirim `2024` ke edge function `sportmonks-standings`. Edge function kemudian menghasilkan label `"2024/25"` dan mem-fetch musim 2024/25.
 
-### 3. Konfirmasi ke user
+Catatan tambahan: edge function (`supabase/functions/sportmonks-standings/index.ts`) sebenarnya **sudah** memakai default `2025` jika body kosong (baris 370), dan punya logika fallback ke musim sebelumnya bila musim baru masih kosong (baris 433–435). Jadi cukup memperbaiki default di sisi client.
 
-Beri tahu Anda bahwa akun siap dipakai untuk login di `/auth` dengan kredensial yang Anda berikan, dan akan otomatis bisa membuka `/cms` plus seluruh menu Admin (termasuk halaman **Users** untuk mengelola akun lain ke depannya).
+# Rencana Perubahan
 
-## Catatan Keamanan
+Hanya 1 file yang diubah:
 
-- Password `Head1984!` akan disimpan ter-hash oleh Supabase Auth (bcrypt). Saya tidak akan mencatat / log plaintext password.
-- Setelah login pertama, sangat disarankan Anda mengganti password dari halaman akun untuk mengurangi risiko (password ini sudah saya lihat di chat).
-- Tidak ada perubahan schema database — hanya **data insert** ke `auth.users` (via Admin API) dan `public.user_roles`. Tidak perlu migrasi.
+**`src/hooks/useStandings.ts`**
+- Ganti default `seasonStartYear: number = 2024` menjadi `seasonStartYear: number = 2025`.
+- (Opsional, lebih aman jangka panjang) Hitung otomatis berdasarkan bulan: bulan Jan–Jun → tahun lalu, Jul–Des → tahun ini. Logika ini sama dengan `getCurrentSeason()` di `apifootball-livescore`. Tapi karena liga Eropa & Indonesia sudah berjalan di musim 2025/26 sekarang (Mei 2026), set hardcoded ke `2025` sudah cukup dan paling aman.
 
-## File yang Akan Dibuat/Diubah
+# Verifikasi Setelah Implementasi
 
-- `(/tmp only)` skrip eksekusi sekali-pakai — **tidak** masuk ke repo project. Tidak ada file source code project yang perlu diubah.
+1. Buka halaman `/klasemen`, pilih Premier League / La Liga / Serie A / Bundesliga / Liga 1 — header dan subtitle harus menampilkan **"2025/26"**.
+2. Tabel klasemen menampilkan data musim berjalan.
+3. Jika untuk liga tertentu API mengembalikan kosong, fallback bawaan edge function akan otomatis memakai musim sebelumnya (2024/25) — ini perilaku yang benar agar UI tidak kosong.
+
+# Pertanyaan Konfirmasi
+
+Mau saya pakai **opsi A: hardcode `2025`** (cepat & cukup), atau **opsi B: deteksi otomatis berdasarkan bulan** (lebih tahan lama untuk pergantian musim berikutnya)?
