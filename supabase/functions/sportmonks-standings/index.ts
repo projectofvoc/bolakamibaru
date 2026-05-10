@@ -534,6 +534,20 @@ serve(async (req) => {
         }
       }
 
+      // Liga 1/2 Indonesia: apply head-to-head tiebreaker for teams with equal points
+      if (result && result.standings.length > 0) {
+        try {
+          result.standings = await applyHeadToHeadTiebreaker(
+            result.standings,
+            apiFootballId,
+            usedSeason,
+            apiKey
+          );
+        } catch (e) {
+          console.error('H2H tiebreaker failed, using API order:', e);
+        }
+      }
+
       const responseData: CachedStandingsData = {
         standings: result?.standings || [],
         league: leagueSlug,
