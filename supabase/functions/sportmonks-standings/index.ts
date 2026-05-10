@@ -219,6 +219,101 @@ async function fetchApiFootballStandings(
   }
 }
 
+// Liga 1/2 Indonesia tiebreaker is head-to-head (not GD).
+// Fetches all finished fixtures for the season and re-sorts teams with equal points
+// using mini-league points from matches between the tied teams.
+async function applyHeadToHeadTiebreaker(
+  standings: StandingTeam[],
+  leagueId: number,
+  season: number,
+  apiKey: string
+): Promise<StandingTeam[]> {
+  // Group teams by points
+  const groups = new Map<number, StandingTeam[]>();
+  for (const t of standings) {
+    const arr = groups.get(t.points) || [];
+    arr.push(t);
+    groups.set(t.points, arr);
+  }
+  const tiedGroups = Array.from(groups.values()).filter((g) => g.length > 1);
+  if (tiedGroups.length === 0) return standings;
+
+  console.log(`H2H tiebreaker: ${tiedGroups.length} tied group(s) found`);
+
+  // Fetch all finished fixtures for the league/season once
+  let fixtures: any[] = [];
+  try {
+    const res = await fetch(
+      `https://v3.football.api-sports.io/fixtures?league=${leagueId}&season=${season}&status=FT`,
+      { headers: { 'x-apisports-key': apiKey, Accept: 'application/json' } }
+    );
+    if (!res.ok) {
+      console.error('H2H fixtures fetch failed:', res.status);
+      return standings;
+    }
+    const data = await res.json();
+    fixtures = data.response || [];
+  } catch (e) {
+    console.error('H2H fixtures error:', e);
+    return standings;
+  }
+
+  // For each tied group, compute mini-league
+  for (const group of tiedGroups) {
+    const ids = new Set(group.map((t) => t.teamId));
+    const mini = new Map<number, { pts: number; gd: number; gf: number }>();
+    for (const t of group) mini.set(t.teamId, { pts: 0, gd: 0, gf: 0 });
+
+    for (const fx of fixtures) {
+      const homeId = fx.teams?.home?.id;
+      const awayId = fx.teams?.away?.id;
+      if (!ids.has(homeId) || !ids.has(awayId)) continue;
+      const hg = fx.goals?.home ?? 0;
+      const ag = fx.goals?.away ?? 0;
+      const home = mini.get(homeId)!;
+      const away = mini.get(awayId)!;
+      home.gf += hg; home.gd += hg - ag;
+      away.gf += ag; away.gd += ag - hg;
+      if (hg > ag) home.pts += 3;
+      else if (ag > hg) away.pts += 3;
+      else { home.pts += 1; away.pts += 1; }
+    }
+
+    // Sort group by: h2h pts desc, h2h gd desc, h2h gf desc, then overall gd desc, gf desc
+    group.sort((a, b) => {
+      const ma = mini.get(a.teamId)!;
+      const mb = mini.get(b.teamId)!;
+      if (mb.pts !== ma.pts) return mb.pts - ma.pts;
+      if (mb.gd !== ma.gd) return mb.gd - ma.gd;
+      if (mb.gf !== ma.gf) return mb.gf - ma.gf;
+      if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
+      return b.goalsFor - a.goalsFor;
+    });
+    console.log(
+      `H2H group (pts=${group[0].points}):`,
+      group.map((t) => `${t.teamName}[h2h=${mini.get(t.teamId)!.pts}]`).join(' > ')
+    );
+  }
+
+  // Rebuild full standings: sort all teams by points desc, then within ties use the
+  // ordering produced above. Easiest: sort by points desc, and for equal points use
+  // the order index from the group arrays.
+  const orderIndex = new Map<number, number>();
+  let idx = 0;
+  // Sort groups by their points desc
+  const sortedGroups = Array.from(groups.entries()).sort((a, b) => b[0] - a[0]);
+  for (const [, teams] of sortedGroups) {
+    for (const t of teams) {
+      orderIndex.set(t.teamId, idx++);
+    }
+  }
+  const resorted = [...standings].sort(
+    (a, b) => (orderIndex.get(a.teamId) ?? 0) - (orderIndex.get(b.teamId) ?? 0)
+  );
+  // Reassign positions
+  return resorted.map((t, i) => ({ ...t, position: i + 1 }));
+}
+
 // Function to find season ID for a specific year range from Sportmonks
 async function findSeasonIdForYear(
   leagueId: number,
@@ -436,6 +531,20 @@ serve(async (req) => {
         result = await fetchApiFootballStandings(apiFootballId, fallbackSeason, apiKey);
         if (result && result.standings.length > 0) {
           usedSeason = fallbackSeason;
+        }
+      }
+
+      // Liga 1/2 Indonesia: apply head-to-head tiebreaker for teams with equal points
+      if (result && result.standings.length > 0) {
+        try {
+          result.standings = await applyHeadToHeadTiebreaker(
+            result.standings,
+            apiFootballId,
+            usedSeason,
+            apiKey
+          );
+        } catch (e) {
+          console.error('H2H tiebreaker failed, using API order:', e);
         }
       }
 
