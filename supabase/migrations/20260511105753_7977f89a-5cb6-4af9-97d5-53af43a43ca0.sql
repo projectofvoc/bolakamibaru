@@ -1,0 +1,1 @@
+UPDATE public.nav_items SET path = 'https://stream.blkmi.com' WHERE id = 'aeef89b9-5f47-42a2-b81a-c12fdc88230f';
