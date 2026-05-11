@@ -200,7 +200,7 @@ const HeroDashboard: React.FC = () => {
                 </span>
               </div>
               <a
-                href="https://bolakamitv.up.railway.app/"
+                href="https://nonton.blkmi.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-primary hover:underline flex items-center gap-1"
