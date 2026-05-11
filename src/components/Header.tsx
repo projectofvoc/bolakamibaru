@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, Search, User, Radio, Trophy, Newspaper, Settings, LogOut, Link2 } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { motion, AnimatePresence } from 'framer-motion';
-import logoBolakami from '@/assets/logo-bolakami.png';
-import SearchModal from './SearchModal';
-import { supabase } from '@/integrations/supabase/client';
-import { User as SupabaseUser } from '@supabase/supabase-js';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Menu, X, ChevronDown, Search, User, Radio, Trophy, Newspaper, Settings, LogOut, Link2 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { motion, AnimatePresence } from "framer-motion";
+import logoBolakami from "@/assets/logo-bolakami.png";
+import SearchModal from "./SearchModal";
+import { supabase } from "@/integrations/supabase/client";
+import { User as SupabaseUser } from "@supabase/supabase-js";
+import { useQuery } from "@tanstack/react-query";
 
 // Icon mapping helper
 const getIcon = (iconName: string | null): React.ElementType => {
@@ -19,9 +19,9 @@ const getIcon = (iconName: string | null): React.ElementType => {
 
 // Fallback icons for known nav items
 const fallbackIcons: Record<string, React.ElementType> = {
-  'Live': Radio,
-  'Liga': Trophy,
-  'Berita': Newspaper,
+  Live: Radio,
+  Liga: Trophy,
+  Berita: Newspaper,
 };
 
 const Header: React.FC = () => {
@@ -33,7 +33,7 @@ const Header: React.FC = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // Refs for dropdown close delay
   const ligaTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const beritaTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -69,14 +69,14 @@ const Header: React.FC = () => {
 
   // Fetch dynamic nav items from database
   const { data: dynamicNavItems = [] } = useQuery({
-    queryKey: ['nav-items'],
+    queryKey: ["nav-items"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('nav_items')
-        .select('*')
-        .eq('is_active', true)
-        .is('parent_id', null)
-        .order('sort_order');
+        .from("nav_items")
+        .select("*")
+        .eq("is_active", true)
+        .is("parent_id", null)
+        .order("sort_order");
       if (error) throw error;
       return data || [];
     },
@@ -85,30 +85,25 @@ const Header: React.FC = () => {
 
   // Query for user roles to check CMS access
   const { data: userRoles = [] } = useQuery({
-    queryKey: ['user-roles', user?.id],
+    queryKey: ["user-roles", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id);
+      const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
       if (error) throw error;
       return data || [];
     },
     enabled: !!user,
   });
 
-  const hasCMSAccess = userRoles.some(
-    (r) => r.role === 'admin' || r.role === 'author'
-  );
+  const hasCMSAccess = userRoles.some((r) => r.role === "admin" || r.role === "author");
 
   // Auth state listener
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -120,14 +115,14 @@ const Header: React.FC = () => {
   // Global keyboard shortcut for search (Cmd/Ctrl + K)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setSearchOpen(true);
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   // Cleanup timeouts on unmount
@@ -141,22 +136,22 @@ const Header: React.FC = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    navigate('/');
+    navigate("/");
   };
 
   // Build navItems from database, with fallback for Liga/Berita submenus
   const navItems = dynamicNavItems.map((item) => {
     const IconComponent = getIcon(item.icon) || fallbackIcons[item.label_id] || Link2;
-    const hasDropdown = item.label_id === 'Liga' || item.label_id === 'Berita';
-    const isHighPriority = item.label_id === 'Live';
-    
+    const hasDropdown = item.label_id === "Liga" || item.label_id === "Berita";
+    const isHighPriority = item.label_id === "Live";
+
     return {
       key: item.label_id,
       label_id: item.label_id,
       label_en: item.label_en,
       path: item.path,
       icon: IconComponent,
-      priority: isHighPriority ? 'high' : 'medium',
+      priority: isHighPriority ? "high" : "medium",
       isExternal: item.is_external,
       hasDropdown,
     };
@@ -164,35 +159,62 @@ const Header: React.FC = () => {
 
   // Fallback if database is empty
   const fallbackNavItems = [
-    { key: 'Live', label_id: 'Live', label_en: 'Live', path: 'https://ayonontonbola.xyz', icon: Radio, priority: 'high', isExternal: true, hasDropdown: false },
-    { key: 'Liga', label_id: 'Liga', label_en: 'Liga', path: '/liga', icon: Trophy, priority: 'medium', isExternal: false, hasDropdown: true },
-    { key: 'Berita', label_id: 'Berita', label_en: 'Berita', path: '/berita', icon: Newspaper, priority: 'medium', isExternal: false, hasDropdown: true },
+    {
+      key: "Live",
+      label_id: "Live",
+      label_en: "Live",
+      path: "https://nonton.blkmi.com",
+      icon: Radio,
+      priority: "high",
+      isExternal: true,
+      hasDropdown: false,
+    },
+    {
+      key: "Liga",
+      label_id: "Liga",
+      label_en: "Liga",
+      path: "/liga",
+      icon: Trophy,
+      priority: "medium",
+      isExternal: false,
+      hasDropdown: true,
+    },
+    {
+      key: "Berita",
+      label_id: "Berita",
+      label_en: "Berita",
+      path: "/berita",
+      icon: Newspaper,
+      priority: "medium",
+      isExternal: false,
+      hasDropdown: true,
+    },
   ];
 
   const displayNavItems = navItems.length > 0 ? navItems : fallbackNavItems;
 
   const ligaSubmenu = [
-    { key: 'liga.all', path: '/liga' },
-    { key: 'liga.liga1', path: '/liga/liga-1' },
-    { key: 'liga.liga2', path: '/liga/liga-2' },
-    { key: 'liga.premierLeague', path: '/liga/premier-league' },
-    { key: 'liga.laLiga', path: '/liga/la-liga' },
-    { key: 'liga.serieA', path: '/liga/serie-a' },
-    { key: 'liga.bundesliga', path: '/liga/bundesliga' },
-    { key: 'liga.championsLeague', path: '/liga/champions-league' },
+    { key: "liga.all", path: "/liga" },
+    { key: "liga.liga1", path: "/liga/liga-1" },
+    { key: "liga.liga2", path: "/liga/liga-2" },
+    { key: "liga.premierLeague", path: "/liga/premier-league" },
+    { key: "liga.laLiga", path: "/liga/la-liga" },
+    { key: "liga.serieA", path: "/liga/serie-a" },
+    { key: "liga.bundesliga", path: "/liga/bundesliga" },
+    { key: "liga.championsLeague", path: "/liga/champions-league" },
   ];
 
   const beritaSubmenu = [
-    { key: 'berita.trending', path: '/berita/trending' },
-    { key: 'berita.daily', path: '/berita/daily' },
-    { key: 'berita.prediksi', path: '/berita/prediksi' },
-    { key: 'berita.klasemen', path: '/klasemen' },
+    { key: "berita.trending", path: "/berita/trending" },
+    { key: "berita.daily", path: "/berita/daily" },
+    { key: "berita.prediksi", path: "/berita/prediksi" },
+    { key: "berita.klasemen", path: "/klasemen" },
   ];
 
-  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
+  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + "/");
 
-  const getNavLabel = (item: typeof displayNavItems[0]) => {
-    return language === 'id' ? item.label_id : item.label_en;
+  const getNavLabel = (item: (typeof displayNavItems)[0]) => {
+    return language === "id" ? item.label_id : item.label_en;
   };
 
   return (
@@ -226,12 +248,12 @@ const Header: React.FC = () => {
                     key={item.key}
                     className="relative"
                     onMouseEnter={() => {
-                      if (item.label_id === 'Liga') handleLigaMouseEnter();
-                      if (item.label_id === 'Berita') handleBeritaMouseEnter();
+                      if (item.label_id === "Liga") handleLigaMouseEnter();
+                      if (item.label_id === "Berita") handleBeritaMouseEnter();
                     }}
                     onMouseLeave={() => {
-                      if (item.label_id === 'Liga') handleLigaMouseLeave();
-                      if (item.label_id === 'Berita') handleBeritaMouseLeave();
+                      if (item.label_id === "Liga") handleLigaMouseLeave();
+                      if (item.label_id === "Berita") handleBeritaMouseLeave();
                     }}
                   >
                     {item.isExternal ? (
@@ -239,7 +261,7 @@ const Header: React.FC = () => {
                         href={item.path}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full text-foreground/80 hover:text-foreground hover:bg-secondary ${item.priority === 'high' ? 'text-primary' : ''}`}
+                        className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full text-foreground/80 hover:text-foreground hover:bg-secondary ${item.priority === "high" ? "text-primary" : ""}`}
                       >
                         <IconComponent className="w-4 h-4" />
                         {getNavLabel(item)}
@@ -247,29 +269,34 @@ const Header: React.FC = () => {
                     ) : item.hasDropdown ? (
                       <button
                         onClick={() => {
-                          if (item.label_id === 'Liga') setLigaDropdownOpen(!ligaDropdownOpen);
-                          if (item.label_id === 'Berita') setBeritaDropdownOpen(!beritaDropdownOpen);
+                          if (item.label_id === "Liga") setLigaDropdownOpen(!ligaDropdownOpen);
+                          if (item.label_id === "Berita") setBeritaDropdownOpen(!beritaDropdownOpen);
                         }}
                         className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full ${
                           isActive(item.path)
-                            ? 'text-primary-foreground bg-primary'
-                            : 'text-foreground/80 hover:text-foreground hover:bg-secondary'
+                            ? "text-primary-foreground bg-primary"
+                            : "text-foreground/80 hover:text-foreground hover:bg-secondary"
                         }`}
                       >
                         <IconComponent className="w-4 h-4" />
                         {getNavLabel(item)}
-                        <ChevronDown className={`w-3 h-3 ml-0.5 transition-transform ${
-                          (item.label_id === 'Liga' && ligaDropdownOpen) || (item.label_id === 'Berita' && beritaDropdownOpen) ? 'rotate-180' : ''
-                        }`} />
+                        <ChevronDown
+                          className={`w-3 h-3 ml-0.5 transition-transform ${
+                            (item.label_id === "Liga" && ligaDropdownOpen) ||
+                            (item.label_id === "Berita" && beritaDropdownOpen)
+                              ? "rotate-180"
+                              : ""
+                          }`}
+                        />
                       </button>
                     ) : (
                       <Link
                         to={item.path}
                         className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all rounded-full ${
                           isActive(item.path)
-                            ? 'text-primary-foreground bg-primary'
-                            : 'text-foreground/80 hover:text-foreground hover:bg-secondary'
-                        } ${item.priority === 'high' ? 'text-primary' : ''}`}
+                            ? "text-primary-foreground bg-primary"
+                            : "text-foreground/80 hover:text-foreground hover:bg-secondary"
+                        } ${item.priority === "high" ? "text-primary" : ""}`}
                       >
                         <IconComponent className="w-4 h-4" />
                         {getNavLabel(item)}
@@ -277,7 +304,7 @@ const Header: React.FC = () => {
                     )}
 
                     {/* Liga Dropdown */}
-                    {item.label_id === 'Liga' && ligaDropdownOpen && (
+                    {item.label_id === "Liga" && ligaDropdownOpen && (
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -299,7 +326,7 @@ const Header: React.FC = () => {
                     )}
 
                     {/* Berita Dropdown */}
-                    {item.label_id === 'Berita' && beritaDropdownOpen && (
+                    {item.label_id === "Berita" && beritaDropdownOpen && (
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -327,7 +354,7 @@ const Header: React.FC = () => {
             {/* Right Side Utilities */}
             <div className="hidden md:flex items-center gap-3">
               {/* Search */}
-              <button 
+              <button
                 onClick={() => setSearchOpen(true)}
                 className="flex items-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-secondary"
               >
@@ -339,12 +366,12 @@ const Header: React.FC = () => {
 
               {/* Language Toggle */}
               <button
-                onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
+                onClick={() => setLanguage(language === "id" ? "en" : "id")}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-secondary text-foreground text-xs font-semibold hover:bg-secondary/80 transition-colors"
               >
-                <span className={language === 'id' ? 'text-primary' : 'text-muted-foreground'}>ID</span>
+                <span className={language === "id" ? "text-primary" : "text-muted-foreground"}>ID</span>
                 <span className="text-muted-foreground/40">/</span>
-                <span className={language === 'en' ? 'text-primary' : 'text-muted-foreground'}>EN</span>
+                <span className={language === "en" ? "text-primary" : "text-muted-foreground"}>EN</span>
               </button>
 
               {/* User */}
@@ -381,10 +408,7 @@ const Header: React.FC = () => {
             </div>
 
             {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-foreground"
-            >
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-foreground">
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
@@ -396,7 +420,7 @@ const Header: React.FC = () => {
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden bg-card border-b border-border"
           >
@@ -422,8 +446,8 @@ const Header: React.FC = () => {
                         onClick={() => !item.hasDropdown && setMobileMenuOpen(false)}
                         className={`flex items-center gap-3 text-sm font-bold uppercase tracking-wide py-3 px-4 rounded-xl transition-colors ${
                           isActive(item.path)
-                            ? 'text-primary-foreground bg-primary'
-                            : 'text-foreground/80 hover:bg-secondary'
+                            ? "text-primary-foreground bg-primary"
+                            : "text-foreground/80 hover:bg-secondary"
                         }`}
                       >
                         <IconComponent className="w-5 h-5" />
@@ -433,7 +457,7 @@ const Header: React.FC = () => {
                     )}
 
                     {/* Mobile Liga Submenu */}
-                    {item.label_id === 'Liga' && (
+                    {item.label_id === "Liga" && (
                       <div className="ml-8 mt-1 flex flex-col gap-1">
                         {ligaSubmenu.slice(0, 4).map((sub) => (
                           <Link
@@ -449,7 +473,7 @@ const Header: React.FC = () => {
                     )}
 
                     {/* Mobile Berita Submenu */}
-                    {item.label_id === 'Berita' && (
+                    {item.label_id === "Berita" && (
                       <div className="ml-8 mt-1 flex flex-col gap-1">
                         {beritaSubmenu.map((sub) => (
                           <Link
@@ -466,15 +490,15 @@ const Header: React.FC = () => {
                   </div>
                 );
               })}
-              
+
               <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
                 <button
-                  onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
+                  onClick={() => setLanguage(language === "id" ? "en" : "id")}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-secondary text-sm font-medium text-foreground"
                 >
-                  <span className={language === 'id' ? 'text-primary font-bold' : 'text-muted-foreground'}>ID</span>
+                  <span className={language === "id" ? "text-primary font-bold" : "text-muted-foreground"}>ID</span>
                   <span className="text-muted-foreground/40">/</span>
-                  <span className={language === 'en' ? 'text-primary font-bold' : 'text-muted-foreground'}>EN</span>
+                  <span className={language === "en" ? "text-primary font-bold" : "text-muted-foreground"}>EN</span>
                 </button>
                 {user ? (
                   <div className="flex items-center gap-2">
