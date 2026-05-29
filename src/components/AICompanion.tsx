@@ -274,7 +274,7 @@ const AICompanion: React.FC = () => {
               {/* Headline */}
               <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-foreground">
                 Analisa setiap pertandingan{' '}
-                <span className="text-primary">dengan akurat!</span>
+                <span className="text-primary">dengan Dukun Bolakami!</span>
               </h2>
 
               {/* Subtitle */}
