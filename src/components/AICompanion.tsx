@@ -1,12 +1,15 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Flag, Plus, Mic, ArrowUp } from 'lucide-react';
+import { Plus, Mic, ArrowUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AIChatSidebar, { ChatMessage } from './AIChatSidebar';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLiveScores } from '@/hooks/useLiveScores';
 import { useUpcomingFixtures } from '@/hooks/useUpcomingFixtures';
+import dukunMascot from '@/assets/dukun-bolakami-mascot.webp';
+
+const DUKUN_REDIRECT_URL = 'https://dukunbolakami.com';
 
 // Use external Predicto Widget endpoint
 const PREDICTO_API_URL = 'https://jfzjqdxqpqiayckjolpr.supabase.co/functions/v1/predicto-widget';
@@ -226,67 +229,19 @@ const AICompanion: React.FC = () => {
     return 'Maaf, saya sedang tidak bisa merespons setelah beberapa percobaan. Silakan coba lagi dalam beberapa saat. 🙏';
   }, [sessionId]);
 
-  // Handle sending message
-  const handleSend = useCallback(async () => {
-    if (!inputValue.trim()) return;
+  // Handle sending message — redirect to Dukun Bolakami
+  const handleSend = useCallback(() => {
+    window.open(DUKUN_REDIRECT_URL, '_blank', 'noopener,noreferrer');
+  }, []);
 
-    const userMessage: ChatMessage = {
-      id: `msg_${Date.now()}`,
-      role: 'user',
-      content: inputValue.trim(),
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
-    setIsOpen(true);
-    setIsTyping(true);
-
-    // Call OpenAI API
-    const matchContext = findMatchingFixture(userMessage.content);
-    const aiResponseText = await callOpenAI(userMessage.content, matchContext);
-    
-    const aiResponse: ChatMessage = {
-      id: `msg_${Date.now()}`,
-      role: 'ai',
-      content: aiResponseText,
-      timestamp: new Date(),
-    };
-    setMessages(prev => [...prev, aiResponse]);
-    setIsTyping(false);
-  }, [inputValue, callOpenAI, findMatchingFixture]);
-
-  // Handle prompt chip click
-  const handlePromptClick = async (prompt: string) => {
-    const userMessage: ChatMessage = {
-      id: `msg_${Date.now()}`,
-      role: 'user',
-      content: prompt,
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
-    setIsOpen(true);
-    setIsTyping(true);
-
-    // Call OpenAI API
-    const matchContext = findMatchingFixture(prompt);
-    const aiResponseText = await callOpenAI(prompt, matchContext);
-    
-    const aiResponse: ChatMessage = {
-      id: `msg_${Date.now()}`,
-      role: 'ai',
-      content: aiResponseText,
-      timestamp: new Date(),
-    };
-    setMessages(prev => [...prev, aiResponse]);
-    setIsTyping(false);
+  // Handle prompt chip click — redirect to Dukun Bolakami
+  const handlePromptClick = (_prompt: string) => {
+    window.open(DUKUN_REDIRECT_URL, '_blank', 'noopener,noreferrer');
   };
 
   // Handle Enter key in widget input
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && inputValue.trim()) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -307,22 +262,24 @@ const AICompanion: React.FC = () => {
             <div className="absolute bottom-0 left-0 w-32 sm:w-48 h-32 sm:h-48 bg-primary/10 rounded-full blur-2xl" />
             
             <div className="relative z-10 max-w-2xl mx-auto text-center">
-              {/* Icon - Simple Flag */}
-              <Flag className="w-6 h-6 sm:w-8 sm:h-8 text-primary mx-auto mb-3 sm:mb-4" />
-              
-              {/* Headline Line 1 - Primary/Orange */}
-              <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-primary">
-                {t('ai.headline1')}
+              {/* Dukun Bolakami Mascot */}
+              <motion.img
+                src={dukunMascot}
+                alt="Dukun Bolakami"
+                className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 mx-auto mb-4 sm:mb-5 drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)]"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              />
+
+              {/* Headline */}
+              <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-foreground">
+                Analisa setiap pertandingan{' '}
+                <span className="text-primary">dengan akurat!</span>
               </h2>
-              
-              {/* Headline Line 2 - White */}
-              <p className="text-xl sm:text-2xl md:text-4xl font-bold text-foreground mb-2 sm:mb-3">
-                {t('ai.headline2')}
-              </p>
-              
-              {/* Subtitle - Smaller, Gray */}
-              <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-6 sm:mb-8">
-                {t('ai.subtitle')}
+
+              {/* Subtitle */}
+              <p className="text-xs sm:text-sm md:text-base text-muted-foreground mt-2 sm:mt-3 mb-6 sm:mb-8">
+                Probabilitas, risiko, value pick, dan odds context — dalam satu chat.
               </p>
               
               {/* Input Field - Rounded Full with Icons */}
@@ -350,8 +307,7 @@ const AICompanion: React.FC = () => {
                 {/* Send button - rounded-full */}
                 <button 
                   onClick={handleSend}
-                  disabled={!inputValue.trim()}
-                  className="w-9 h-9 flex items-center justify-center bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-9 h-9 flex items-center justify-center bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors"
                 >
                   <ArrowUp className="w-5 h-5" />
                 </button>
