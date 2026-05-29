@@ -314,19 +314,8 @@ const AICompanion: React.FC = () => {
                 </button>
               </div>
               
-              {/* Suggested Prompts - Below Input */}
-              <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
-                {prompts.slice(0, 2).map((prompt, index) => (
-                  <motion.button
-                    key={index}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handlePromptClick(prompt)}
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-card text-foreground rounded-full border border-muted-foreground/30 hover:border-primary hover:text-primary transition-colors"
-                  >
-                    {prompt}
-                  </motion.button>
-                ))}
+              {/* Download App Button - Centered */}
+              <div className="flex justify-center">
                 <motion.a
                   href="https://app.dukunbolakami.com"
                   target="_blank"
