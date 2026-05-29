@@ -316,7 +316,7 @@ const AICompanion: React.FC = () => {
               
               {/* Suggested Prompts - Below Input */}
               <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
-                {prompts.map((prompt, index) => (
+                {prompts.slice(0, 2).map((prompt, index) => (
                   <motion.button
                     key={index}
                     whileHover={{ scale: 1.02 }}
