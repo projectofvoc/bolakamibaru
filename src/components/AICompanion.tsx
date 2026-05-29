@@ -316,7 +316,7 @@ const AICompanion: React.FC = () => {
               
               {/* Suggested Prompts - Below Input */}
               <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
-                {prompts.map((prompt, index) => (
+                {prompts.slice(0, 2).map((prompt, index) => (
                   <motion.button
                     key={index}
                     whileHover={{ scale: 1.02 }}
@@ -327,6 +327,16 @@ const AICompanion: React.FC = () => {
                     {prompt}
                   </motion.button>
                 ))}
+                <motion.a
+                  href="https://app.dukunbolakami.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-primary text-primary-foreground rounded-full border border-primary hover:bg-primary/90 transition-colors"
+                >
+                  Download App
+                </motion.a>
               </div>
             </div>
           </motion.div>
