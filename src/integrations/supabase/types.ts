@@ -680,6 +680,7 @@ export type Database = {
           end_date: string
           id: string
           is_active: boolean
+          join_enabled: boolean
           join_url: string
           name: string
           sort_order: number
@@ -696,6 +697,7 @@ export type Database = {
           end_date: string
           id?: string
           is_active?: boolean
+          join_enabled?: boolean
           join_url: string
           name: string
           sort_order?: number
@@ -712,6 +714,7 @@ export type Database = {
           end_date?: string
           id?: string
           is_active?: boolean
+          join_enabled?: boolean
           join_url?: string
           name?: string
           sort_order?: number
