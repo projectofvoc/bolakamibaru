@@ -126,19 +126,19 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
     </article>
 
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-3xl max-h-[92vh] p-0 flex flex-col gap-0 overflow-hidden">
+      <DialogContent className="w-[95vw] sm:w-full max-w-3xl h-[90vh] sm:h-auto sm:max-h-[92vh] p-0 flex flex-col gap-0 overflow-hidden">
         {event.banner_url && (
-          <div className="shrink-0 w-full bg-black border-b border-border flex items-center justify-center max-h-[45vh] overflow-hidden">
+          <div className="shrink-0 w-full bg-black border-b border-border flex items-center justify-center max-h-[30vh] sm:max-h-[45vh] overflow-hidden">
             <img
               src={event.banner_url}
               alt={event.name}
-              className="w-full h-auto max-h-[45vh] object-contain"
+              className="w-full h-auto max-h-[30vh] sm:max-h-[45vh] object-contain"
             />
           </div>
         )}
-        <DialogHeader className="shrink-0 space-y-2 text-left p-6 pb-3 border-b border-border">
-          <DialogTitle className="text-2xl font-bold pr-8">{event.name}</DialogTitle>
-          <DialogDescription className="flex items-center gap-2 text-sm">
+        <DialogHeader className="shrink-0 space-y-2 text-left p-4 sm:p-6 sm:pb-3 border-b border-border">
+          <DialogTitle className="text-xl sm:text-2xl font-bold pr-8">{event.name}</DialogTitle>
+          <DialogDescription className="flex items-center gap-2 text-xs sm:text-sm">
             <Calendar className="w-4 h-4 shrink-0" />
             <span>
               {t('event.period')}: {formatRange(event.start_date, event.end_date, language)}
@@ -147,12 +147,12 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
         </DialogHeader>
 
         {hasDescription && (
-          <div className="flex-1 overflow-y-auto px-6 py-4 text-sm text-foreground/90 whitespace-pre-line leading-relaxed">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base text-foreground/90 whitespace-pre-line leading-relaxed">
             {event.description}
           </div>
         )}
 
-        <div className="shrink-0 flex flex-col sm:flex-row gap-2 p-4 border-t border-border bg-card">
+        <div className="shrink-0 flex flex-col sm:flex-row gap-2 p-3 sm:p-4 border-t border-border bg-card">
           {showJoin && (
             <Button asChild className="flex-1">
               <a href={event.join_url} target="_blank" rel="noopener noreferrer">
