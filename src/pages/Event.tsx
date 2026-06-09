@@ -15,7 +15,7 @@ const EventPage: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('events')
-        .select('id,name,banner_url,start_date,end_date,join_url,telegram_url,telegram_enabled')
+        .select('id,name,banner_url,start_date,end_date,join_url,telegram_url,telegram_enabled,description')
         .eq('is_active', true)
         .order('sort_order', { ascending: true })
         .order('start_date', { ascending: true });
