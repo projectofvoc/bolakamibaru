@@ -440,7 +440,7 @@ const Header: React.FC = () => {
             className="md:hidden bg-card border-b border-border"
           >
             <nav className="container mx-auto px-4 py-3 flex flex-col gap-2">
-              {displayNavItems.map((item) => {
+              {finalNavItems.map((item) => {
                 const IconComponent = item.icon;
                 return (
                   <div key={item.key}>
