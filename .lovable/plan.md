@@ -1,41 +1,47 @@
-# Event Pertama Bolakami: "Tebak & Share Pildun" + Fitur Deskripsi
+## Tujuan
+1. Matikan tombol **Ikut Event** pada event "Tebak & Share Pildun" (data seed pertama).
+2. Perbaiki layout popup event: banner dan deskripsi sekarang terlihat tumpang tindih (lihat screenshot — judul & list S&K terbaca di atas gambar piala). Pisahkan menjadi dua section yang jelas.
 
-## 1. Database
-Migration untuk menambah kolom pada `public.events`:
-- `description` (TEXT, nullable) — diisi via CMS, mendukung multi-baris/markdown ringan, ditampilkan dalam dropdown di card event.
+## Perubahan
 
-## 2. CMS (`src/pages/cms/CMSEvents.tsx`)
-- Tambah field **Deskripsi Event** (Textarea, opsional, rich-text plain dengan support newline). Diletakkan di bawah field "Nama Event".
-- Placeholder: "Syarat & ketentuan, cara ikut, hadiah, dsb. Mendukung baris baru."
-- Simpan ke kolom `description`.
+### 1. Database (data update, bukan schema)
+- `UPDATE public.events SET join_enabled = false WHERE name ILIKE 'Tebak & Share Pildun%';`
+- Tidak ada perubahan kolom/RLS.
 
-## 3. Tampilan User (`src/components/EventCard.tsx`)
-- Tambah **dropdown/accordion "Lihat Detail & Syarat"** di bawah area tombol (pakai `shadcn/ui` Collapsible atau Accordion).
-- Saat di-expand, tampilkan `description` dengan `whitespace-pre-line` agar baris baru terjaga. Heading kecil + chevron icon untuk toggle.
-- Jika `description` kosong/null, dropdown tidak ditampilkan.
-- Tambah translation key `event.viewDetails` / `event.hideDetails` di `LanguageContext.tsx`.
+### 2. `src/components/EventCard.tsx` — restruktur `DialogContent`
 
-## 4. Banner Event Pertama
-Generate banner 1792×1008 (16:9) via `imagegen` (model premium karena ada teks):
-- Tema: Piala Dunia 2026, dark theme bolakami (primary `#4ade80`, bg `#0d0f14`).
-- Visual: trophy Piala Dunia + bola, badge "TANPA MODAL", tagline besar **"TEBAK & SHARE PILDUN"**, sub **"Total Hadiah Rp 50.000.000 · 100 Pemenang"**.
-- Logo/teks "BOLAKAMI" kecil di pojok.
-- Disimpan ke `src/assets/events/event-pildun-2026.jpg`, lalu di-upload ke bucket `articles-media` (folder `events/`) via script seed, dan URL publik disimpan ke `banner_url`.
+Masalah saat ini: `DialogContent` punya `p-0` + `overflow-y-auto`, banner pakai `aspect-[16/9] w-full` (sangat tinggi di dialog `max-w-3xl`), lalu header + deskripsi diletakkan di bawahnya dalam container yang sama yang ikut scroll → di viewport pendek banner & teks terlihat menempel/menutupi.
 
-## 5. Seed Event Pertama (via `supabase--insert`)
-Setelah migration disetujui & banner ter-upload:
-- `name`: "Tebak & Share Pildun Bolakami — Tebak Juara Piala Dunia 2026"
-- `description`: Full S&K dari PDF (Cara Ikut, Caption Siap Pakai, Hadiah, Penentuan Pemenang, Larangan, Ketentuan Lain, Disclaimer) — diformat dengan section headers & bullet menggunakan newline + emoji ringan.
-- `start_date`: `2026-06-11 00:00 WIB`
-- `end_date`: `2026-07-19 02:00 WIB`
-- `join_url`: `https://www.facebook.com/groups/bolakamiofficial` (sementara, bisa diganti admin)
-- `telegram_url`: null
-- `telegram_enabled`: false (sesuai SK — channel utama Facebook)
-- `is_active`: true
-- `sort_order`: 0
+Struktur baru (flex column, banner fixed di atas, deskripsi scrollable di bawah):
 
-## Teknis singkat
-- File diubah: `CMSEvents.tsx`, `EventCard.tsx`, `LanguageContext.tsx`.
-- File dibuat: banner image asset.
-- 1 migration: `ALTER TABLE public.events ADD COLUMN description TEXT;`
-- 1 insert data event pertama.
+```text
+┌─ DialogContent (flex flex-col, max-h-[92vh], p-0) ─┐
+│  [Banner section]                                  │
+│    - aspect-[16/9], max-h-[45vh], object-contain   │
+│    - bg-black, border-b border-border              │
+│    - shrink-0 (tidak ikut scroll)                  │
+├────────────────────────────────────────────────────┤
+│  [Header section] (p-6 pb-3, shrink-0)             │
+│    - Title + tanggal periode                       │
+├────────────────────────────────────────────────────┤
+│  [Description section] (flex-1 overflow-y-auto)    │
+│    - px-6 py-4, whitespace-pre-line                │
+│    - Scroll independen dari banner                 │
+├────────────────────────────────────────────────────┤
+│  [Action buttons] (p-4 border-t, shrink-0)         │
+│    - Join (jika enabled) / Telegram / Copy Link    │
+└────────────────────────────────────────────────────┘
+```
+
+Detail:
+- Banner pakai `object-contain` + `bg-black` agar full image terlihat tanpa cropping aneh, tinggi dibatasi `max-h-[45vh]` supaya tidak mendominasi.
+- Header & action bar `shrink-0`, hanya bagian deskripsi yang scroll.
+- Hapus `border-t` di deskripsi (sudah ada pemisah natural via section).
+- Tidak ada perubahan card view, hanya popup.
+
+### 3. Tidak ada perubahan lain
+- CMS, translation keys, dan tabel events tidak diubah.
+
+## File yang disentuh
+- `src/components/EventCard.tsx` (edit struktur DialogContent)
+- 1 migration data-only untuk update `join_enabled` event Pildun
