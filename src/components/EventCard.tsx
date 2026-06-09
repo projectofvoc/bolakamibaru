@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar, ExternalLink, Send } from 'lucide-react';
+import { Calendar, ExternalLink, Send, ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface EventItem {
@@ -12,6 +12,7 @@ export interface EventItem {
   join_url: string;
   telegram_url: string | null;
   telegram_enabled: boolean;
+  description?: string | null;
 }
 
 const formatRange = (start: string, end: string, lang: 'id' | 'en') => {
@@ -30,6 +31,8 @@ const formatRange = (start: string, end: string, lang: 'id' | 'en') => {
 const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
   const { language, t } = useLanguage();
   const showTelegram = event.telegram_enabled && !!event.telegram_url;
+  const [open, setOpen] = useState(false);
+  const hasDescription = !!event.description && event.description.trim().length > 0;
 
   return (
     <article className="bg-card rounded-xl overflow-hidden border border-border flex flex-col">
@@ -69,6 +72,26 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
             </Button>
           )}
         </div>
+        {hasDescription && (
+          <div className="border-t border-border pt-3 mt-1">
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              className="w-full flex items-center justify-between text-sm font-medium text-foreground hover:text-primary transition-colors"
+              aria-expanded={open}
+            >
+              <span>{open ? t('event.hideDetails') : t('event.viewDetails')}</span>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`}
+              />
+            </button>
+            {open && (
+              <div className="mt-3 text-sm text-muted-foreground whitespace-pre-line leading-relaxed max-h-96 overflow-y-auto pr-1">
+                {event.description}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </article>
   );
