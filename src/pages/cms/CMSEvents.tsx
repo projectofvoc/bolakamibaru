@@ -343,7 +343,7 @@ const CMSEvents = () => {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Syarat & ketentuan, cara ikut, hadiah, dsb. Mendukung baris baru."
                 rows={8}
-                className="font-mono text-sm"
+                className="text-sm"
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Ditampilkan dalam dropdown "Lihat Detail & Syarat" di card event. Gunakan baris baru untuk memisahkan section.
