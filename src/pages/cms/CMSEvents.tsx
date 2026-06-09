@@ -48,6 +48,7 @@ interface EventRow {
   sort_order: number;
   created_at: string;
   description: string | null;
+  join_enabled: boolean;
 }
 
 const toDatetimeLocal = (iso: string) => {
@@ -73,6 +74,7 @@ const CMSEvents = () => {
   const [joinUrl, setJoinUrl] = useState('');
   const [telegramUrl, setTelegramUrl] = useState('');
   const [telegramEnabled, setTelegramEnabled] = useState(false);
+  const [joinEnabled, setJoinEnabled] = useState(true);
   const [isActive, setIsActive] = useState(true);
   const [sortOrder, setSortOrder] = useState(0);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -102,6 +104,7 @@ const CMSEvents = () => {
     setJoinUrl('');
     setTelegramUrl('');
     setTelegramEnabled(false);
+    setJoinEnabled(true);
     setIsActive(true);
     setSortOrder(0);
     setBannerFile(null);
@@ -118,6 +121,7 @@ const CMSEvents = () => {
     setJoinUrl(row.join_url);
     setTelegramUrl(row.telegram_url || '');
     setTelegramEnabled(row.telegram_enabled);
+    setJoinEnabled(row.join_enabled !== false);
     setIsActive(row.is_active);
     setSortOrder(row.sort_order);
     setBannerFile(null);
@@ -171,6 +175,7 @@ const CMSEvents = () => {
         join_url: joinUrl.trim(),
         telegram_url: telegramUrl.trim() || null,
         telegram_enabled: telegramEnabled,
+        join_enabled: joinEnabled,
         is_active: isActive,
         sort_order: sortOrder,
       };
@@ -384,6 +389,16 @@ const CMSEvents = () => {
             <div>
               <Label>URL Join (tombol utama) *</Label>
               <Input type="url" value={joinUrl} onChange={(e) => setJoinUrl(e.target.value)} placeholder="https://..." required />
+            </div>
+
+            <div className="space-y-2 p-3 border border-border rounded-lg">
+              <div className="flex items-center justify-between">
+                <Label>Tombol "Ikut Event"</Label>
+                <Switch checked={joinEnabled} onCheckedChange={setJoinEnabled} />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Jika dimatikan, tombol Ikut Event tidak akan tampil di card event.
+              </p>
             </div>
 
             <div className="space-y-2 p-3 border border-border rounded-lg">
