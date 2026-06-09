@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
@@ -46,6 +47,7 @@ interface EventRow {
   is_active: boolean;
   sort_order: number;
   created_at: string;
+  description: string | null;
 }
 
 const toDatetimeLocal = (iso: string) => {
@@ -65,6 +67,7 @@ const CMSEvents = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [joinUrl, setJoinUrl] = useState('');
@@ -93,6 +96,7 @@ const CMSEvents = () => {
     setShowForm(false);
     setEditing(null);
     setName('');
+    setDescription('');
     setStartDate('');
     setEndDate('');
     setJoinUrl('');
@@ -108,6 +112,7 @@ const CMSEvents = () => {
   const handleEdit = (row: EventRow) => {
     setEditing(row);
     setName(row.name);
+    setDescription(row.description || '');
     setStartDate(toDatetimeLocal(row.start_date));
     setEndDate(toDatetimeLocal(row.end_date));
     setJoinUrl(row.join_url);
@@ -159,6 +164,7 @@ const CMSEvents = () => {
 
       const payload = {
         name: name.trim(),
+        description: description.trim() || null,
         banner_url: bannerUrl,
         start_date: new Date(startDate).toISOString(),
         end_date: new Date(endDate).toISOString(),
@@ -328,6 +334,20 @@ const CMSEvents = () => {
             <div>
               <Label>Nama Event *</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={200} required />
+            </div>
+
+            <div>
+              <Label>Deskripsi Event (opsional)</Label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Syarat & ketentuan, cara ikut, hadiah, dsb. Mendukung baris baru."
+                rows={8}
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Ditampilkan dalam dropdown "Lihat Detail & Syarat" di card event. Gunakan baris baru untuk memisahkan section.
+              </p>
             </div>
 
             <div>

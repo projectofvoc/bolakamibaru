@@ -182,6 +182,8 @@ const translations: Record<string, Record<Language, string>> = {
   'event.joinTelegram': { id: 'Gabung Grup Telegram', en: 'Join Telegram Group' },
   'event.empty': { id: 'Belum ada event aktif', en: 'No active events yet' },
   'event.emptyDesc': { id: 'Pantau halaman ini untuk event mendatang.', en: 'Stay tuned for upcoming events.' },
+  'event.viewDetails': { id: 'Lihat Detail & Syarat', en: 'View Details & Terms' },
+  'event.hideDetails': { id: 'Tutup Detail', en: 'Hide Details' },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
