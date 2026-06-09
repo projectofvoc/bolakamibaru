@@ -8,6 +8,7 @@ import BestMomentsCarousel from '@/components/BestMomentsCarousel';
 import NewsGrid from '@/components/NewsGrid';
 import UpcomingMatches from '@/components/UpcomingMatches';
 import AICompanion from '@/components/AICompanion';
+import EventsSection from '@/components/EventsSection';
 import MoreNewsGrid from '@/components/MoreNewsGrid';
 import AdvertisementPopup from '@/components/AdvertisementPopup';
 import SidebarBanners from '@/components/SidebarBanners';
@@ -42,6 +43,7 @@ const Index: React.FC = () => {
         <BestMomentsCarousel />
         <NewsGrid />
         <UpcomingMatches />
+        <EventsSection />
         <AICompanion />
         <MoreNewsGrid />
       </main>

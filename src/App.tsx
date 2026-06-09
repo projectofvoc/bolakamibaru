@@ -24,6 +24,7 @@ import Liga from "./pages/Liga";
 import Berita from "./pages/Berita";
 import BeritaTag from "./pages/BeritaTag";
 import Klasemen from "./pages/Klasemen";
+import EventPage from "./pages/Event";
 import {
   CMSLayout,
   CMSDashboard,
@@ -43,6 +44,7 @@ import {
   CMSReadToEarn,
   CMSIntegrations,
   CMSBotSender,
+  CMSEvents,
 } from "./pages/cms";
 import Rewards from "./pages/Rewards";
 
@@ -74,6 +76,7 @@ const App = () => (
             <Route path="/berita" element={<BeritaTag />} />
             <Route path="/klasemen" element={<Klasemen />} />
             <Route path="/rewards" element={<Rewards />} />
+            <Route path="/event" element={<EventPage />} />
             
             {/* CMS Routes */}
             <Route path="/cms" element={<CMSLayout />}>
@@ -95,6 +98,7 @@ const App = () => (
               <Route path="read-to-earn" element={<CMSReadToEarn />} />
               <Route path="integrations" element={<CMSIntegrations />} />
               <Route path="bot-sender" element={<CMSBotSender />} />
+              <Route path="events" element={<CMSEvents />} />
             </Route>
             
             {/* Legacy route redirect */}

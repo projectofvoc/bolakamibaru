@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, ChevronDown, Search, User, Radio, Trophy, Newspaper, Settings, LogOut, Link2 } from "lucide-react";
+import { Menu, X, ChevronDown, Search, User, Radio, Trophy, Newspaper, Settings, LogOut, Link2, CalendarDays } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -193,6 +193,21 @@ const Header: React.FC = () => {
 
   const displayNavItems = navItems.length > 0 ? navItems : fallbackNavItems;
 
+  // Static "Event" nav item appended to whatever source is used
+  const eventNavItem = {
+    key: "Event",
+    label_id: "Event",
+    label_en: "Event",
+    path: "/event",
+    icon: CalendarDays,
+    priority: "medium",
+    isExternal: false,
+    hasDropdown: false,
+  };
+  const finalNavItems = displayNavItems.some((i) => i.path === "/event")
+    ? displayNavItems
+    : [...displayNavItems, eventNavItem];
+
   const ligaSubmenu = [
     { key: "liga.all", path: "/liga" },
     { key: "liga.liga1", path: "/liga/liga-1" },
@@ -241,7 +256,7 @@ const Header: React.FC = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1">
-              {displayNavItems.map((item) => {
+              {finalNavItems.map((item) => {
                 const IconComponent = item.icon;
                 return (
                   <div
@@ -425,7 +440,7 @@ const Header: React.FC = () => {
             className="md:hidden bg-card border-b border-border"
           >
             <nav className="container mx-auto px-4 py-3 flex flex-col gap-2">
-              {displayNavItems.map((item) => {
+              {finalNavItems.map((item) => {
                 const IconComponent = item.icon;
                 return (
                   <div key={item.key}>

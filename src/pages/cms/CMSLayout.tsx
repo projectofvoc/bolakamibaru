@@ -37,6 +37,7 @@ import {
   Image,
   Gift,
   Bot,
+  CalendarDays,
 } from 'lucide-react';
 import logoBolakami from '@/assets/logo-bolakami.png';
 
@@ -54,6 +55,7 @@ const CMSSidebar = ({ isAdmin }: { isAdmin: boolean }) => {
     { title: 'Semua Berita', url: '/cms/articles', icon: FileText },
     { title: 'Tambah Berita', url: '/cms/articles/new', icon: Plus },
     { title: 'Momen Terbaik', url: '/cms/moments', icon: Video },
+    { title: 'Events', url: '/cms/events', icon: CalendarDays },
   ];
 
   const adminItems = [
