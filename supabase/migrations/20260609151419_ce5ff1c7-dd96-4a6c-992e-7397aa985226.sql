@@ -1,0 +1,1 @@
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS join_enabled BOOLEAN NOT NULL DEFAULT true;

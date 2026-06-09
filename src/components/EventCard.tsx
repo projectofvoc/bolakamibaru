@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar, ExternalLink, Send, ChevronDown } from 'lucide-react';
+import { Calendar, ExternalLink, Send, Link2, Check } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 export interface EventItem {
   id: string;
@@ -13,6 +21,7 @@ export interface EventItem {
   telegram_url: string | null;
   telegram_enabled: boolean;
   description?: string | null;
+  join_enabled?: boolean;
 }
 
 const formatRange = (start: string, end: string, lang: 'id' | 'en') => {
@@ -30,12 +39,38 @@ const formatRange = (start: string, end: string, lang: 'id' | 'en') => {
 
 const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
   const { language, t } = useLanguage();
+  const { toast } = useToast();
   const showTelegram = event.telegram_enabled && !!event.telegram_url;
+  const showJoin = event.join_enabled !== false && !!event.join_url;
   const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const hasDescription = !!event.description && event.description.trim().length > 0;
 
+  const shareUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/event?id=${event.id}`
+      : `/event?id=${event.id}`;
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      toast({ title: t('event.linkCopied') });
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast({ title: 'Error', variant: 'destructive' });
+    }
+  };
+
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
+
   return (
-    <article className="bg-card rounded-xl overflow-hidden border border-border flex flex-col">
+    <>
+    <article
+      className="bg-card rounded-xl overflow-hidden border border-border flex flex-col cursor-pointer hover:border-primary/50 transition-colors"
+      onClick={() => setOpen(true)}
+    >
       <div className="aspect-[16/9] bg-muted overflow-hidden">
         {event.banner_url ? (
           <img
@@ -57,43 +92,93 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
           <span>{formatRange(event.start_date, event.end_date, language)}</span>
         </div>
         <div className="flex flex-col gap-2 mt-auto pt-2">
-          <Button asChild className="w-full">
-            <a href={event.join_url} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="w-4 h-4 mr-2" />
-              {t('event.join')}
-            </a>
-          </Button>
+          {showJoin && (
+            <Button asChild className="w-full" onClick={stop}>
+              <a href={event.join_url} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="w-4 h-4 mr-2" />
+                {t('event.join')}
+              </a>
+            </Button>
+          )}
           {showTelegram && (
-            <Button asChild variant="secondary" className="w-full">
+            <Button asChild variant="secondary" className="w-full" onClick={stop}>
               <a href={event.telegram_url!} target="_blank" rel="noopener noreferrer">
                 <Send className="w-4 h-4 mr-2" />
                 {t('event.joinTelegram')}
               </a>
             </Button>
           )}
-        </div>
-        {hasDescription && (
-          <div className="border-t border-border pt-3 mt-1">
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              className="w-full flex items-center justify-between text-sm font-medium text-foreground hover:text-primary transition-colors"
-              aria-expanded={open}
-            >
-              <span>{open ? t('event.hideDetails') : t('event.viewDetails')}</span>
-              <ChevronDown
-                className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`}
-              />
-            </button>
-            {open && (
-              <div className="mt-3 text-sm text-muted-foreground whitespace-pre-line leading-relaxed max-h-96 overflow-y-auto pr-1">
-                {event.description}
-              </div>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleCopy}
+            type="button"
+          >
+            {copied ? (
+              <Check className="w-4 h-4 mr-2" />
+            ) : (
+              <Link2 className="w-4 h-4 mr-2" />
             )}
-          </div>
-        )}
+            {t('event.copyLink')}
+          </Button>
+        </div>
       </div>
     </article>
+
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-0">
+        {event.banner_url && (
+          <div className="aspect-[16/9] w-full bg-muted overflow-hidden rounded-t-lg">
+            <img
+              src={event.banner_url}
+              alt={event.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+        <div className="p-6 space-y-4">
+          <DialogHeader className="space-y-2 text-left">
+            <DialogTitle className="text-2xl font-bold">{event.name}</DialogTitle>
+            <DialogDescription className="flex items-center gap-2 text-sm">
+              <Calendar className="w-4 h-4" />
+              <span>
+                {t('event.period')}: {formatRange(event.start_date, event.end_date, language)}
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+
+          {hasDescription && (
+            <div className="text-sm text-foreground/90 whitespace-pre-line leading-relaxed border-t border-border pt-4">
+              {event.description}
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border">
+            {showJoin && (
+              <Button asChild className="flex-1">
+                <a href={event.join_url} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  {t('event.join')}
+                </a>
+              </Button>
+            )}
+            {showTelegram && (
+              <Button asChild variant="secondary" className="flex-1">
+                <a href={event.telegram_url!} target="_blank" rel="noopener noreferrer">
+                  <Send className="w-4 h-4 mr-2" />
+                  {t('event.joinTelegram')}
+                </a>
+              </Button>
+            )}
+            <Button variant="outline" className="flex-1" onClick={handleCopy} type="button">
+              {copied ? <Check className="w-4 h-4 mr-2" /> : <Link2 className="w-4 h-4 mr-2" />}
+              {t('event.copyLink')}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 
