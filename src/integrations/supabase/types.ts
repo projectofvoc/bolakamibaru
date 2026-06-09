@@ -676,6 +676,7 @@ export type Database = {
           banner_url: string | null
           created_at: string
           created_by: string | null
+          description: string | null
           end_date: string
           id: string
           is_active: boolean
@@ -691,6 +692,7 @@ export type Database = {
           banner_url?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           end_date: string
           id?: string
           is_active?: boolean
@@ -706,6 +708,7 @@ export type Database = {
           banner_url?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           end_date?: string
           id?: string
           is_active?: boolean
