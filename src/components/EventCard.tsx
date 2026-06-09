@@ -126,55 +126,53 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
     </article>
 
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-0">
+      <DialogContent className="max-w-3xl max-h-[92vh] p-0 flex flex-col gap-0 overflow-hidden">
         {event.banner_url && (
-          <div className="aspect-[16/9] w-full bg-muted overflow-hidden rounded-t-lg">
+          <div className="shrink-0 w-full bg-black border-b border-border flex items-center justify-center max-h-[45vh] overflow-hidden">
             <img
               src={event.banner_url}
               alt={event.name}
-              className="w-full h-full object-cover"
+              className="w-full h-auto max-h-[45vh] object-contain"
             />
           </div>
         )}
-        <div className="p-6 space-y-4">
-          <DialogHeader className="space-y-2 text-left">
-            <DialogTitle className="text-2xl font-bold">{event.name}</DialogTitle>
-            <DialogDescription className="flex items-center gap-2 text-sm">
-              <Calendar className="w-4 h-4" />
-              <span>
-                {t('event.period')}: {formatRange(event.start_date, event.end_date, language)}
-              </span>
-            </DialogDescription>
-          </DialogHeader>
+        <DialogHeader className="shrink-0 space-y-2 text-left p-6 pb-3 border-b border-border">
+          <DialogTitle className="text-2xl font-bold pr-8">{event.name}</DialogTitle>
+          <DialogDescription className="flex items-center gap-2 text-sm">
+            <Calendar className="w-4 h-4 shrink-0" />
+            <span>
+              {t('event.period')}: {formatRange(event.start_date, event.end_date, language)}
+            </span>
+          </DialogDescription>
+        </DialogHeader>
 
-          {hasDescription && (
-            <div className="text-sm text-foreground/90 whitespace-pre-line leading-relaxed border-t border-border pt-4">
-              {event.description}
-            </div>
-          )}
-
-          <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border">
-            {showJoin && (
-              <Button asChild className="flex-1">
-                <a href={event.join_url} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  {t('event.join')}
-                </a>
-              </Button>
-            )}
-            {showTelegram && (
-              <Button asChild variant="secondary" className="flex-1">
-                <a href={event.telegram_url!} target="_blank" rel="noopener noreferrer">
-                  <Send className="w-4 h-4 mr-2" />
-                  {t('event.joinTelegram')}
-                </a>
-              </Button>
-            )}
-            <Button variant="outline" className="flex-1" onClick={handleCopy} type="button">
-              {copied ? <Check className="w-4 h-4 mr-2" /> : <Link2 className="w-4 h-4 mr-2" />}
-              {t('event.copyLink')}
-            </Button>
+        {hasDescription && (
+          <div className="flex-1 overflow-y-auto px-6 py-4 text-sm text-foreground/90 whitespace-pre-line leading-relaxed">
+            {event.description}
           </div>
+        )}
+
+        <div className="shrink-0 flex flex-col sm:flex-row gap-2 p-4 border-t border-border bg-card">
+          {showJoin && (
+            <Button asChild className="flex-1">
+              <a href={event.join_url} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="w-4 h-4 mr-2" />
+                {t('event.join')}
+              </a>
+            </Button>
+          )}
+          {showTelegram && (
+            <Button asChild variant="secondary" className="flex-1">
+              <a href={event.telegram_url!} target="_blank" rel="noopener noreferrer">
+                <Send className="w-4 h-4 mr-2" />
+                {t('event.joinTelegram')}
+              </a>
+            </Button>
+          )}
+          <Button variant="outline" className="flex-1" onClick={handleCopy} type="button">
+            {copied ? <Check className="w-4 h-4 mr-2" /> : <Link2 className="w-4 h-4 mr-2" />}
+            {t('event.copyLink')}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
