@@ -16,3 +16,4 @@ export { default as CMSSidebarBanners } from './CMSSidebarBanners';
 export { default as CMSReadToEarn } from './CMSReadToEarn';
 export { default as CMSIntegrations } from './CMSIntegrations';
 export { default as CMSBotSender } from './CMSBotSender';
+export { default as CMSEvents } from './CMSEvents';

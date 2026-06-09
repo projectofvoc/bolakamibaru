@@ -170,6 +170,18 @@ const translations: Record<string, Record<Language, string>> = {
   'rte.redeem': { id: 'Tukar', en: 'Redeem' },
   'rte.dailyCheckin': { id: 'Daily Check-in', en: 'Daily Check-in' },
   'rte.claimPoint': { id: 'Klaim +1 poin hari ini', en: 'Claim +1 point today' },
+
+  // Event
+  'nav.event': { id: 'EVENT', en: 'EVENT' },
+  'event.sectionTitle': { id: 'Event Terbaru', en: 'Latest Events' },
+  'event.sectionSubtitle': { id: 'Ikuti event & komunitas BOLAKAMI', en: 'Join BOLAKAMI events & community' },
+  'event.viewAll': { id: 'Lihat Semua', en: 'View All' },
+  'event.pageTitle': { id: 'Event BOLAKAMI', en: 'BOLAKAMI Events' },
+  'event.pageSubtitle': { id: 'Daftar event dan kegiatan komunitas terbaru', en: 'Latest events and community activities' },
+  'event.join': { id: 'Ikut Event', en: 'Join Event' },
+  'event.joinTelegram': { id: 'Gabung Grup Telegram', en: 'Join Telegram Group' },
+  'event.empty': { id: 'Belum ada event aktif', en: 'No active events yet' },
+  'event.emptyDesc': { id: 'Pantau halaman ini untuk event mendatang.', en: 'Stay tuned for upcoming events.' },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
