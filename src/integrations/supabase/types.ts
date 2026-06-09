@@ -671,6 +671,54 @@ export type Database = {
           },
         ]
       }
+      events: {
+        Row: {
+          banner_url: string | null
+          created_at: string
+          created_by: string | null
+          end_date: string
+          id: string
+          is_active: boolean
+          join_url: string
+          name: string
+          sort_order: number
+          start_date: string
+          telegram_enabled: boolean
+          telegram_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean
+          join_url: string
+          name: string
+          sort_order?: number
+          start_date: string
+          telegram_enabled?: boolean
+          telegram_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          join_url?: string
+          name?: string
+          sort_order?: number
+          start_date?: string
+          telegram_enabled?: boolean
+          telegram_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       footer_banners: {
         Row: {
           created_at: string
