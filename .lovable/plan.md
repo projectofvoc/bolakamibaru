@@ -1,44 +1,24 @@
-## Goal
-Tambah tombol **Download PDF** di action bar popup event. PDF berisi deskripsi event dengan desain warna brand BOLAKAMI (dark + accent hijau).
+## Tujuan
+1. Tambah tombol **Download PDF** langsung di card event (selain di popup).
+2. Perbaiki PDF yang berantakan (emoji & karakter Unicode jadi `Ø<ßÆ`, `%P%P%`, spasi aneh).
 
-## Approach
+## Akar masalah PDF
+`jsPDF` saat ini pakai font core **Helvetica** yang hanya Latin-1. Emoji `📅`, em-dash `—`, smart quotes, bullet `•`, dan karakter non-ASCII pada deskripsi event jadi glyph rusak.
 
-Pakai **jsPDF** (client-side, ringan, tidak perlu edge function). Banner event di-embed sebagai gambar di header PDF.
+## Perubahan
 
-### 1. Dependency
-- `bun add jspdf` (sekitar 150 KB, sudah cukup untuk teks + image).
+### 1. `public/fonts/Inter-Regular.ttf` & `Inter-Bold.ttf` (file baru)
+Static TTF Inter (OFL) di-download ke `public/fonts/`. Di-fetch on-demand saat user klik tombol PDF (tidak masuk bundle JS).
 
-### 2. Helper baru: `src/lib/eventPdf.ts`
-Export `downloadEventPdf(event)` yang:
-- Buat A4 portrait, background dark `#0d0f14`.
-- Header bar tinggi ~12mm warna primary `#4ade80` dengan teks "BOLAKAMI" putih bold + tagline kecil.
-- Banner event (jika ada) di-load via `fetch` → blob → base64, lalu `doc.addImage` rasio 16:9 full-width margin (atau placeholder hijau jika gagal).
-- Title event: font bold 18pt putih.
-- Period: ikon kalender (text "📅") + range tanggal warna muted `#9ca3af`.
-- Garis pemisah hijau tipis.
-- Deskripsi: split per baris dengan `doc.splitTextToSize`, warna `#e5e7eb`, line-height nyaman. Auto page-break bila konten panjang — setiap page baru ulang background dark + footer.
-- Footer setiap halaman: garis hijau + teks `bolakami.com` kiri, "Halaman X / Y" kanan, warna muted.
-- File name: `event-${slugified(event.name)}.pdf`.
+### 2. `src/lib/eventPdf.ts` (rewrite font handling)
+- `ensureFonts()`: fetch kedua TTF → base64 (cached module-level).
+- `registerFonts(doc)`: `addFileToVFS` + `addFont('Inter', 'normal' | 'bold')`.
+- Ganti semua `setFont('helvetica', …)` → `setFont('Inter', …)`.
+- `sanitize(text)`: NFC normalize + strip emoji/pictograph range (`U+1F300–1FAFF`, `U+2600–27BF`, VS16, ZWJ) sebagai safety net. Em-dash, smart quotes, bullet dipertahankan karena Inter mendukungnya.
+- Layout dipoles: line-height deskripsi 5.6mm, label "Periode:" tanpa emoji 📅 (sudah jelas), background dark & header repaint tiap halaman baru, footer `bolakami.com` + `Halaman x / y`.
 
-### 3. UI: `src/components/EventCard.tsx`
-- Import `Download` dari `lucide-react` + helper baru.
-- Tambah tombol di dialog action bar (di samping "Salin Link"):
-  ```
-  <Button variant="outline" className="flex-1" onClick={() => downloadEventPdf(event)}>
-    <Download className="w-4 h-4 mr-2" /> {t('event.downloadPdf')}
-  </Button>
-  ```
-- Tombol pakai variant `outline` agar konsisten dengan Salin Link; biar tidak terlalu sempit di mobile, gunakan `flex-col sm:flex-row` (sudah ada) — 4 tombol akan stack di mobile.
+### 3. `src/components/EventCard.tsx`
+Tambah tombol "Download PDF" di action area card (di bawah "Salin Link"), kondisi `hasDescription`, dengan `stopPropagation` agar tidak membuka popup. Tombol di popup tetap ada.
 
-### 4. Translation (`src/contexts/LanguageContext.tsx`)
-- `event.downloadPdf`: ID `Download PDF`, EN `Download PDF`.
-
-## Files
-- `src/lib/eventPdf.ts` — new (helper + brand layout).
-- `src/components/EventCard.tsx` — tambah tombol & import.
-- `src/contexts/LanguageContext.tsx` — translation key baru.
-- `package.json` — `jspdf` dependency.
-
-## Catatan
-- Tidak perlu edge function / DB.
-- Tombol hanya muncul jika `event.description` ada (untuk event tanpa deskripsi PDF kurang berguna). Jika kosong, tombol disembunyikan.
+## Tidak diubah
+DB, edge function, CMS, design tokens, copy.
