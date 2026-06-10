@@ -72,7 +72,7 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
       className="bg-card rounded-xl overflow-hidden border border-border flex flex-col cursor-pointer hover:border-primary/50 transition-colors h-full"
       onClick={() => setOpen(true)}
     >
-      <div className="aspect-[16/9] bg-muted overflow-hidden">
+      <div className="aspect-[16/9] w-full bg-muted overflow-hidden shrink-0">
         {event.banner_url ? (
           <img
             src={event.banner_url}
