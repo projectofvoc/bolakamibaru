@@ -12,9 +12,17 @@ let fontCache: { regular: string; bold: string } | null = null;
 
 async function fetchAsBase64(url: string): Promise<string> {
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`Font fetch failed: ${url}`);
+  if (!res.ok) throw new Error(`Font fetch failed: ${url} (${res.status})`);
   const buf = await res.arrayBuffer();
   const bytes = new Uint8Array(buf);
+  // Validate magic bytes: TrueType (00 01 00 00) or OpenType (OTTO)
+  const isTrueType =
+    bytes[0] === 0x00 && bytes[1] === 0x01 && bytes[2] === 0x00 && bytes[3] === 0x00;
+  const isOpenType =
+    bytes[0] === 0x4f && bytes[1] === 0x54 && bytes[2] === 0x54 && bytes[3] === 0x4f;
+  if (!isTrueType && !isOpenType) {
+    throw new Error(`Invalid font file at ${url} (not TTF/OTF)`);
+  }
   let bin = '';
   const chunk = 0x8000;
   for (let i = 0; i < bytes.length; i += chunk) {
