@@ -68,7 +68,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/share/:slug" element={<ShareRedirect />} />
-            <Route path="/share/event/:id" element={<ShareEventRedirect />} />
+            <Route path="/share/event/:idOrSlug" element={<ShareEventRedirect />} />
             <Route path="/news/:slug" element={<NewsDetail />} />
             <Route path="/live" element={<Live />} />
             

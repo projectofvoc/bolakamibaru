@@ -13,13 +13,14 @@ const EventPage: React.FC = () => {
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const focusEventId = searchParams.get('id');
+  const focusEventSlug = searchParams.get('slug');
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['events', 'all'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('events')
-        .select('id,name,banner_url,start_date,end_date,join_url,telegram_url,telegram_enabled,description,join_enabled')
+        .select('id,name,slug,banner_url,start_date,end_date,join_url,telegram_url,telegram_enabled,description,join_enabled')
         .eq('is_active', true)
         .order('sort_order', { ascending: true })
         .order('start_date', { ascending: true });
@@ -28,15 +29,18 @@ const EventPage: React.FC = () => {
     },
   });
 
-  const focusEvent = focusEventId
-    ? events.find((e) => e.id === focusEventId)
-    : null;
+  const focusEvent = focusEventSlug
+    ? events.find((e) => e.slug === focusEventSlug)
+    : focusEventId
+      ? events.find((e) => e.id === focusEventId)
+      : null;
 
   useEffect(() => {
-    if (!focusEventId) return;
-    const el = document.getElementById(`event-${focusEventId}`);
+    const targetId = focusEvent?.id || focusEventId;
+    if (!targetId) return;
+    const el = document.getElementById(`event-${targetId}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [focusEventId, events]);
+  }, [focusEventId, focusEvent, events]);
 
   const pageTitle = focusEvent
     ? `${focusEvent.name} - BOLAKAMI`
@@ -44,6 +48,11 @@ const EventPage: React.FC = () => {
   const pageDesc = focusEvent
     ? (focusEvent.description || 'Ikuti event komunitas BOLAKAMI').replace(/\s+/g, ' ').slice(0, 160)
     : 'Daftar event terbaru BOLAKAMI. Ikuti event komunitas sepak bola, promo, dan gabung grup Telegram resmi.';
+  const canonicalParam = focusEvent?.slug
+    ? `?slug=${focusEvent.slug}`
+    : focusEventId
+      ? `?id=${focusEventId}`
+      : '';
 
   return (
     <div className="min-h-screen bg-background">
@@ -52,7 +61,7 @@ const EventPage: React.FC = () => {
         <meta name="description" content={pageDesc} />
         <link
           rel="canonical"
-          href={focusEventId ? `https://bolakami.com/event?id=${focusEventId}` : 'https://bolakami.com/event'}
+          href={`https://bolakami.com/event${canonicalParam}`}
         />
       </Helmet>
       <Header />
