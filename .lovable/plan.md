@@ -1,22 +1,51 @@
-## Perbaikan: TTF font rusak → jsPDF crash
+# Plan: Share Link Event Pakai Slug
 
-### Akar masalah
-`public/fonts/Inter-Regular.ttf` & `Inter-Bold.ttf` saat ini berisi **HTML halaman GitHub**, bukan binary TTF. Verifikasi: 100 byte pertama `<!DOCTYPE html>...`. URL `github.com/.../raw/...` mengembalikan viewer HTML. Akibat: `jsPDF.addFont` gagal parse → `text()` crash → PDF tidak tersimpan.
+## Goal
+Ubah link share event dari `/share/event/<uuid>` jadi `/share/event/<slug>` (contoh: `tebak-skor-match-mexico-vs-africa`), tetap kompatibel dengan link UUID lama.
 
-### Eksekusi
-1. **Re-download TTF** dari jsDelivr (CDN raw asli):
-   - `https://cdn.jsdelivr.net/gh/rsms/inter@v4.0/docs/font-files/Inter-Regular.ttf`
-   - `https://cdn.jsdelivr.net/gh/rsms/inter@v4.0/docs/font-files/Inter-Bold.ttf`
-   - Verifikasi magic byte `00 01 00 00` (TrueType). Fallback ke release zip Inter 4.0 jika gagal.
+## 1. Database (migration)
 
-2. **Upload ke Lovable Assets** (font binary tidak masuk repo): `lovable-assets create --file public/fonts/Inter-Regular.ttf > public/fonts/Inter-Regular.ttf.asset.json` (idem bold), lalu `rm` file TTF. `eventPdf.ts` fetch dari `inter[Regular|Bold].url`.
+Tambah kolom `slug` di tabel `events`:
+- `slug text` — unique, nullable awalnya
+- Backfill semua row existing: lowercase, ganti non-alphanumeric jadi `-`, strip dash ganda/edge
+- Anti-bentrok: bila slug duplikat, append `-<6 char id>` 
+- Tambah unique index pada `slug`
+- Trigger BEFORE INSERT/UPDATE: auto-generate slug dari `name` bila slug kosong atau name berubah
 
-3. **Guard di `src/lib/eventPdf.ts`**:
-   - Validasi 4 byte pertama TTF (`00 01 00 00` atau `OTTO`) sebelum register; throw jika invalid.
-   - Tangkap error & lempar ke caller dengan pesan jelas.
+## 2. Frontend — `src/components/EventCard.tsx`
 
-4. **Guard di `src/components/EventCard.tsx`**:
-   - Bungkus `downloadEventPdf(event)` di `try/catch` + `toast` error agar user dapat feedback bila gagal.
+`shareUrl` jadi `${origin}/share/event/${event.slug ?? event.id}`. Tambah `slug` ke interface `EventItem`.
 
-### Tidak diubah
-Layout PDF, tombol UI, komponen lain.
+## 3. Query — `src/pages/Event.tsx`
+
+Tambah `slug` di SELECT events. Tambah dukungan `?slug=` (selain `?id=`) untuk focus event.
+
+## 4. Routing — `src/pages/ShareEventRedirect.tsx`
+
+Param `:id` di-rename konseptual jadi `:idOrSlug`. Kirim ke edge function sebagai `?id=` (jika UUID valid) atau `?slug=` (jika bukan UUID). Deteksi UUID via regex.
+
+## 5. Edge Function — `supabase/functions/event-og-metadata/index.ts`
+
+Terima `?id=` (UUID lookup) **atau** `?slug=` (slug lookup). Build `eventUrl` redirect pakai `?slug=<slug>` bila tersedia, fallback `?id=`. Update `event` SELECT untuk include `slug`.
+
+## 6. CMS Share (jika ada)
+
+Cek `src/pages/cms/CMSEvents.tsx` — bila ada tombol copy share link, pakai slug juga.
+
+## Technical Detail
+
+**Slug generator (SQL):**
+```sql
+lower(regexp_replace(regexp_replace(trim(name), '[^a-zA-Z0-9]+', '-', 'g'), '(^-+|-+$)', '', 'g'))
+```
+
+**UUID detect (TS):**
+```ts
+/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+```
+
+**Backward compat:** Route `/share/event/:idOrSlug` resolve dua-duanya; canonical `/event?slug=...` jadi sumber utama, `/event?id=...` tetap jalan.
+
+## Out of scope
+- Tidak mengubah desain card / dialog.
+- Tidak mengubah copy/translasi.

@@ -23,6 +23,7 @@ export interface EventItem {
   telegram_enabled: boolean;
   description?: string | null;
   join_enabled?: boolean;
+  slug?: string | null;
 }
 
 const formatRange = (start: string, end: string, lang: 'id' | 'en') => {
@@ -49,8 +50,8 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
 
   const shareUrl =
     typeof window !== 'undefined'
-      ? `${window.location.origin}/share/event/${event.id}`
-      : `/share/event/${event.id}`;
+      ? `${window.location.origin}/share/event/${event.slug || event.id}`
+      : `/share/event/${event.slug || event.id}`;
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();

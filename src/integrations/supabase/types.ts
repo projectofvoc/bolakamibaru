@@ -683,6 +683,7 @@ export type Database = {
           join_enabled: boolean
           join_url: string
           name: string
+          slug: string | null
           sort_order: number
           start_date: string
           telegram_enabled: boolean
@@ -700,6 +701,7 @@ export type Database = {
           join_enabled?: boolean
           join_url: string
           name: string
+          slug?: string | null
           sort_order?: number
           start_date: string
           telegram_enabled?: boolean
@@ -717,6 +719,7 @@ export type Database = {
           join_enabled?: boolean
           join_url?: string
           name?: string
+          slug?: string | null
           sort_order?: number
           start_date?: string
           telegram_enabled?: boolean
@@ -1254,6 +1257,7 @@ export type Database = {
         }
         Returns: Json
       }
+      slugify_event_name: { Args: { _name: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "author" | "user"

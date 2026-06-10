@@ -36,8 +36,9 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const id = url.searchParams.get('id');
+    const slug = url.searchParams.get('slug');
 
-    if (!id) {
+    if (!id && !slug) {
       return new Response(defaultHtml(siteUrl), {
         headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' },
       });
@@ -48,12 +49,13 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    const { data: event } = await supabase
+    const query = supabase
       .from('events')
-      .select('name, banner_url, description')
-      .eq('id', id)
-      .eq('is_active', true)
-      .maybeSingle();
+      .select('id, name, slug, banner_url, description')
+      .eq('is_active', true);
+    const { data: event } = slug
+      ? await query.eq('slug', slug).maybeSingle()
+      : await query.eq('id', id!).maybeSingle();
 
     if (!event) {
       return new Response(defaultHtml(siteUrl), {
@@ -61,7 +63,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const eventUrl = `${siteUrl}/event?id=${id}`;
+    const eventSlug = (event as { slug?: string | null }).slug;
+    const eventId = (event as { id: string }).id;
+    const eventUrl = eventSlug
+      ? `${siteUrl}/event?slug=${encodeURIComponent(eventSlug)}`
+      : `${siteUrl}/event?id=${eventId}`;
     const title = event.name as string;
     const rawDesc = (event.description as string | null) || 'Ikuti event komunitas BOLAKAMI';
     const description = rawDesc.replace(/\s+/g, ' ').slice(0, 160);
