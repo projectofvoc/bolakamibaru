@@ -126,9 +126,18 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
             <Button
               variant="outline"
               className="w-full"
-              onClick={(e) => {
+              onClick={async (e) => {
                 stop(e);
-                downloadEventPdf(event);
+                try {
+                  await downloadEventPdf(event);
+                } catch (err) {
+                  console.error('PDF download failed', err);
+                  toast({
+                    title: 'Gagal membuat PDF',
+                    description: err instanceof Error ? err.message : 'Terjadi kesalahan',
+                    variant: 'destructive',
+                  });
+                }
               }}
               type="button"
             >
@@ -194,7 +203,18 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
             <Button
               variant="outline"
               className="flex-1"
-              onClick={() => downloadEventPdf(event)}
+              onClick={async () => {
+                try {
+                  await downloadEventPdf(event);
+                } catch (err) {
+                  console.error('PDF download failed', err);
+                  toast({
+                    title: 'Gagal membuat PDF',
+                    description: err instanceof Error ? err.message : 'Terjadi kesalahan',
+                    variant: 'destructive',
+                  });
+                }
+              }}
               type="button"
             >
               <Download className="w-4 h-4 mr-2" />

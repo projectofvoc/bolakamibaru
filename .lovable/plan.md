@@ -1,24 +1,22 @@
-## Tujuan
-1. Tambah tombol **Download PDF** langsung di card event (selain di popup).
-2. Perbaiki PDF yang berantakan (emoji & karakter Unicode jadi `Ø<ßÆ`, `%P%P%`, spasi aneh).
+## Perbaikan: TTF font rusak → jsPDF crash
 
-## Akar masalah PDF
-`jsPDF` saat ini pakai font core **Helvetica** yang hanya Latin-1. Emoji `📅`, em-dash `—`, smart quotes, bullet `•`, dan karakter non-ASCII pada deskripsi event jadi glyph rusak.
+### Akar masalah
+`public/fonts/Inter-Regular.ttf` & `Inter-Bold.ttf` saat ini berisi **HTML halaman GitHub**, bukan binary TTF. Verifikasi: 100 byte pertama `<!DOCTYPE html>...`. URL `github.com/.../raw/...` mengembalikan viewer HTML. Akibat: `jsPDF.addFont` gagal parse → `text()` crash → PDF tidak tersimpan.
 
-## Perubahan
+### Eksekusi
+1. **Re-download TTF** dari jsDelivr (CDN raw asli):
+   - `https://cdn.jsdelivr.net/gh/rsms/inter@v4.0/docs/font-files/Inter-Regular.ttf`
+   - `https://cdn.jsdelivr.net/gh/rsms/inter@v4.0/docs/font-files/Inter-Bold.ttf`
+   - Verifikasi magic byte `00 01 00 00` (TrueType). Fallback ke release zip Inter 4.0 jika gagal.
 
-### 1. `public/fonts/Inter-Regular.ttf` & `Inter-Bold.ttf` (file baru)
-Static TTF Inter (OFL) di-download ke `public/fonts/`. Di-fetch on-demand saat user klik tombol PDF (tidak masuk bundle JS).
+2. **Upload ke Lovable Assets** (font binary tidak masuk repo): `lovable-assets create --file public/fonts/Inter-Regular.ttf > public/fonts/Inter-Regular.ttf.asset.json` (idem bold), lalu `rm` file TTF. `eventPdf.ts` fetch dari `inter[Regular|Bold].url`.
 
-### 2. `src/lib/eventPdf.ts` (rewrite font handling)
-- `ensureFonts()`: fetch kedua TTF → base64 (cached module-level).
-- `registerFonts(doc)`: `addFileToVFS` + `addFont('Inter', 'normal' | 'bold')`.
-- Ganti semua `setFont('helvetica', …)` → `setFont('Inter', …)`.
-- `sanitize(text)`: NFC normalize + strip emoji/pictograph range (`U+1F300–1FAFF`, `U+2600–27BF`, VS16, ZWJ) sebagai safety net. Em-dash, smart quotes, bullet dipertahankan karena Inter mendukungnya.
-- Layout dipoles: line-height deskripsi 5.6mm, label "Periode:" tanpa emoji 📅 (sudah jelas), background dark & header repaint tiap halaman baru, footer `bolakami.com` + `Halaman x / y`.
+3. **Guard di `src/lib/eventPdf.ts`**:
+   - Validasi 4 byte pertama TTF (`00 01 00 00` atau `OTTO`) sebelum register; throw jika invalid.
+   - Tangkap error & lempar ke caller dengan pesan jelas.
 
-### 3. `src/components/EventCard.tsx`
-Tambah tombol "Download PDF" di action area card (di bawah "Salin Link"), kondisi `hasDescription`, dengan `stopPropagation` agar tidak membuka popup. Tombol di popup tetap ada.
+4. **Guard di `src/components/EventCard.tsx`**:
+   - Bungkus `downloadEventPdf(event)` di `try/catch` + `toast` error agar user dapat feedback bila gagal.
 
-## Tidak diubah
-DB, edge function, CMS, design tokens, copy.
+### Tidak diubah
+Layout PDF, tombol UI, komponen lain.
