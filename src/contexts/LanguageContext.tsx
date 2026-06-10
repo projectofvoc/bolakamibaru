@@ -188,6 +188,7 @@ const translations: Record<string, Record<Language, string>> = {
   'event.linkCopied': { id: 'Link disalin!', en: 'Link copied!' },
   'event.openDetail': { id: 'Lihat Event', en: 'View Event' },
   'event.period': { id: 'Periode', en: 'Period' },
+  'event.downloadPdf': { id: 'Download PDF', en: 'Download PDF' },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
