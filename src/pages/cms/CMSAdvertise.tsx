@@ -289,13 +289,18 @@ const CMSAdvertise = () => {
   };
 
   const uploadFile = async (file: File): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
+    let finalFile = file;
+    if (file.type.startsWith('image/')) {
+      const { convertToWebp } = await import('@/lib/imageConvert');
+      finalFile = await convertToWebp(file);
+    }
+    const fileExt = finalFile.type === 'image/webp' ? 'webp' : finalFile.name.split('.').pop();
     const fileName = `${Date.now()}.${fileExt}`;
     const filePath = `ads/${fileName}`;
 
     const { error } = await supabase.storage
       .from('advertisements')
-      .upload(filePath, file);
+      .upload(filePath, finalFile, { contentType: finalFile.type || undefined });
 
     if (error) throw error;
 

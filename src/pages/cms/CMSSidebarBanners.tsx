@@ -293,12 +293,14 @@ const CMSSidebarBanners = () => {
   };
 
   const uploadFile = async (file: File): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
+    const { convertToWebp } = await import('@/lib/imageConvert');
+    const finalFile = await convertToWebp(file);
+    const fileExt = finalFile.type === 'image/webp' ? 'webp' : finalFile.name.split('.').pop();
     const fileName = `${Date.now()}.${fileExt}`;
 
     const { error } = await supabase.storage
       .from('sidebar-banners')
-      .upload(fileName, file);
+      .upload(fileName, finalFile, { contentType: finalFile.type || undefined });
 
     if (error) throw error;
 

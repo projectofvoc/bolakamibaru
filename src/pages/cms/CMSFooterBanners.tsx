@@ -293,12 +293,14 @@ const CMSFooterBanners = () => {
   };
 
   const uploadFile = async (file: File): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
+    const { convertToWebp } = await import('@/lib/imageConvert');
+    const finalFile = await convertToWebp(file);
+    const fileExt = finalFile.type === 'image/webp' ? 'webp' : finalFile.name.split('.').pop();
     const fileName = `footer-banners/${Date.now()}.${fileExt}`;
 
     const { error } = await supabase.storage
       .from('advertisements')
-      .upload(fileName, file);
+      .upload(fileName, finalFile, { contentType: finalFile.type || undefined });
 
     if (error) throw error;
 
