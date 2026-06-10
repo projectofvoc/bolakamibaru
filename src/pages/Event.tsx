@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +11,9 @@ import { Calendar } from 'lucide-react';
 
 const EventPage: React.FC = () => {
   const { t } = useLanguage();
+  const [searchParams] = useSearchParams();
+  const focusEventId = searchParams.get('id');
+
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['events', 'all'],
     queryFn: async () => {
@@ -24,15 +28,32 @@ const EventPage: React.FC = () => {
     },
   });
 
+  const focusEvent = focusEventId
+    ? events.find((e) => e.id === focusEventId)
+    : null;
+
+  useEffect(() => {
+    if (!focusEventId) return;
+    const el = document.getElementById(`event-${focusEventId}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [focusEventId, events]);
+
+  const pageTitle = focusEvent
+    ? `${focusEvent.name} - BOLAKAMI`
+    : 'Event BOLAKAMI - Event & Komunitas Sepak Bola';
+  const pageDesc = focusEvent
+    ? (focusEvent.description || 'Ikuti event komunitas BOLAKAMI').replace(/\s+/g, ' ').slice(0, 160)
+    : 'Daftar event terbaru BOLAKAMI. Ikuti event komunitas sepak bola, promo, dan gabung grup Telegram resmi.';
+
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Event BOLAKAMI - Event & Komunitas Sepak Bola</title>
-        <meta
-          name="description"
-          content="Daftar event terbaru BOLAKAMI. Ikuti event komunitas sepak bola, promo, dan gabung grup Telegram resmi."
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDesc} />
+        <link
+          rel="canonical"
+          href={focusEventId ? `https://bolakami.com/event?id=${focusEventId}` : 'https://bolakami.com/event'}
         />
-        <link rel="canonical" href="https://bolakami.com/event" />
       </Helmet>
       <Header />
       <main className="container mx-auto px-4 py-10">
@@ -62,7 +83,9 @@ const EventPage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {events.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <div key={event.id} id={`event-${event.id}`}>
+                <EventCard event={event} />
+              </div>
             ))}
           </div>
         )}
