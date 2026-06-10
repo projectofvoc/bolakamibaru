@@ -199,12 +199,17 @@ const CMSMoments = () => {
   };
 
   const uploadFile = async (file: File, folder: string): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
+    let finalFile = file;
+    if (file.type.startsWith('image/')) {
+      const { convertToWebp } = await import('@/lib/imageConvert');
+      finalFile = await convertToWebp(file);
+    }
+    const fileExt = finalFile.type === 'image/webp' ? 'webp' : finalFile.name.split('.').pop();
     const fileName = `${folder}/${Date.now()}.${fileExt}`;
     
     const { error } = await supabase.storage
       .from('moments-media')
-      .upload(fileName, file);
+      .upload(fileName, finalFile, { contentType: finalFile.type || undefined });
     
     if (error) throw error;
     

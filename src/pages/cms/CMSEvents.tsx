@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { convertToWebp } from '@/lib/imageConvert';
 import {
   Plus,
   Trash2,
@@ -140,14 +141,18 @@ const CMSEvents = () => {
       toast({ title: 'Error', description: 'Ukuran maksimal 5MB', variant: 'destructive' });
       return;
     }
-    setBannerFile(file);
-    setBannerPreview(URL.createObjectURL(file));
+    convertToWebp(file).then((converted) => {
+      setBannerFile(converted);
+      setBannerPreview(URL.createObjectURL(converted));
+    });
   };
 
   const uploadBanner = async (file: File): Promise<string> => {
-    const ext = file.name.split('.').pop();
+    const ext = file.type === 'image/webp' ? 'webp' : file.name.split('.').pop();
     const path = `events/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error } = await supabase.storage.from('articles-media').upload(path, file);
+    const { error } = await supabase.storage.from('articles-media').upload(path, file, {
+      contentType: file.type || undefined,
+    });
     if (error) throw error;
     const { data } = supabase.storage.from('articles-media').getPublicUrl(path);
     return data.publicUrl;
