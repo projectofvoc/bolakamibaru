@@ -83,7 +83,7 @@ const EventPage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {events.map((event) => (
-              <div key={event.id} id={`event-${event.id}`}>
+              <div key={event.id} id={`event-${event.id}`} className="h-full">
                 <EventCard event={event} />
               </div>
             ))}
