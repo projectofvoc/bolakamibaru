@@ -69,10 +69,10 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
   return (
     <>
     <article
-      className="bg-card rounded-xl overflow-hidden border border-border flex flex-col cursor-pointer hover:border-primary/50 transition-colors"
+      className="bg-card rounded-xl overflow-hidden border border-border flex flex-col cursor-pointer hover:border-primary/50 transition-colors h-full"
       onClick={() => setOpen(true)}
     >
-      <div className="aspect-[16/9] bg-muted overflow-hidden">
+      <div className="aspect-[16/9] w-full bg-muted overflow-hidden shrink-0">
         {event.banner_url ? (
           <img
             src={event.banner_url}
@@ -87,7 +87,7 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
         )}
       </div>
       <div className="p-5 flex flex-col gap-3 flex-1">
-        <h3 className="text-lg font-bold text-foreground line-clamp-2">{event.name}</h3>
+        <h3 className="text-lg font-bold text-foreground line-clamp-2 min-h-[3.5rem]">{event.name}</h3>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Calendar className="w-3.5 h-3.5" />
           <span>{formatRange(event.start_date, event.end_date, language)}</span>
