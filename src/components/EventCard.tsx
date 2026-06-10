@@ -69,7 +69,7 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
   return (
     <>
     <article
-      className="bg-card rounded-xl overflow-hidden border border-border flex flex-col cursor-pointer hover:border-primary/50 transition-colors"
+      className="bg-card rounded-xl overflow-hidden border border-border flex flex-col cursor-pointer hover:border-primary/50 transition-colors h-full"
       onClick={() => setOpen(true)}
     >
       <div className="aspect-[16/9] bg-muted overflow-hidden">
