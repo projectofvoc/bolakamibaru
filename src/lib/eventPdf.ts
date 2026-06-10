@@ -7,6 +7,53 @@ const PRIMARY = '#4ade80';
 const TEXT = '#e5e7eb';
 const MUTED = '#9ca3af';
 
+// ---- Font loading (Inter, Unicode-safe) -----------------------------------
+let fontCache: { regular: string; bold: string } | null = null;
+
+async function fetchAsBase64(url: string): Promise<string> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Font fetch failed: ${url}`);
+  const buf = await res.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let bin = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    bin += String.fromCharCode.apply(
+      null,
+      Array.from(bytes.subarray(i, i + chunk)) as unknown as number[],
+    );
+  }
+  return btoa(bin);
+}
+
+async function ensureFonts(): Promise<{ regular: string; bold: string }> {
+  if (fontCache) return fontCache;
+  const [regular, bold] = await Promise.all([
+    fetchAsBase64('/fonts/Inter-Regular.ttf'),
+    fetchAsBase64('/fonts/Inter-Bold.ttf'),
+  ]);
+  fontCache = { regular, bold };
+  return fontCache;
+}
+
+function registerFonts(doc: jsPDF, fonts: { regular: string; bold: string }) {
+  doc.addFileToVFS('Inter-Regular.ttf', fonts.regular);
+  doc.addFont('Inter-Regular.ttf', 'Inter', 'normal');
+  doc.addFileToVFS('Inter-Bold.ttf', fonts.bold);
+  doc.addFont('Inter-Bold.ttf', 'Inter', 'bold');
+}
+
+// Strip emoji / pictographs that don't render even with Inter
+function sanitize(text: string): string {
+  return text
+    .normalize('NFC')
+    .replace(
+      /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F2FF}\uFE0F]/gu,
+      '',
+    )
+    .replace(/[\u200B-\u200D\uFEFF]/g, '');
+}
+
 const slugify = (s: string) =>
   s
     .toLowerCase()
@@ -73,7 +120,7 @@ function drawFooter(
   doc.setDrawColor(PRIMARY);
   doc.setLineWidth(0.4);
   doc.line(marginX, pageH - 14, pageW - marginX, pageH - 14);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('Inter', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(MUTED);
   doc.text('bolakami.com', marginX, pageH - 8);
@@ -85,17 +132,19 @@ function drawFooter(
 function drawHeaderBar(doc: jsPDF, pageW: number) {
   doc.setFillColor(PRIMARY);
   doc.rect(0, 0, pageW, 12, 'F');
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('Inter', 'bold');
   doc.setFontSize(12);
   doc.setTextColor('#0d0f14');
   doc.text('BOLAKAMI', 14, 7.8);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('Inter', 'normal');
   doc.setFontSize(9);
   doc.text('Event & Komunitas', pageW - 14, 7.8, { align: 'right' });
 }
 
 export async function downloadEventPdf(event: EventItem): Promise<void> {
+  const fonts = await ensureFonts();
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  registerFonts(doc, fonts);
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const marginX = 14;
@@ -123,15 +172,15 @@ export async function downloadEventPdf(event: EventItem): Promise<void> {
   }
 
   // Title
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('Inter', 'bold');
   doc.setFontSize(18);
   doc.setTextColor('#ffffff');
-  const titleLines = doc.splitTextToSize(event.name, contentW);
+  const titleLines = doc.splitTextToSize(sanitize(event.name), contentW);
   doc.text(titleLines, marginX, cursorY);
   cursorY += titleLines.length * 7 + 2;
 
   // Period
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('Inter', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(MUTED);
   doc.text(`Periode: ${fmtRange(event.start_date, event.end_date)}`, marginX, cursorY);
@@ -144,11 +193,11 @@ export async function downloadEventPdf(event: EventItem): Promise<void> {
   cursorY += 6;
 
   // Description
-  const description = (event.description || '').trim() || 'Tidak ada deskripsi.';
-  doc.setFont('helvetica', 'normal');
+  const description = sanitize((event.description || '').trim() || 'Tidak ada deskripsi.');
+  doc.setFont('Inter', 'normal');
   doc.setFontSize(11);
   doc.setTextColor(TEXT);
-  const lineH = 5.2;
+  const lineH = 5.6;
   const bottomLimit = pageH - 20;
 
   // Process paragraph by paragraph to preserve newlines
@@ -162,7 +211,7 @@ export async function downloadEventPdf(event: EventItem): Promise<void> {
         paintPage(doc, pageW, pageH);
         drawHeaderBar(doc, pageW);
         cursorY = 20;
-        doc.setFont('helvetica', 'normal');
+        doc.setFont('Inter', 'normal');
         doc.setFontSize(11);
         doc.setTextColor(TEXT);
       }

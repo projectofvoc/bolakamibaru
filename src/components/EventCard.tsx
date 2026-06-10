@@ -122,6 +122,20 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
             )}
             {t('event.copyLink')}
           </Button>
+          {hasDescription && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={(e) => {
+                stop(e);
+                downloadEventPdf(event);
+              }}
+              type="button"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              {t('event.downloadPdf')}
+            </Button>
+          )}
         </div>
       </div>
     </article>
