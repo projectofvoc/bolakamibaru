@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar, ExternalLink, Send, Link2, Check } from 'lucide-react';
+import { Calendar, ExternalLink, Send, Link2, Check, Download } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { downloadEventPdf } from '@/lib/eventPdf';
 import {
   Dialog,
   DialogContent,
@@ -175,6 +176,17 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
             {copied ? <Check className="w-4 h-4 mr-2" /> : <Link2 className="w-4 h-4 mr-2" />}
             {t('event.copyLink')}
           </Button>
+          {hasDescription && (
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => downloadEventPdf(event)}
+              type="button"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              {t('event.downloadPdf')}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
