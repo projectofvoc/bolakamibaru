@@ -14,6 +14,7 @@ import EventBadge, {
   BADGE_ICON_OPTIONS,
   BadgeColor,
   BadgeIcon,
+  getBadgeIconComponent,
 } from '@/components/EventBadge';
 import {
   Plus,
@@ -508,20 +509,24 @@ const CMSEvents = () => {
                   <div>
                     <Label className="text-xs">Icon</Label>
                     <div className="flex flex-wrap gap-2 mt-1">
-                      {BADGE_ICON_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => setBadgeIcon(opt.value)}
-                          className={`text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
-                            badgeIcon === opt.value
-                              ? 'border-primary bg-primary/10'
-                              : 'border-border hover:bg-muted'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
+                      {BADGE_ICON_OPTIONS.map((opt) => {
+                        const IconCmp = getBadgeIconComponent(opt.value);
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setBadgeIcon(opt.value)}
+                            className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
+                              badgeIcon === opt.value
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border hover:bg-muted'
+                            }`}
+                          >
+                            {IconCmp ? <IconCmp className="w-3.5 h-3.5" /> : <span className="w-3.5 h-3.5 inline-block opacity-40">—</span>}
+                            {opt.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                   {badgeLabel.trim() && (
