@@ -1,55 +1,55 @@
-## Tujuan
-Ganti pilihan icon badge event dari generic (Flame/Star/Trophy/dll) menjadi icon platform media sosial + web, supaya user langsung paham event ini berjalan di platform mana.
+## Analisis Masalah
 
-## Daftar icon baru
+Saya cek DB & code:
 
-| Value | Label | Source |
-|---|---|---|
-| `none` | Tanpa Icon | — |
-| `web` | Website | Lucide `Globe` |
-| `telegram` | Telegram | Lucide `Send` (paper plane, sudah dipakai utk telegram di app ini) |
-| `whatsapp` | WhatsApp | Lucide `MessageCircle` |
-| `facebook` | Facebook | Lucide `Facebook` |
-| `instagram` | Instagram | Lucide `Instagram` |
-| `tiktok` | TikTok | Custom `TikTokIcon` (sudah ada di `src/components/icons/SocialIcons.tsx`) |
-| `youtube` | YouTube | Lucide `Youtube` |
-| `twitter` | X / Twitter | Lucide `Twitter` |
-| `threads` | Threads | Custom `ThreadsIcon` (sudah ada) |
-| `discord` | Discord | Lucide `MessagesSquare` (proxy — Lucide tidak punya icon Discord) |
+**DB row terakhir (event "Tebak & Share Pildun Bolakami"):**
 
-Total 11 opsi (termasuk None). Icon TikTok & Threads pakai SVG custom; sisanya pakai Lucide.
-
-## Perubahan
-
-### 1. DB — migrasi update CHECK constraint `events_badge_icon_check`
-```text
-none | web | telegram | whatsapp | facebook | instagram | tiktok | youtube | twitter | threads | discord
 ```
-Default tetap `none`. Tidak ada data lama yang perlu di-migrate karena fitur baru saja dirilis dan default `none`.
-
-### 2. `src/components/EventBadge.tsx`
-- Update `BadgeIcon` type ke 11 nilai di atas.
-- Update `BADGE_ICON_OPTIONS` (label + icon).
-- Render: buat helper `renderIcon(icon, className)` yang return:
-  - Untuk Lucide icons → ambil dari `icons` map (sudah dipakai).
-  - Untuk `tiktok`/`threads` → render custom SVG component.
-
-### 3. `src/pages/cms/CMSEvents.tsx`
-Tidak ada perubahan struktur — sudah render `BADGE_ICON_OPTIONS` secara dinamis. Tambahkan preview icon kecil di tiap tombol pilihan agar admin lebih cepat memilih:
-```text
-[🌐 Website]  [✈ Telegram]  [📘 Facebook]  ...
+badge_enabled: false
+badge_label:   NULL
+badge_color:   blue
+badge_icon:    telegram
 ```
 
-### 4. Tidak ada perubahan di `EventCard.tsx` / `EventDetail.tsx` — sudah pakai `<EventBadge>` component.
+Jadi sebenarnya **warna & icon TERSIMPAN** ke database. Yang tidak tersimpan adalah `badge_enabled` (selalu jadi `false`) dan `badge_label` (NULL). Akibatnya badge tidak muncul di card/landing page karena render dibatasi oleh `badge_enabled && badge_label`.
 
-## File changes
+**Root cause** — `src/pages/cms/CMSEvents.tsx` baris 209–210:
 
-```text
-NEW    supabase/migrations/<ts>_update_event_badge_icon_check.sql
-EDIT   src/components/EventBadge.tsx
-EDIT   src/pages/cms/CMSEvents.tsx   (preview icon di tombol pilihan)
+```ts
+badge_enabled: badgeEnabled && !!badgeLabel.trim(),
+badge_label:   badgeLabel.trim() ? badgeLabel.trim().slice(0,24) : null,
 ```
 
-## Catatan
-- WhatsApp & Discord pakai icon proxy karena Lucide official tidak menyediakannya; alternatif lain (Simple Icons, custom SVG) bisa dipakai jika user tidak puas — tunggu feedback.
-- Warna icon mengikuti warna badge (text color), tidak di-brand-color per platform, agar konsisten dengan sistem desain badge yang sudah disetujui (teks + warna preset).
+Switch hanya tersimpan `true` kalau teks badge juga terisi. Pada screenshot, "Hadiah 2 Juta" itu adalah **placeholder** (input kosong) — karena itu `badge_enabled` di-paksa `false` walau switch ON dan icon Telegram dipilih.
+
+Tambahan: render badge di `EventCard.tsx`, `EventsSection.tsx`, dan `EventDetail.tsx` juga butuh `badge_enabled && badge_label`, jadi badge icon-only (tanpa teks) tidak mungkin.
+
+## Rencana Perbaikan
+
+### 1. `src/pages/cms/CMSEvents.tsx` (saveMutation)
+
+- `badge_enabled` ikuti switch apa adanya (`badgeEnabled`), tidak tergantung label.
+- `badge_label` tetap di-trim/slice 24 char, boleh NULL.
+- Validasi ringan: kalau switch ON tapi label kosong **dan** icon `none`, tampilkan error "Isi teks badge atau pilih icon".
+
+### 2. `EventBadge.tsx`
+
+- Bila `label` kosong, render badge icon-only (padding lebih simetris, `aria-label` dari nama icon).
+
+### 3. Render badge di card & landing
+
+File: `src/components/EventCard.tsx`, `src/components/EventsSection.tsx`, `src/pages/EventDetail.tsx`
+
+- Ganti syarat dari `badge_enabled && badge_label` → `badge_enabled && (badge_label || badge_icon !== 'none')`.
+
+### 4. Tidak ada perubahan DB
+
+Constraint & kolom sudah benar; data icon/warna lama akan langsung muncul setelah user save ulang (toggle akan tersimpan dengan benar).
+
+### Verifikasi setelah build
+
+- Buka event di CMS → aktifkan badge, pilih icon Telegram, kosongkan teks → Simpan → reopen: switch tetap ON, icon Telegram tetap terpilih.
+- Cek di list event & landing `/event/:slug`: badge icon Telegram muncul di pojok kanan-atas banner.
+- Test dengan teks "Hadiah 2 Juta" + icon → keduanya tampil.  
+  
+dan warna dari iconnya atau badgenya untuk media sosial tetap menggunakan warna default dari platformnya 
