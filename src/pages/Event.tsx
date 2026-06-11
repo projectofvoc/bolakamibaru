@@ -29,17 +29,17 @@ const EventPage: React.FC = () => {
     },
   });
 
-  // Redirect ?slug=... (link legacy) ke landing page baru /event/<slug>
-  if (focusEventSlug) {
-    return <Navigate to={`/event/${focusEventSlug}`} replace />;
-  }
-  // Untuk ?id=<uuid> (legacy), kalau event ditemukan & punya slug, redirect ke slug-nya.
+  // Untuk ?id=<uuid> legacy: scroll ke card (jika slug tersedia di list, redirect ke landing).
   const legacyEvent = focusEventId ? events.find((e) => e.id === focusEventId) : null;
   useEffect(() => {
     if (!focusEventId) return;
     const el = document.getElementById(`event-${focusEventId}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [focusEventId, events]);
+
+  if (focusEventSlug) {
+    return <Navigate to={`/event/${focusEventSlug}`} replace />;
+  }
   if (legacyEvent?.slug) {
     return <Navigate to={`/event/${legacyEvent.slug}`} replace />;
   }
