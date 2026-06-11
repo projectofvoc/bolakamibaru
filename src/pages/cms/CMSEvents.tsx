@@ -307,12 +307,27 @@ const CMSEvents = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {events.map((ev) => (
             <Card key={ev.id} className="overflow-hidden">
-              <div className="aspect-[16/9] bg-muted">
+              <div className="relative aspect-[16/9] bg-muted">
                 {ev.banner_url ? (
-                  <img src={ev.banner_url} alt={ev.name} className="w-full h-full object-cover" />
+                  <img
+                    src={ev.banner_url}
+                    alt={ev.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                     <CalendarIcon className="w-10 h-10" />
+                  </div>
+                )}
+                {ev.badge_enabled && ev.badge_label && (
+                  <div className="absolute top-2 right-2 z-10">
+                    <EventBadge
+                      label={ev.badge_label}
+                      color={(ev.badge_color as BadgeColor) || 'primary'}
+                      icon={(ev.badge_icon as BadgeIcon) || 'none'}
+                    />
                   </div>
                 )}
               </div>
