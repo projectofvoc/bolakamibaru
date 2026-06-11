@@ -188,6 +188,9 @@ const CMSEvents = () => {
       if (new Date(endDate) < new Date(startDate)) throw new Error('Tanggal berakhir harus ≥ tanggal mulai');
       if (!joinUrl.trim()) throw new Error('URL Join wajib diisi');
       if (telegramEnabled && !telegramUrl.trim()) throw new Error('URL Telegram wajib jika tombol diaktifkan');
+      if (badgeEnabled && !badgeLabel.trim() && badgeIcon === 'none') {
+        throw new Error('Badge aktif: isi teks badge atau pilih icon');
+      }
 
       let bannerUrl = editing?.banner_url || null;
       if (bannerFile) {
@@ -206,7 +209,7 @@ const CMSEvents = () => {
         join_enabled: joinEnabled,
         is_active: isActive,
         sort_order: sortOrder,
-        badge_enabled: badgeEnabled && !!badgeLabel.trim(),
+        badge_enabled: badgeEnabled,
         badge_label: badgeLabel.trim() ? badgeLabel.trim().slice(0, 24) : null,
         badge_color: badgeColor,
         badge_icon: badgeIcon,
