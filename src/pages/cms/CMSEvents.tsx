@@ -9,6 +9,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { convertToWebp } from '@/lib/imageConvert';
+import EventBadge, {
+  BADGE_COLOR_OPTIONS,
+  BADGE_ICON_OPTIONS,
+  BadgeColor,
+  BadgeIcon,
+} from '@/components/EventBadge';
 import {
   Plus,
   Trash2,
@@ -50,6 +56,10 @@ interface EventRow {
   created_at: string;
   description: string | null;
   join_enabled: boolean;
+  badge_enabled: boolean;
+  badge_label: string | null;
+  badge_color: BadgeColor;
+  badge_icon: BadgeIcon;
 }
 
 const toDatetimeLocal = (iso: string) => {
@@ -81,6 +91,10 @@ const CMSEvents = () => {
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [badgeEnabled, setBadgeEnabled] = useState(false);
+  const [badgeLabel, setBadgeLabel] = useState('');
+  const [badgeColor, setBadgeColor] = useState<BadgeColor>('primary');
+  const [badgeIcon, setBadgeIcon] = useState<BadgeIcon>('none');
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['cms-events'],
@@ -110,6 +124,10 @@ const CMSEvents = () => {
     setSortOrder(0);
     setBannerFile(null);
     setBannerPreview('');
+    setBadgeEnabled(false);
+    setBadgeLabel('');
+    setBadgeColor('primary');
+    setBadgeIcon('none');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -127,6 +145,10 @@ const CMSEvents = () => {
     setSortOrder(row.sort_order);
     setBannerFile(null);
     setBannerPreview(row.banner_url || '');
+    setBadgeEnabled(!!row.badge_enabled);
+    setBadgeLabel(row.badge_label || '');
+    setBadgeColor((row.badge_color as BadgeColor) || 'primary');
+    setBadgeIcon((row.badge_icon as BadgeIcon) || 'none');
     setShowForm(true);
   };
 
@@ -183,6 +205,10 @@ const CMSEvents = () => {
         join_enabled: joinEnabled,
         is_active: isActive,
         sort_order: sortOrder,
+        badge_enabled: badgeEnabled && !!badgeLabel.trim(),
+        badge_label: badgeLabel.trim() ? badgeLabel.trim().slice(0, 24) : null,
+        badge_color: badgeColor,
+        badge_icon: badgeIcon,
       };
 
       if (editing) {
@@ -281,12 +307,27 @@ const CMSEvents = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {events.map((ev) => (
             <Card key={ev.id} className="overflow-hidden">
-              <div className="aspect-[16/9] bg-muted">
+              <div className="relative aspect-[16/9] bg-muted">
                 {ev.banner_url ? (
-                  <img src={ev.banner_url} alt={ev.name} className="w-full h-full object-cover" />
+                  <img
+                    src={ev.banner_url}
+                    alt={ev.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                     <CalendarIcon className="w-10 h-10" />
+                  </div>
+                )}
+                {ev.badge_enabled && ev.badge_label && (
+                  <div className="absolute top-2 right-2 z-10">
+                    <EventBadge
+                      label={ev.badge_label}
+                      color={(ev.badge_color as BadgeColor) || 'primary'}
+                      icon={(ev.badge_icon as BadgeIcon) || 'none'}
+                    />
                   </div>
                 )}
               </div>
@@ -421,6 +462,77 @@ const CMSEvents = () => {
                   onChange={(e) => setTelegramUrl(e.target.value)}
                   placeholder="https://t.me/..."
                 />
+              )}
+            </div>
+
+            <div className="space-y-3 p-3 border border-border rounded-lg">
+              <div className="flex items-center justify-between">
+                <Label>Badge Event</Label>
+                <Switch checked={badgeEnabled} onCheckedChange={setBadgeEnabled} />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Badge tampil di pojok kanan-atas banner event di card list & landing page.
+              </p>
+              {badgeEnabled && (
+                <div className="space-y-3 pt-2">
+                  <div>
+                    <Label className="text-xs">Teks Badge (maks 24 karakter)</Label>
+                    <Input
+                      value={badgeLabel}
+                      onChange={(e) => setBadgeLabel(e.target.value.slice(0, 24))}
+                      maxLength={24}
+                      placeholder="Hadiah 2 Juta"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Warna</Label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {BADGE_COLOR_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setBadgeColor(opt.value)}
+                          className={`flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
+                            badgeColor === opt.value
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border hover:bg-muted'
+                          }`}
+                          aria-label={opt.label}
+                        >
+                          <span className={`w-4 h-4 rounded-full ${opt.swatch}`} />
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Icon</Label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {BADGE_ICON_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setBadgeIcon(opt.value)}
+                          className={`text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
+                            badgeIcon === opt.value
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border hover:bg-muted'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {badgeLabel.trim() && (
+                    <div>
+                      <Label className="text-xs">Preview</Label>
+                      <div className="mt-1 p-3 bg-muted/40 rounded-md">
+                        <EventBadge label={badgeLabel.trim()} color={badgeColor} icon={badgeIcon} size="md" />
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 

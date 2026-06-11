@@ -1,16 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Calendar, ExternalLink, Send, Link2, Check, Download } from 'lucide-react';
+import { Calendar, ExternalLink, Send } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useToast } from '@/hooks/use-toast';
-import { downloadEventPdf } from '@/lib/eventPdf';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+import EventBadge, { BadgeColor, BadgeIcon } from '@/components/EventBadge';
 
 export interface EventItem {
   id: string;
@@ -24,6 +17,10 @@ export interface EventItem {
   description?: string | null;
   join_enabled?: boolean;
   slug?: string | null;
+  badge_enabled?: boolean;
+  badge_label?: string | null;
+  badge_color?: BadgeColor | null;
+  badge_icon?: BadgeIcon | null;
 }
 
 const formatRange = (start: string, end: string, lang: 'id' | 'en') => {
@@ -41,49 +38,41 @@ const formatRange = (start: string, end: string, lang: 'id' | 'en') => {
 
 const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
   const { language, t } = useLanguage();
-  const { toast } = useToast();
+  const navigate = useNavigate();
   const showTelegram = event.telegram_enabled && !!event.telegram_url;
   const showJoin = event.join_enabled !== false && !!event.join_url;
-  const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const hasDescription = !!event.description && event.description.trim().length > 0;
-
-  const shareUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/share/event/${event.slug || event.id}`
-      : `/share/event/${event.slug || event.id}`;
-
-  const handleCopy = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      toast({ title: t('event.linkCopied') });
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      toast({ title: 'Error', variant: 'destructive' });
-    }
-  };
+  const slugOrId = event.slug || event.id;
+  const showBadge = !!event.badge_enabled && !!event.badge_label?.trim();
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
+  const goToDetail = () => navigate(`/event/${slugOrId}`);
 
   return (
-    <>
     <article
       className="bg-card rounded-xl overflow-hidden border border-border flex flex-col cursor-pointer hover:border-primary/50 transition-colors h-full"
-      onClick={() => setOpen(true)}
+      onClick={goToDetail}
     >
-      <div className="aspect-[16/9] w-full bg-muted overflow-hidden shrink-0">
+      <div className="relative aspect-[16/9] w-full bg-muted overflow-hidden shrink-0">
         {event.banner_url ? (
           <img
             src={event.banner_url}
             alt={event.name}
             className="w-full h-full object-cover"
             loading="lazy"
+            decoding="async"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
             <Calendar className="w-10 h-10" />
+          </div>
+        )}
+        {showBadge && (
+          <div className="absolute top-2 right-2 z-10">
+            <EventBadge
+              label={event.badge_label!.trim()}
+              color={(event.badge_color as BadgeColor) || 'primary'}
+              icon={(event.badge_icon as BadgeIcon) || 'none'}
+            />
           </div>
         )}
       </div>
@@ -113,119 +102,14 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
           <Button
             variant="outline"
             className="w-full"
-            onClick={handleCopy}
+            onClick={(e) => { stop(e); goToDetail(); }}
             type="button"
           >
-            {copied ? (
-              <Check className="w-4 h-4 mr-2" />
-            ) : (
-              <Link2 className="w-4 h-4 mr-2" />
-            )}
-            {t('event.copyLink')}
+            {t('event.openDetail')}
           </Button>
-          {hasDescription && (
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={async (e) => {
-                stop(e);
-                try {
-                  await downloadEventPdf(event);
-                } catch (err) {
-                  console.error('PDF download failed', err);
-                  toast({
-                    title: 'Gagal membuat PDF',
-                    description: err instanceof Error ? err.message : 'Terjadi kesalahan',
-                    variant: 'destructive',
-                  });
-                }
-              }}
-              type="button"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              {t('event.downloadPdf')}
-            </Button>
-          )}
         </div>
       </div>
     </article>
-
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="w-[95vw] sm:w-full max-w-3xl h-[90vh] sm:h-auto sm:max-h-[92vh] p-0 flex flex-col gap-0 overflow-hidden">
-        <div className="flex-1 overflow-y-auto">
-          {event.banner_url && (
-            <div className="w-full bg-black border-b border-border flex items-center justify-center">
-              <img
-                src={event.banner_url}
-                alt={event.name}
-                className="w-full h-auto object-contain"
-              />
-            </div>
-          )}
-          <DialogHeader className="space-y-2 text-left p-4 sm:p-6 sm:pb-3 border-b border-border">
-            <DialogTitle className="text-xl sm:text-2xl font-bold pr-8">{event.name}</DialogTitle>
-            <DialogDescription className="flex items-center gap-2 text-xs sm:text-sm">
-              <Calendar className="w-4 h-4 shrink-0" />
-              <span>
-                {t('event.period')}: {formatRange(event.start_date, event.end_date, language)}
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-
-          {hasDescription && (
-            <div className="px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base text-foreground/90 whitespace-pre-line leading-relaxed">
-              {event.description}
-            </div>
-          )}
-        </div>
-
-        <div className="shrink-0 flex flex-col sm:flex-row gap-2 p-3 sm:p-4 border-t border-border bg-card">
-          {showJoin && (
-            <Button asChild className="flex-1">
-              <a href={event.join_url} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                {t('event.join')}
-              </a>
-            </Button>
-          )}
-          {showTelegram && (
-            <Button asChild variant="secondary" className="flex-1">
-              <a href={event.telegram_url!} target="_blank" rel="noopener noreferrer">
-                <Send className="w-4 h-4 mr-2" />
-                {t('event.joinTelegram')}
-              </a>
-            </Button>
-          )}
-          <Button variant="outline" className="flex-1" onClick={handleCopy} type="button">
-            {copied ? <Check className="w-4 h-4 mr-2" /> : <Link2 className="w-4 h-4 mr-2" />}
-            {t('event.copyLink')}
-          </Button>
-          {hasDescription && (
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={async () => {
-                try {
-                  await downloadEventPdf(event);
-                } catch (err) {
-                  console.error('PDF download failed', err);
-                  toast({
-                    title: 'Gagal membuat PDF',
-                    description: err instanceof Error ? err.message : 'Terjadi kesalahan',
-                    variant: 'destructive',
-                  });
-                }
-              }}
-              type="button"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              {t('event.downloadPdf')}
-            </Button>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
-    </>
   );
 };
 

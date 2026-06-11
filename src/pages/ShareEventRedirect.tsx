@@ -11,8 +11,10 @@ const ShareEventRedirect: React.FC = () => {
     return <Navigate to="/event" replace />;
   }
 
-  const param = UUID_RE.test(idOrSlug) ? 'id' : 'slug';
-  const target = `/event?${param}=${encodeURIComponent(idOrSlug)}`;
+  // UUID lama → /event?id=<uuid> (fallback list). Slug → /event/<slug> (landing page).
+  const target = UUID_RE.test(idOrSlug)
+    ? `/event?id=${encodeURIComponent(idOrSlug)}`
+    : `/event/${encodeURIComponent(idOrSlug)}`;
 
   return (
     <>

@@ -189,6 +189,10 @@ const translations: Record<string, Record<Language, string>> = {
   'event.openDetail': { id: 'Lihat Event', en: 'View Event' },
   'event.period': { id: 'Periode', en: 'Period' },
   'event.downloadPdf': { id: 'Download PDF', en: 'Download PDF' },
+  'event.back': { id: '← Kembali ke daftar event', en: '← Back to events' },
+  'event.notFound': { id: 'Event tidak ditemukan', en: 'Event not found' },
+  'event.notFoundDesc': { id: 'Event yang Anda cari tidak tersedia atau sudah berakhir.', en: 'The event you are looking for is unavailable or has ended.' },
+  'event.detailsHeading': { id: 'Detail & Syarat', en: 'Details & Terms' },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);

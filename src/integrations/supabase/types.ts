@@ -673,6 +673,10 @@ export type Database = {
       }
       events: {
         Row: {
+          badge_color: string
+          badge_enabled: boolean
+          badge_icon: string
+          badge_label: string | null
           banner_url: string | null
           created_at: string
           created_by: string | null
@@ -691,6 +695,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          badge_color?: string
+          badge_enabled?: boolean
+          badge_icon?: string
+          badge_label?: string | null
           banner_url?: string | null
           created_at?: string
           created_by?: string | null
@@ -709,6 +717,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          badge_color?: string
+          badge_enabled?: boolean
+          badge_icon?: string
+          badge_label?: string | null
           banner_url?: string | null
           created_at?: string
           created_by?: string | null
