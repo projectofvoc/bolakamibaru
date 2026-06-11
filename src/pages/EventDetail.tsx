@@ -10,7 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import EventBadge, { BadgeColor, BadgeIcon } from '@/components/EventBadge';
 import { downloadEventPdf } from '@/lib/eventPdf';
-import { Calendar, ExternalLink, Send, Link2, Check, Download, ArrowLeft } from 'lucide-react';
+import { Calendar, ExternalLink, Send, Link2, Check, Download, ArrowLeft, Copy } from 'lucide-react';
 import type { EventItem } from '@/components/EventCard';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -33,6 +33,7 @@ const EventDetail: React.FC = () => {
   const { language, t } = useLanguage();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const [descCopied, setDescCopied] = useState(false);
 
   const isUuid = !!slug && UUID_RE.test(slug);
 
@@ -61,6 +62,18 @@ const EventDetail: React.FC = () => {
       setCopied(true);
       toast({ title: t('event.linkCopied') });
       setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast({ title: 'Error', variant: 'destructive' });
+    }
+  };
+
+  const handleCopyDescription = async () => {
+    if (!event?.description) return;
+    try {
+      await navigator.clipboard.writeText(event.description);
+      setDescCopied(true);
+      toast({ title: language === 'id' ? 'Detail event disalin' : 'Event details copied' });
+      setTimeout(() => setDescCopied(false), 1800);
     } catch {
       toast({ title: 'Error', variant: 'destructive' });
     }
@@ -210,7 +223,18 @@ const EventDetail: React.FC = () => {
               {/* Description */}
               {hasDescription && (
                 <section className="mt-8 bg-card border border-border rounded-xl p-5 md:p-7">
-                  <h2 className="text-lg font-semibold text-foreground mb-3">{t('event.detailsHeading')}</h2>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-lg font-semibold text-foreground">{t('event.detailsHeading')}</h2>
+                    <button
+                      type="button"
+                      onClick={handleCopyDescription}
+                      aria-label={language === 'id' ? 'Salin detail' : 'Copy details'}
+                      title={language === 'id' ? 'Salin detail' : 'Copy details'}
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    >
+                      {descCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
                   <div className="text-sm md:text-base text-foreground/90 whitespace-pre-line leading-relaxed">
                     {event.description}
                   </div>
