@@ -450,6 +450,77 @@ const CMSEvents = () => {
               )}
             </div>
 
+            <div className="space-y-3 p-3 border border-border rounded-lg">
+              <div className="flex items-center justify-between">
+                <Label>Badge Event</Label>
+                <Switch checked={badgeEnabled} onCheckedChange={setBadgeEnabled} />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Badge tampil di pojok kanan-atas banner event di card list & landing page.
+              </p>
+              {badgeEnabled && (
+                <div className="space-y-3 pt-2">
+                  <div>
+                    <Label className="text-xs">Teks Badge (maks 24 karakter)</Label>
+                    <Input
+                      value={badgeLabel}
+                      onChange={(e) => setBadgeLabel(e.target.value.slice(0, 24))}
+                      maxLength={24}
+                      placeholder="Hadiah 2 Juta"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Warna</Label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {BADGE_COLOR_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setBadgeColor(opt.value)}
+                          className={`flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
+                            badgeColor === opt.value
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border hover:bg-muted'
+                          }`}
+                          aria-label={opt.label}
+                        >
+                          <span className={`w-4 h-4 rounded-full ${opt.swatch}`} />
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Icon</Label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {BADGE_ICON_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setBadgeIcon(opt.value)}
+                          className={`text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
+                            badgeIcon === opt.value
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border hover:bg-muted'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {badgeLabel.trim() && (
+                    <div>
+                      <Label className="text-xs">Preview</Label>
+                      <div className="mt-1 p-3 bg-muted/40 rounded-md">
+                        <EventBadge label={badgeLabel.trim()} color={badgeColor} icon={badgeIcon} size="md" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="flex items-center justify-between p-3 border border-border rounded-lg">
                 <Label>Tampilkan</Label>
