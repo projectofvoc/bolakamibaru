@@ -532,7 +532,7 @@ const CMSEvents = () => {
                       })}
                     </div>
                   </div>
-                  {badgeLabel.trim() && (
+                  {(badgeLabel.trim() || badgeIcon !== 'none') && (
                     <div>
                       <Label className="text-xs">Preview</Label>
                       <div className="mt-1 p-3 bg-muted/40 rounded-md">
