@@ -26,6 +26,7 @@ import Berita from "./pages/Berita";
 import BeritaTag from "./pages/BeritaTag";
 import Klasemen from "./pages/Klasemen";
 import EventPage from "./pages/Event";
+import EventDetail from "./pages/EventDetail";
 import {
   CMSLayout,
   CMSDashboard,
@@ -79,6 +80,7 @@ const App = () => (
             <Route path="/klasemen" element={<Klasemen />} />
             <Route path="/rewards" element={<Rewards />} />
             <Route path="/event" element={<EventPage />} />
+            <Route path="/event/:slug" element={<EventDetail />} />
             
             {/* CMS Routes */}
             <Route path="/cms" element={<CMSLayout />}>
