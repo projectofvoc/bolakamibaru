@@ -116,11 +116,13 @@ const EventBadge: React.FC<EventBadgeProps> = ({
   // Padding: more symmetric when icon-only.
   const sizeCls = hasLabel
     ? size === 'md' ? 'text-sm px-3 py-1' : 'text-[11px] px-2.5 py-1'
-    : size === 'md' ? 'p-1.5' : 'p-1';
+    : size === 'md' ? 'p-4' : 'p-3';
 
   const colorCls = brand ? '' : COLOR_CLASS[color];
   const styleOverride = brand ? { backgroundColor: brand.bg, color: brand.fg } : undefined;
-  const iconSizeCls = size === 'md' ? 'w-4 h-4' : 'w-3 h-3';
+  const iconSizeCls = hasLabel
+    ? size === 'md' ? 'w-4 h-4' : 'w-3 h-3'
+    : size === 'md' ? 'w-9 h-9' : 'w-7 h-7';
 
   return (
     <span
