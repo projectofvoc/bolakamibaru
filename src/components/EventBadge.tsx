@@ -1,8 +1,30 @@
 import React from 'react';
-import { icons } from 'lucide-react';
+import {
+  Globe,
+  Send,
+  MessageCircle,
+  Facebook,
+  Instagram,
+  Youtube,
+  Twitter,
+  MessagesSquare,
+  type LucideIcon,
+} from 'lucide-react';
+import { TikTokIcon, ThreadsIcon } from '@/components/icons/SocialIcons';
 
 export type BadgeColor = 'primary' | 'red' | 'yellow' | 'blue' | 'purple' | 'green';
-export type BadgeIcon = 'none' | 'flame' | 'star' | 'trophy' | 'gift' | 'sparkles' | 'crown' | 'zap';
+export type BadgeIcon =
+  | 'none'
+  | 'web'
+  | 'telegram'
+  | 'whatsapp'
+  | 'facebook'
+  | 'instagram'
+  | 'tiktok'
+  | 'youtube'
+  | 'twitter'
+  | 'threads'
+  | 'discord';
 
 export const BADGE_COLOR_OPTIONS: { value: BadgeColor; label: string; swatch: string }[] = [
   { value: 'primary', label: 'Primary', swatch: 'bg-primary' },
@@ -13,16 +35,37 @@ export const BADGE_COLOR_OPTIONS: { value: BadgeColor; label: string; swatch: st
   { value: 'green', label: 'Hijau', swatch: 'bg-emerald-500' },
 ];
 
-export const BADGE_ICON_OPTIONS: { value: BadgeIcon; label: string; iconName: string | null }[] = [
-  { value: 'none', label: 'Tanpa Icon', iconName: null },
-  { value: 'flame', label: 'Flame', iconName: 'Flame' },
-  { value: 'star', label: 'Star', iconName: 'Star' },
-  { value: 'trophy', label: 'Trophy', iconName: 'Trophy' },
-  { value: 'gift', label: 'Gift', iconName: 'Gift' },
-  { value: 'sparkles', label: 'Sparkles', iconName: 'Sparkles' },
-  { value: 'crown', label: 'Crown', iconName: 'Crown' },
-  { value: 'zap', label: 'Zap', iconName: 'Zap' },
+type IconCmp = React.ComponentType<{ className?: string }>;
+
+const ICON_MAP: Record<BadgeIcon, IconCmp | null> = {
+  none: null,
+  web: Globe as LucideIcon,
+  telegram: Send as LucideIcon,
+  whatsapp: MessageCircle as LucideIcon,
+  facebook: Facebook as LucideIcon,
+  instagram: Instagram as LucideIcon,
+  tiktok: TikTokIcon,
+  youtube: Youtube as LucideIcon,
+  twitter: Twitter as LucideIcon,
+  threads: ThreadsIcon,
+  discord: MessagesSquare as LucideIcon,
+};
+
+export const BADGE_ICON_OPTIONS: { value: BadgeIcon; label: string }[] = [
+  { value: 'none', label: 'Tanpa Icon' },
+  { value: 'web', label: 'Website' },
+  { value: 'telegram', label: 'Telegram' },
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'facebook', label: 'Facebook' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'tiktok', label: 'TikTok' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'twitter', label: 'X / Twitter' },
+  { value: 'threads', label: 'Threads' },
+  { value: 'discord', label: 'Discord' },
 ];
+
+export const getBadgeIconComponent = (icon: BadgeIcon): IconCmp | null => ICON_MAP[icon] || null;
 
 const COLOR_CLASS: Record<BadgeColor, string> = {
   primary: 'bg-primary text-primary-foreground',
@@ -31,17 +74,6 @@ const COLOR_CLASS: Record<BadgeColor, string> = {
   blue: 'bg-blue-500 text-white',
   purple: 'bg-purple-500 text-white',
   green: 'bg-emerald-500 text-white',
-};
-
-const ICON_NAME: Record<BadgeIcon, string | null> = {
-  none: null,
-  flame: 'Flame',
-  star: 'Star',
-  trophy: 'Trophy',
-  gift: 'Gift',
-  sparkles: 'Sparkles',
-  crown: 'Crown',
-  zap: 'Zap',
 };
 
 interface EventBadgeProps {
@@ -59,8 +91,7 @@ const EventBadge: React.FC<EventBadgeProps> = ({
   size = 'sm',
   className = '',
 }) => {
-  const iconName = ICON_NAME[icon];
-  const IconCmp = iconName ? (icons as Record<string, React.ComponentType<{ className?: string }>>)[iconName] : null;
+  const IconCmp = getBadgeIconComponent(icon);
   const sizeCls = size === 'md' ? 'text-sm px-3 py-1' : 'text-[11px] px-2.5 py-1';
   return (
     <span
