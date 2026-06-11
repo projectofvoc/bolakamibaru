@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Calendar, ExternalLink, Send } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useToast } from '@/hooks/use-toast';
 import EventBadge, { BadgeColor, BadgeIcon } from '@/components/EventBadge';
 
 export interface EventItem {
@@ -40,8 +39,6 @@ const formatRange = (start: string, end: string, lang: 'id' | 'en') => {
 const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
   const { language, t } = useLanguage();
   const navigate = useNavigate();
-  const { toast: _toast } = useToast();
-  void _toast;
   const showTelegram = event.telegram_enabled && !!event.telegram_url;
   const showJoin = event.join_enabled !== false && !!event.join_url;
   const slugOrId = event.slug || event.id;
