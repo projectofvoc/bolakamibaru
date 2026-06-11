@@ -69,7 +69,9 @@ const EventDetail: React.FC = () => {
   const showJoin = !!event && event.join_enabled !== false && !!event.join_url;
   const showTelegram = !!event && event.telegram_enabled && !!event.telegram_url;
   const hasDescription = !!event?.description && event.description.trim().length > 0;
-  const showBadge = !!event?.badge_enabled && !!event.badge_label?.trim();
+  const showBadge =
+    !!event?.badge_enabled &&
+    (!!event.badge_label?.trim() || (event.badge_icon && event.badge_icon !== 'none'));
 
   const pageTitle = event ? `${event.name} - BOLAKAMI` : 'Event - BOLAKAMI';
   const pageDesc = event
@@ -141,7 +143,7 @@ const EventDetail: React.FC = () => {
                 {showBadge && (
                   <div className="absolute top-3 right-3 md:top-4 md:right-4 z-10">
                     <EventBadge
-                      label={event.badge_label!.trim()}
+                      label={event.badge_label?.trim() || ''}
                       color={(event.badge_color as BadgeColor) || 'primary'}
                       icon={(event.badge_icon as BadgeIcon) || 'none'}
                       size="md"

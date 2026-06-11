@@ -67,6 +67,23 @@ export const BADGE_ICON_OPTIONS: { value: BadgeIcon; label: string }[] = [
 
 export const getBadgeIconComponent = (icon: BadgeIcon): IconCmp | null => ICON_MAP[icon] || null;
 
+// Brand colors per platform — used automatically when a social/web icon is picked.
+// Keeps platform recognizability regardless of the "Warna" picker selection.
+const BRAND_STYLE: Partial<Record<BadgeIcon, { bg: string; fg: string }>> = {
+  web:       { bg: '#4ade80', fg: '#0d0f14' },
+  telegram:  { bg: '#229ED9', fg: '#ffffff' },
+  whatsapp:  { bg: '#25D366', fg: '#0d0f14' },
+  facebook:  { bg: '#1877F2', fg: '#ffffff' },
+  instagram: { bg: '#E4405F', fg: '#ffffff' },
+  tiktok:    { bg: '#000000', fg: '#ffffff' },
+  youtube:   { bg: '#FF0000', fg: '#ffffff' },
+  twitter:   { bg: '#000000', fg: '#ffffff' },
+  threads:   { bg: '#000000', fg: '#ffffff' },
+  discord:   { bg: '#5865F2', fg: '#ffffff' },
+};
+
+export const getBrandStyle = (icon: BadgeIcon) => BRAND_STYLE[icon];
+
 const COLOR_CLASS: Record<BadgeColor, string> = {
   primary: 'bg-primary text-primary-foreground',
   red: 'bg-red-500 text-white',
@@ -77,7 +94,7 @@ const COLOR_CLASS: Record<BadgeColor, string> = {
 };
 
 interface EventBadgeProps {
-  label: string;
+  label?: string;
   color?: BadgeColor;
   icon?: BadgeIcon;
   size?: 'sm' | 'md';
@@ -85,20 +102,34 @@ interface EventBadgeProps {
 }
 
 const EventBadge: React.FC<EventBadgeProps> = ({
-  label,
+  label = '',
   color = 'primary',
   icon = 'none',
   size = 'sm',
   className = '',
 }) => {
   const IconCmp = getBadgeIconComponent(icon);
-  const sizeCls = size === 'md' ? 'text-sm px-3 py-1' : 'text-[11px] px-2.5 py-1';
+  const trimmed = (label || '').trim();
+  const hasLabel = trimmed.length > 0;
+  const brand = getBrandStyle(icon);
+
+  // Padding: more symmetric when icon-only.
+  const sizeCls = hasLabel
+    ? size === 'md' ? 'text-sm px-3 py-1' : 'text-[11px] px-2.5 py-1'
+    : size === 'md' ? 'p-1.5' : 'p-1';
+
+  const colorCls = brand ? '' : COLOR_CLASS[color];
+  const styleOverride = brand ? { backgroundColor: brand.bg, color: brand.fg } : undefined;
+  const iconSizeCls = size === 'md' ? 'w-4 h-4' : 'w-3 h-3';
+
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full font-semibold shadow-md backdrop-blur ${COLOR_CLASS[color]} ${sizeCls} ${className}`}
+      className={`inline-flex items-center gap-1 rounded-full font-semibold shadow-md backdrop-blur ${colorCls} ${sizeCls} ${className}`}
+      style={styleOverride}
+      aria-label={hasLabel ? trimmed : icon}
     >
-      {IconCmp && <IconCmp className={size === 'md' ? 'w-4 h-4' : 'w-3 h-3'} />}
-      <span className="leading-none">{label}</span>
+      {IconCmp && <IconCmp className={iconSizeCls} />}
+      {hasLabel && <span className="leading-none">{trimmed}</span>}
     </span>
   );
 };
