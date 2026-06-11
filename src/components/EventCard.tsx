@@ -42,7 +42,9 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
   const showTelegram = event.telegram_enabled && !!event.telegram_url;
   const showJoin = event.join_enabled !== false && !!event.join_url;
   const slugOrId = event.slug || event.id;
-  const showBadge = !!event.badge_enabled && !!event.badge_label?.trim();
+  const showBadge =
+    !!event.badge_enabled &&
+    (!!event.badge_label?.trim() || (event.badge_icon && event.badge_icon !== 'none'));
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
   const goToDetail = () => navigate(`/event/${slugOrId}`);
@@ -69,7 +71,7 @@ const EventCard: React.FC<{ event: EventItem }> = ({ event }) => {
         {showBadge && (
           <div className="absolute top-2 right-2 z-10">
             <EventBadge
-              label={event.badge_label!.trim()}
+              label={event.badge_label?.trim() || ''}
               color={(event.badge_color as BadgeColor) || 'primary'}
               icon={(event.badge_icon as BadgeIcon) || 'none'}
             />
