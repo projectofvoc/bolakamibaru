@@ -1,40 +1,36 @@
+## Plan: Ganti tombol "Salin Link" → "Share Event"
 
-## Plan: Auto-Linkify URL di Detail & Syarat
+### Perubahan UI (EventDetail.tsx)
 
-Saat ini `event.description` dirender sebagai plain text (`whitespace-pre-line`), sehingga URL seperti `https://mediavault.ink/s/YLu8hR` atau `a.lwn25.com/register?referral=markasbola` tampil sebagai teks biasa (hanya ada highlight visual karena seleksi/format lain). Plan: deteksi otomatis URL pada deskripsi dan render sebagai `<a>` clickable dengan warna hijau brand (`text-primary` = `#4ade80`).
+**Desktop action bar:**
+- Button "Salin Link" (Link2 icon) → "Share Event" (Share2 icon dari lucide-react)
+- Tetap variant `outline`, posisi sama
+
+**Mobile sticky bar:**
+- Icon button Link2 → Share2 (aria-label "Share event")
+
+### Behavior
+
+Handler baru `handleShare()`:
+1. Jika `navigator.share` tersedia (mobile/PWA modern):
+   - Panggil `navigator.share({ title: event.name, text: event.name, url: shareUrl })`
+   - Tangani `AbortError` (user cancel) tanpa toast error
+2. Fallback (desktop/browser tanpa Web Share API):
+   - Copy `shareUrl` ke clipboard (perilaku lama)
+   - Tampilkan toast "Link disalin" / "Link copied"
+   - Set `copied=true` 1800ms (icon Share2 → Check)
+
+### Teks i18n
+
+Tambah key di `LanguageContext`:
+- `event.share` → ID: "Share Event", EN: "Share Event"
+
+(Key lama `event.copyLink` tetap dipertahankan kalau masih dipakai di tempat lain; kalau tidak, dihapus.)
 
 ### File yang diubah
-- **`src/pages/EventDetail.tsx`** — ganti render `{event.description}` dengan komponen/util yang melakukan linkify.
-- **`src/lib/linkify.tsx`** (baru) — util kecil `linkifyText(text)` yang mengembalikan `ReactNode[]`.
-
-### Detail perubahan
-
-1. **Buat `src/lib/linkify.tsx`**
-   - Export `linkifyText(text: string): ReactNode[]`.
-   - Regex deteksi:
-     - URL lengkap: `https?://[^\s]+`
-     - URL tanpa skema (mis. `a.lwn25.com/...`, `mediavault.ink/...`): pola domain `([a-z0-9-]+\.)+[a-z]{2,}(/[^\s]*)?` (case-insensitive).
-   - Trim trailing punctuation umum (`.,;:!?)]}`) dari match agar tanda baca tidak ikut jadi link.
-   - Untuk match tanpa skema, tambahkan `https://` saat membentuk `href`.
-   - Kembalikan array bercampur string + `<a key target="_blank" rel="noopener noreferrer nofollow" class="text-primary hover:text-primary/80 underline underline-offset-2 break-all">`.
-
-2. **Update `src/pages/EventDetail.tsx`**
-   - Import `linkifyText`.
-   - Ganti:
-     ```tsx
-     <div className="... whitespace-pre-line ...">{event.description}</div>
-     ```
-     menjadi render hasil `linkifyText(event.description)`. Pertahankan `whitespace-pre-line` agar newline tetap dihormati (linkify hanya mengganti URL, sisa string apa adanya termasuk `\n`).
-
-3. **Warna brand hijau**
-   - Gunakan token `text-primary` (sudah = `#4ade80` sesuai core memory). Tidak menambah warna baru, tidak mengubah `index.css`/`tailwind.config.ts`.
+- `src/pages/EventDetail.tsx` — rename handler & label, ganti icon, tambah Web Share API
+- `src/contexts/LanguageContext.tsx` — tambah `event.share`
 
 ### Tidak diubah
-- Tidak menyentuh CMS editor, DB, schema, PDF generator, share link, atau komponen lain.
-- Tidak mengubah copy/teks event.
-- Hanya layer presentasi di halaman EventDetail.
-
-### Catatan teknis
-- Pendekatan regex + split lebih ringan daripada menambah dependency (`linkify-react`, dll).
-- `break-all` mencegah URL panjang merusak layout mobile.
-- Berlaku otomatis untuk **semua event** karena single render path.
+- Tombol salin di section "Detail & Syarat" (icon Copy di header) — tetap
+- DB, edge function, share redirect route, PDF
