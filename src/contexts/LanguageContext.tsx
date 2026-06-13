@@ -185,6 +185,8 @@ const translations: Record<string, Record<Language, string>> = {
   'event.viewDetails': { id: 'Lihat Detail & Syarat', en: 'View Details & Terms' },
   'event.hideDetails': { id: 'Tutup Detail', en: 'Hide Details' },
   'event.copyLink': { id: 'Salin Link', en: 'Copy Link' },
+  'event.share': { id: 'Share Event', en: 'Share Event' },
+  'event.linkCopiedFallback': { id: 'Link disalin', en: 'Link copied' },
   'event.linkCopied': { id: 'Link disalin!', en: 'Link copied!' },
   'event.openDetail': { id: 'Lihat Event', en: 'View Event' },
   'event.period': { id: 'Periode', en: 'Period' },
