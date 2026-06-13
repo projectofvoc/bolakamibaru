@@ -10,6 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import EventBadge, { BadgeColor, BadgeIcon } from '@/components/EventBadge';
 import { downloadEventPdf } from '@/lib/eventPdf';
+import { linkifyText } from '@/lib/linkify';
 import { Calendar, ExternalLink, Send, Link2, Check, Download, ArrowLeft, Copy } from 'lucide-react';
 import type { EventItem } from '@/components/EventCard';
 
@@ -236,7 +237,7 @@ const EventDetail: React.FC = () => {
                     </button>
                   </div>
                   <div className="text-sm md:text-base text-foreground/90 whitespace-pre-line leading-relaxed">
-                    {event.description}
+                    {linkifyText(event.description)}
                   </div>
                 </section>
               )}
