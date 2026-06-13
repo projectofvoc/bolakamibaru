@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import EventBadge, { BadgeColor, BadgeIcon } from '@/components/EventBadge';
 import { downloadEventPdf } from '@/lib/eventPdf';
 import { linkifyText } from '@/lib/linkify';
-import { Calendar, ExternalLink, Send, Link2, Check, Download, ArrowLeft, Copy } from 'lucide-react';
+import { Calendar, ExternalLink, Send, Share2, Check, Download, ArrowLeft, Copy } from 'lucide-react';
 import type { EventItem } from '@/components/EventCard';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -57,11 +57,25 @@ const EventDetail: React.FC = () => {
     ? `${window.location.origin}/event/${canonicalSlug}`
     : `/event/${canonicalSlug}`;
 
-  const handleCopy = async () => {
+  const handleShare = async () => {
+    const nav = typeof navigator !== 'undefined' ? navigator : undefined;
+    if (nav && typeof nav.share === 'function') {
+      try {
+        await nav.share({
+          title: event?.name || 'BOLAKAMI Event',
+          text: event?.name || '',
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
+        // fall through to clipboard fallback
+      }
+    }
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      toast({ title: t('event.linkCopied') });
+      toast({ title: t('event.linkCopiedFallback') });
       setTimeout(() => setCopied(false), 1800);
     } catch {
       toast({ title: 'Error', variant: 'destructive' });
@@ -195,9 +209,9 @@ const EventDetail: React.FC = () => {
                     </a>
                   </Button>
                 )}
-                <Button variant="outline" onClick={handleCopy} type="button">
-                  {copied ? <Check className="w-4 h-4 mr-2" /> : <Link2 className="w-4 h-4 mr-2" />}
-                  {t('event.copyLink')}
+                <Button variant="outline" onClick={handleShare} type="button">
+                  {copied ? <Check className="w-4 h-4 mr-2" /> : <Share2 className="w-4 h-4 mr-2" />}
+                  {t('event.share')}
                 </Button>
                 {hasDescription && (
                   <Button
@@ -265,8 +279,8 @@ const EventDetail: React.FC = () => {
               </a>
             </Button>
           )}
-          <Button variant="outline" size="icon" onClick={handleCopy} type="button" aria-label={t('event.copyLink')}>
-            {copied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
+          <Button variant="outline" size="icon" onClick={handleShare} type="button" aria-label={t('event.share')}>
+            {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
           </Button>
         </div>
       )}
