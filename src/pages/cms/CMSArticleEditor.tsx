@@ -519,7 +519,26 @@ const CMSArticleEditor = () => {
     });
 
     if (error) {
-      throw new Error(error.message || 'Gagal menerjemahkan artikel');
+      // FunctionsHttpError has context.response with the actual error body
+      let serverMessage: string | undefined;
+      let status: number | undefined;
+      try {
+        const res = (error as any)?.context?.response as Response | undefined;
+        if (res) {
+          status = res.status;
+          const body = await res.clone().json().catch(() => null);
+          serverMessage = body?.error;
+        }
+      } catch {
+        // ignore parse errors
+      }
+      if (status === 429) {
+        throw new Error(serverMessage || 'Batas permintaan AI tercapai, silakan coba lagi nanti.');
+      }
+      if (status === 402) {
+        throw new Error(serverMessage || 'Kredit AI habis. Silakan tambahkan kredit di workspace Lovable.');
+      }
+      throw new Error(serverMessage || error.message || 'Gagal menerjemahkan artikel');
     }
 
     if (data?.error) {
